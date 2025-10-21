@@ -1,0 +1,183 @@
+# 鸿蒙 HarmonyOS 开发规范
+
+## 语言和框架
+- 使用 **ArkTS** (TypeScript 的超集)
+- 使用 **ArkUI** 声明式 UI 框架
+- 文件扩展名: `.ets`
+
+## 核心装饰器 (Decorators)
+
+### 组件装饰器
+- `@Entry` - 页面入口组件
+- `@Component` - 自定义组件
+- `@Preview` - 组件预览（开发时可视化）
+- `@Reusable` - 可复用组件（配合 aboutToReuse 生命周期）
+
+### 状态管理装饰器
+- `@State` - 组件内部状态（触发 UI 更新）
+- `@Prop` - 父组件单向传递给子组件
+- `@Link` - 父子组件双向同步
+- `@Provide/@Consume` - 跨层级组件数据共享
+- `@Observed` - 标记类可被观察
+- `@ObjectLink` - 嵌套对象双向绑定
+- `@Watch` - 监听状态变化回调
+- `@Local` - 本地状态（不可被父组件覆盖，API 12+）
+- `@Track` - 类属性精细化观察（优化渲染性能）
+
+### 样式扩展装饰器
+- `@Extend(ComponentName)` - 扩展组件样式
+- `@Styles` - 抽取通用样式
+- `@Builder` - 自定义构建函数
+
+## 组件生命周期
+
+```typescript
+aboutToAppear()      // 组件即将出现（初始化数据）
+aboutToDisappear()   // 组件即将销毁（清理资源）
+aboutToReuse(params) // 组件复用时调用（配合 @Reusable）
+aboutToRecycle()     // 组件回收时调用
+```
+
+## 命名规范
+
+### 文件命名
+- 小驼峰: `homePage.ets`, `userProfile.ets`
+
+### 组件命名
+- 大驼峰 (PascalCase): `HomePage`, `UserProfile`
+
+### 变量命名
+- 状态变量: `@State message: string`
+- 常规变量: 小驼峰 `userName`, `itemList`
+
+## 资源引用
+
+```typescript
+$r('app.string.xxx')   // 字符串资源
+$r('app.media.xxx')    // 图片资源
+$r('app.color.xxx')    // 颜色资源
+$rawfile('xxx.json')   // rawfile 资源
+```
+
+## UI 更新机制 (重要!)
+
+### ✅ 正确触发 UI 更新
+
+```typescript
+// 1. 直接赋值
+this.message = 'new value'
+
+// 2. 数组变异方法
+this.list.push(item)
+this.list.splice(0, 1)
+
+// 3. 对象整体替换
+this.user = { name: 'new' }
+
+// 4. 使用 @Observed + @ObjectLink
+@Observed class User {
+  name: string
+}
+this.user.name = 'new' // 会触发更新
+```
+
+### ❌ 不会触发 UI 更新
+
+```typescript
+// 1. 直接修改数组元素（需要用 @Track 或整体替换）
+this.list[0] = newValue  // ❌
+
+// 2. 修改普通对象属性
+this.user.name = 'new'  // ❌ (除非用 @Observed)
+
+// 3. 使用不会改变数组引用的操作
+this.list.sort()  // ❌ 需要 this.list = [...this.list].sort()
+```
+
+## 常见组件结构
+
+```typescript
+@Entry
+@Component
+struct PageName {
+  @State private message: string = 'Hello'
+
+  aboutToAppear() {
+    // 初始化数据、API 调用
+  }
+
+  build() {
+    Column() {
+      Text(this.message)
+        .fontSize(20)
+        .onClick(() => {
+          this.message = 'Updated'
+        })
+    }
+    .width('100%')
+    .height('100%')
+  }
+}
+```
+
+## ForEach 渲染列表
+
+```typescript
+ForEach(
+  this.dataList,                    // 数据源
+  (item: DataType, index: number) => {  // 渲染项
+    ListItem() {
+      Text(item.name)
+    }
+  },
+  (item: DataType) => item.id       // 唯一键（必须提供！）
+)
+```
+
+## 性能优化要点
+
+1. **使用 @Track 装饰器** - 精细化控制类属性更新
+2. **LazyForEach 替代 ForEach** - 大列表懒加载
+3. **@Reusable 组件复用** - 减少组件创建销毁
+4. **合理使用 @Observed/@ObjectLink** - 避免过度渲染
+
+## 路由导航
+
+```typescript
+import router from '@ohos.router'
+
+// 跳转
+router.pushUrl({ url: 'pages/Detail' })
+
+// 带参数跳转
+router.pushUrl({
+  url: 'pages/Detail',
+  params: { id: 123 }
+})
+
+// 返回
+router.back()
+```
+
+## 常见陷阱 (Pitfalls)
+
+1. **ForEach 必须提供唯一键** - 否则列表更新会有问题
+2. **@State 修饰的对象属性变化不会触发更新** - 使用 @Observed
+3. **数组索引赋值不触发更新** - 使用 splice() 或整体替换
+4. **组件内 @State 初始值会被父组件覆盖** - 使用 @Local (API 12+)
+5. **异步更新状态需在主线程** - 使用 setTimeout 或 Promise
+
+## 参考文档位置
+
+- 详细语法: `docs/harmonyos-syntax.md`
+- 常见问题: `docs/common-pitfalls.md`
+- 状态管理: `docs/state-management.md`
+- 代码示例: `examples/` 目录
+
+## 开发建议
+
+- 优先使用声明式 UI，避免命令式操作
+- 状态变量尽量保持简单，复杂对象用 @Observed
+- 组件拆分要合理，避免过深嵌套
+- 使用 @Preview 装饰器预览组件
+- API 调用放在 aboutToAppear() 生命周期
