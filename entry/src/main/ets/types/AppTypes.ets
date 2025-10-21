@@ -1,0 +1,389 @@
+/**
+ * 应用全局类型定义
+ * 包含项目中使用的基础类型、接口和枚举
+ */
+
+/**
+ * 项目状态枚举
+ */
+export enum ProjectStatus {
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  PAUSED = 'paused',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * 项目过滤器枚举
+ */
+export enum ProjectFilter {
+  ALL = 'all',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  PAUSED = 'paused',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * 项目排序枚举
+ */
+export enum ProjectSortOrder {
+  NAME_ASC = 'name_asc',
+  NAME_DESC = 'name_desc',
+  CREATED_ASC = 'created_asc',
+  CREATED_DESC = 'created_desc',
+  UPDATED_ASC = 'updated_asc',
+  UPDATED_DESC = 'updated_desc'
+}
+
+/**
+ * 水印模板分类枚举
+ */
+export enum TemplateCategory {
+  SYSTEM = 'system',
+  CONSTRUCTION = 'construction',
+  QUALITY = 'quality',
+  SAFETY = 'safety',
+  CUSTOM = 'custom'
+}
+
+/**
+ * 照片过滤器枚举
+ */
+export enum PhotoFilter {
+  ALL = 'all',
+  RECENT = 'recent',
+  TODAY = 'today',
+  THIS_WEEK = 'this_week',
+  THIS_MONTH = 'this_month',
+  EDITED = 'edited',
+  FAVORITE = 'favorite'
+}
+
+/**
+ * 照片排序枚举
+ */
+export enum PhotoSortOrder {
+  TAKEN_ASC = 'taken_asc',
+  TAKEN_DESC = 'taken_desc',
+  CREATED_ASC = 'created_asc',
+  CREATED_DESC = 'created_desc',
+  NAME_ASC = 'name_asc',
+  NAME_DESC = 'name_desc',
+  SIZE_ASC = 'size_asc',
+  SIZE_DESC = 'size_desc'
+}
+
+/**
+ * 主题模式枚举
+ */
+export enum ThemeMode {
+  LIGHT = 'light',
+  DARK = 'dark',
+  SYSTEM = 'system'
+}
+
+/**
+ * 用户角色枚举
+ */
+export enum UserRole {
+  OWNER = 'owner',
+  EDITOR = 'editor',
+  VIEWER = 'viewer'
+}
+
+/**
+ * 权限枚举
+ */
+export enum Permission {
+  READ = 'read',
+  WRITE = 'write',
+  DELETE = 'delete',
+  SHARE = 'share',
+  MANAGE = 'manage'
+}
+
+/**
+ * 文件类型枚举
+ */
+export enum FileType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  DOCUMENT = 'document',
+  ARCHIVE = 'archive'
+}
+
+/**
+ * 数据库操作类型枚举
+ */
+export enum DatabaseOperation {
+  CREATE = 'create',
+  READ = 'read',
+  UPDATE = 'update',
+  DELETE = 'delete'
+}
+
+/**
+ * 位置数据接口
+ */
+export interface LocationData {
+  country: string
+  province: string
+  city: string
+  district: string
+  street: string
+  postalCode: string
+}
+
+/**
+ * 天气信息接口
+ */
+export interface WeatherInfo {
+  temperature: number
+  humidity: number
+  condition: string
+  icon: string
+}
+
+/**
+ * 标注信息接口
+ */
+export interface Annotation {
+  id: string
+  type: 'text' | 'shape' | 'doodle' | 'mosaic'
+  content: any
+  position: { x: number, y: number }
+  style: Record<string, any>
+  createdAt: Date
+}
+
+/**
+ * 水印字段接口
+ */
+export interface WatermarkField {
+  key: string
+  label: string
+  enabled: boolean
+  format?: string
+  position?: { x: number, y: number }
+}
+
+/**
+ * 水印样式接口
+ */
+export interface WatermarkStyle {
+  backgroundColor: string
+  textColor: string
+  fontSize: number
+  fontFamily: string
+  opacity: number
+  borderRadius: number
+  padding: number
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+}
+
+/**
+ * 主题颜色接口
+ */
+export interface ThemeColors {
+  primary: string
+  secondary: string
+  background: string
+  surface: string
+  error: string
+  onPrimary: string
+  onSecondary: string
+  onBackground: string
+  onSurface: string
+  onError: string
+  text: {
+    primary: string
+    secondary: string
+    disabled: string
+  }
+  border: {
+    default: string
+    focus: string
+    error: string
+  }
+}
+
+/**
+ * 主题字体接口
+ */
+export interface ThemeTypography {
+  fontSize: {
+    small: number
+    medium: number
+    large: number
+    xlarge: number
+  }
+  fontWeight: {
+    normal: FontWeight
+    medium: FontWeight
+    bold: FontWeight
+  }
+  lineHeight: {
+    tight: number
+    normal: number
+    relaxed: number
+  }
+}
+
+/**
+ * 主题间距接口
+ */
+export interface ThemeSpacing {
+  xs: number
+  sm: number
+  md: number
+  lg: number
+  xl: number
+  xxl: number
+}
+
+/**
+ * 主题接口
+ */
+export interface Theme {
+  colors: ThemeColors
+  typography: ThemeTypography
+  spacing: ThemeSpacing
+}
+
+/**
+ * 数据库配置接口
+ */
+export interface DatabaseConfig {
+  name: string
+  version: number
+  securityLevel: 'S1' | 'S2' | 'S3' | 'S4'
+}
+
+/**
+ * 数据库表结构接口
+ */
+export interface TableSchema {
+  name: string
+  columns: ColumnSchema[]
+  indexes?: IndexSchema[]
+}
+
+/**
+ * 数据库列结构接口
+ */
+export interface ColumnSchema {
+  name: string
+  type: 'TEXT' | 'INTEGER' | 'REAL' | 'BLOB'
+  nullable: boolean
+  primaryKey?: boolean
+  autoIncrement?: boolean
+  defaultValue?: any
+  unique?: boolean
+}
+
+/**
+ * 数据库索引结构接口
+ */
+export interface IndexSchema {
+  name: string
+  columns: string[]
+  unique?: boolean
+}
+
+/**
+ * API响应接口
+ */
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  code?: number
+}
+
+/**
+ * 分页请求参数接口
+ */
+export interface PaginationParams {
+  page: number
+  pageSize: number
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+}
+
+/**
+ * 分页响应接口
+ */
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+/**
+ * 搜索参数接口
+ */
+export interface SearchParams {
+  query?: string
+  filters?: Record<string, any>
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  pagination?: PaginationParams
+}
+
+/**
+ * 应用配置接口
+ */
+export interface AppConfig {
+  version: string
+  buildNumber: string
+  environment: 'development' | 'production' | 'testing'
+  features: Record<string, boolean>
+}
+
+/**
+ * 用户偏好设置接口
+ */
+export interface UserPreferences {
+  theme: ThemeMode
+  language: string
+  autoBackup: boolean
+  compressImages: boolean
+  defaultTemplate?: string
+  locationServices: boolean
+}
+
+/**
+ * 错误信息接口
+ */
+export interface ErrorInfo {
+  code: string
+  message: string
+  details?: any
+  timestamp: Date
+}
+
+/**
+ * 日志级别枚举
+ */
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error'
+}
+
+/**
+ * 日志信息接口
+ */
+export interface LogInfo {
+  level: LogLevel
+  message: string
+  timestamp: Date
+  tag?: string
+  data?: any
+}
