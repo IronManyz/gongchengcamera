@@ -6,6 +6,8 @@
 
 import { BaseStore } from './BaseStore'
 import { GlobalStore, globalStore, GlobalAppState } from './GlobalStore'
+import { projectStore } from './project/ProjectStore'
+import { siteStore } from './site/SiteStore'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 
 const TAG = 'StoreIndex'
@@ -29,6 +31,18 @@ export { systemThemeMonitor, SystemThemeListener } from './theme/SystemThemeMoni
 
 // UserStore
 export { UserStore, userStore, UserState, UserPreferences, UserRole, UserPermission, PermissionManager } from './user/UserStore'
+
+// ProjectStore
+export { ProjectStore, projectStore, ProjectManagementState, ProjectSearchParams } from './project/ProjectStore'
+
+// SiteStore
+export { SiteStore, siteStore, SiteManagementState, LocationManagementState, SiteSearchParams, NearbySearchParams } from './site/SiteStore'
+
+// Business Logic Managers
+export { ProjectStateManager, projectStateManager, StatusTransitionRule } from './business/ProjectStateManager'
+export { SiteClassificationManager, siteClassificationManager, SiteCategory, SiteCategoryConfig, ClassificationRule, GeographicRegion } from './business/SiteClassificationManager'
+export { DataValidationManager, dataValidationManager, ValidationResult, ValidationError, ValidationWarning, ValidationRule, BatchValidationResult } from './business/DataValidationManager'
+export { ErrorHandlingManager, errorHandlingManager, AppError, ErrorType, ErrorSeverity, ErrorHandlingStrategy, ErrorHandlingConfig, ErrorRecoveryResult, handleError, wrapOperation, createError } from './business/ErrorHandlingManager'
 
 /**
  * Store管理器类
@@ -71,6 +85,12 @@ export class StoreManager {
 
     // 注册用户Store
     this.registerStore('user', userStore)
+
+    // 注册项目Store
+    this.registerStore('project', projectStore)
+
+    // 注册工点Store
+    this.registerStore('site', siteStore)
 
     hilog.info(0x0000, TAG, 'Default stores registered')
   }
