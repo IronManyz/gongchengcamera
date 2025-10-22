@@ -9,6 +9,9 @@ import { Logger } from '../../utils/Logger'
 import { CameraService, CameraState, CameraPosition, FlashMode } from '../../services/camera/CameraService'
 import { PhotoCaptureService, CaptureState, CaptureMode, PhotoFormat, ImageQuality } from '../../services/camera/PhotoCaptureService'
 import { PhotoInfo, CaptureResult } from '../../services/camera/PhotoCaptureService'
+import { WatermarkService, WatermarkData, WatermarkTemplateType } from '../../services/camera/WatermarkService'
+import { LocationService, LocationData, LocationState } from '../../services/location/LocationService'
+import { WeatherService, WeatherData, WeatherState } from '../../services/weather/WeatherService'
 import { GlobalStore } from '../../store/GlobalStore'
 import { UserStore } from '../../store/user/UserStore'
 import { ProjectStore } from '../../store/project/ProjectStore'
@@ -45,6 +48,9 @@ struct CameraPage {
   // 服务实例
   private cameraService: CameraService = CameraService.getInstance()
   private captureService: PhotoCaptureService = PhotoCaptureService.getInstance()
+  private watermarkService: WatermarkService = WatermarkService.getInstance()
+  private locationService: LocationService = LocationService.getInstance()
+  private weatherService: WeatherService = WeatherService.getInstance()
   private globalStore = GlobalStore.getInstance()
   private userStore = UserStore.getInstance()
   private projectStore = ProjectStore.getInstance()
@@ -82,6 +88,15 @@ struct CameraPage {
   @State private errorMessage: string = ''
   @State private showError: boolean = false
 
+  // 位置和水印状态
+  @State private currentLocation: LocationData | null = null
+  @State private locationState: LocationState = LocationState.DISABLED
+  @State private currentWeather: WeatherData | null = null
+  @State private weatherState: WeatherState = WeatherState.DISABLED
+  @State private watermarkData: WatermarkData = {}
+  @State private showWatermarkPreview: boolean = true
+  @State private currentWatermarkTemplate: WatermarkTemplateType = WatermarkTemplateType.ENGINEERING
+
   // 自动隐藏控制器的定时器
   private hideControlsTimer: number = -1
 
@@ -106,11 +121,23 @@ struct CameraPage {
       // 初始化相机服务
       await this.initializeCameraServices()
 
+      // 初始化位置服务
+      await this.initializeLocationServices()
+
+      // 初始化天气服务
+      await this.initializeWeatherServices()
+
+      // 初始化水印服务
+      this.initializeWatermarkServices()
+
       // 设置服务回调
       this.setupServiceCallbacks()
 
       // 配置拍照参数
       this.configureCaptureServices()
+
+      // 开始位置更新
+      this.startLocationUpdates()
 
       this.isInitialized = true
       this.logger.info('CameraPage initialized successfully')
@@ -163,6 +190,149 @@ struct CameraPage {
     } catch (error) {
       this.logger.error('Failed to initialize camera services', error)
       throw error
+    }
+  }
+
+  /**
+   * 初始化位置服务
+   */
+  private async initializeLocationServices(): Promise<void> {
+    this.logger.info('Initializing location services...')
+
+    try {
+      await this.locationService.initialize()
+      this.locationState = this.locationService.getState()
+      this.logger.info('Location services initialized', { state: this.locationState })
+    } catch (error) {
+      this.logger.error('Failed to initialize location services', error)
+      // 位置服务失败不应该阻止相机使用
+      this.locationState = LocationState.ERROR
+    }
+  }
+
+  /**
+   * 初始化天气服务
+   */
+  private async initializeWeatherServices(): Promise<void> {
+    this.logger.info('Initializing weather services...')
+
+    try {
+      await this.weatherService.initialize()
+      this.weatherState = this.weatherService.getState()
+      this.logger.info('Weather services initialized', { state: this.weatherState })
+    } catch (error) {
+      this.logger.error('Failed to initialize weather services', error)
+      // 天气服务失败不应该阻止相机使用
+      this.weatherState = WeatherState.ERROR
+    }
+  }
+
+  /**
+   * 初始化水印服务
+   */
+  private initializeWatermarkServices(): void {
+    this.logger.info('Initializing watermark services...')
+
+    try {
+      // 初始化水印数据
+      this.updateWatermarkData()
+      this.logger.info('Watermark services initialized')
+    } catch (error) {
+      this.logger.error('Failed to initialize watermark services', error)
+    }
+  }
+
+  /**
+   * 开始位置更新
+   */
+  private async startLocationUpdates(): Promise<void> {
+    try {
+      // 设置位置服务监听器
+      this.locationService.setListeners({
+        onLocationChanged: (location: LocationData) => {
+          this.currentLocation = location
+          this.updateWatermarkData()
+          this.fetchWeatherForLocation(location)
+          this.logger.info('Location updated', location)
+        },
+        onLocationError: (error: Error) => {
+          this.logger.error('Location error', error)
+          this.locationState = LocationState.ERROR
+        }
+      })
+
+      // 设置天气服务监听器
+      this.weatherService.setListeners({
+        onWeatherChanged: (weather: WeatherData) => {
+          this.currentWeather = weather
+          this.updateWatermarkData()
+          this.logger.info('Weather updated', weather)
+        },
+        onWeatherError: (error: Error) => {
+          this.logger.error('Weather error', error)
+          this.weatherState = WeatherState.ERROR
+        }
+      })
+
+      // 开始连续位置更新
+      await this.locationService.startLocationUpdates()
+
+      // 尝试获取当前位置
+      const locationResult = await this.locationService.getCurrentLocation()
+      if (locationResult.success && locationResult.location) {
+        this.currentLocation = locationResult.location
+        this.updateWatermarkData()
+        this.fetchWeatherForLocation(locationResult.location)
+      }
+
+    } catch (error) {
+      this.logger.error('Failed to start location updates', error)
+      // 位置更新失败不应该阻止相机使用
+    }
+  }
+
+  /**
+   * 为位置获取天气
+   */
+  private async fetchWeatherForLocation(location: LocationData): Promise<void> {
+    try {
+      const weatherResult = await this.weatherService.getCurrentWeather(
+        location.latitude,
+        location.longitude
+      )
+
+      if (weatherResult.success && weatherResult.weather) {
+        this.currentWeather = weatherResult.weather
+        this.weatherState = WeatherState.AVAILABLE
+        this.updateWatermarkData()
+      }
+    } catch (error) {
+      this.logger.error('Failed to fetch weather for location', error)
+      this.weatherState = WeatherState.ERROR
+    }
+  }
+
+  /**
+   * 更新水印数据
+   */
+  private updateWatermarkData(): void {
+    // 格式化天气数据
+    let weatherInfo = this.watermarkData.weather
+    if (this.currentWeather) {
+      weatherInfo = {
+        temperature: this.currentWeather.current.temperature,
+        condition: this.currentWeather.current.description
+      }
+    }
+
+    this.watermarkData = {
+      projectName: this.getProjectName(),
+      siteName: this.getSiteName(),
+      dateTime: new Date(),
+      location: this.currentLocation || undefined,
+      weather: weatherInfo,
+      companyName: this.getCompanyName(),
+      description: this.pageParams.photoMode ? this.getPhotoModeDescription() : undefined
     }
   }
 
@@ -264,16 +434,23 @@ struct CameraPage {
    * 准备照片元数据
    */
   private preparePhotoMetadata(): any {
+    // 更新水印数据
+    this.updateWatermarkData()
+
     const metadata: any = {
       user: {
         projectId: this.pageParams.projectId,
         siteId: this.pageParams.siteId,
         photoMode: this.pageParams.photoMode
-      }
+      },
+      watermark: {
+        data: this.watermarkData,
+        templateType: this.currentWatermarkTemplate,
+        showPreview: this.showWatermarkPreview
+      },
+      location: this.currentLocation,
+      captureTime: new Date()
     }
-
-    // 添加位置信息（如果可用）
-    // 这里可以添加定位服务的调用
 
     return metadata
   }
@@ -337,6 +514,31 @@ struct CameraPage {
    */
   private toggleGridLines(): void {
     this.cameraConfig.gridLines = !this.cameraConfig.gridLines
+    this.startAutoHideControlsTimer()
+  }
+
+  /**
+   * 切换水印预览显示
+   */
+  private toggleWatermarkPreview(): void {
+    this.showWatermarkPreview = !this.showWatermarkPreview
+    this.startAutoHideControlsTimer()
+  }
+
+  /**
+   * 切换水印模板
+   */
+  private switchWatermarkTemplate(): void {
+    const templates = [
+      WatermarkTemplateType.ENGINEERING,
+      WatermarkTemplateType.CONSTRUCTION,
+      WatermarkTemplateType.QUALITY,
+      WatermarkTemplateType.SAFETY
+    ]
+    const currentIndex = templates.indexOf(this.currentWatermarkTemplate)
+    const nextIndex = (currentIndex + 1) % templates.length
+    this.currentWatermarkTemplate = templates[nextIndex]
+    this.updateWatermarkData()
     this.startAutoHideControlsTimer()
   }
 
@@ -429,6 +631,16 @@ struct CameraPage {
     if (this.hideControlsTimer >= 0) {
       clearTimeout(this.hideControlsTimer)
     }
+
+    // 停止位置更新
+    this.locationService.release().catch(error => {
+      this.logger.error('Failed to release location service', error)
+    })
+
+    // 停止天气服务
+    this.weatherService.release().catch(error => {
+      this.logger.error('Failed to release weather service', error)
+    })
   }
 
   build() {
@@ -502,6 +714,11 @@ struct CameraPage {
       if (this.cameraConfig.gridLines) {
         this.buildGridLines()
       }
+
+      // 水印预览
+      if (this.showWatermarkPreview) {
+        this.buildWatermarkPreview()
+      }
     }
     .width('100%')
     .height('100%')
@@ -549,6 +766,74 @@ struct CameraPage {
   }
 
   /**
+   * 构建水印预览
+   */
+  @Builder
+  buildWatermarkPreview() {
+    Column() {
+      // 项目名称
+      if (this.watermarkData.projectName) {
+        Text(this.watermarkData.projectName)
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(Color.White)
+          .margin({ bottom: 4 })
+      }
+
+      // 工点名称
+      if (this.watermarkData.siteName) {
+        Text(this.watermarkData.siteName)
+          .fontSize(14)
+          .fontColor(Color.White)
+          .margin({ bottom: 2 })
+      }
+
+      // 日期时间
+      Text(this.formatDateTime(this.watermarkData.dateTime || new Date()))
+        .fontSize(12)
+        .fontColor(Color.White)
+        .margin({ bottom: 2 })
+
+      // 位置信息
+      if (this.watermarkData.location) {
+        Text(this.formatLocation(this.watermarkData.location))
+          .fontSize(12)
+          .fontColor(Color.White)
+          .margin({ bottom: 2 })
+      }
+
+      // 天气信息
+      if (this.watermarkData.weather) {
+        Text(`${this.watermarkData.weather.condition} ${this.watermarkData.weather.temperature}°C`)
+          .fontSize(12)
+          .fontColor(Color.White)
+          .margin({ bottom: 2 })
+      }
+
+      // 公司名称
+      if (this.watermarkData.companyName) {
+        Text(this.watermarkData.companyName)
+          .fontSize(10)
+          .fontColor(Color.White)
+          .opacity(0.8)
+      }
+
+      // 模板指示器
+      Text(`[${this.getTemplateName()}]`)
+        .fontSize(8)
+        .fontColor(Color.White)
+        .opacity(0.6)
+        .margin({ top: 4 })
+    }
+    .padding(12)
+    .backgroundColor('rgba(0, 0, 0, 0.7)')
+    .borderRadius(8)
+    .position({ x: 20, y: 100 })
+    .maxWidth(280)
+    .hitTestBehavior(HitTestMode.None)
+  }
+
+  /**
    * 构建控制层
    */
   @Builder
@@ -591,6 +876,30 @@ struct CameraPage {
       .onClick(() => this.goBack())
 
       Blank()
+
+      // 水印模板按钮
+      Button({ type: ButtonType.Circle }) {
+        Image($r('app.media.ic_watermark'))
+          .width(24)
+          .height(24)
+          .fillColor(Color.White)
+      }
+      .width(40)
+      .height(40)
+      .backgroundColor('rgba(0,0,0,0.5)')
+      .onClick(() => this.switchWatermarkTemplate())
+
+      // 水印预览按钮
+      Button({ type: ButtonType.Circle }) {
+        Image($r('app.media.ic_preview'))
+          .width(24)
+          .height(24)
+          .fillColor(this.showWatermarkPreview ? Color.Blue : Color.White)
+      }
+      .width(40)
+      .height(40)
+      .backgroundColor('rgba(0,0,0,0.5)')
+      .onClick(() => this.toggleWatermarkPreview())
 
       // 设置按钮
       Button({ type: ButtonType.Circle }) {
@@ -687,30 +996,84 @@ struct CameraPage {
    */
   @Builder
   buildModeIndicator() {
-    Row() {
-      // 项目信息
-      if (this.pageParams.projectId) {
-        Text(`项目: ${this.getProjectName()}`)
+    Column() {
+      Row() {
+        // 项目信息
+        if (this.pageParams.projectId) {
+          Text(`项目: ${this.getProjectName()}`)
+            .fontSize(14)
+            .fontColor(Color.White)
+            .opacity(0.8)
+        }
+
+        Blank()
+
+        // 相机状态
+        Text(this.getCameraStateText())
+          .fontSize(14)
+          .fontColor(this.getStateColor())
+          .opacity(0.8)
+
+        Blank()
+
+        // 拍照配置
+        Text(`${this.cameraConfig.quality} ${this.cameraConfig.format.toUpperCase()}`)
           .fontSize(14)
           .fontColor(Color.White)
           .opacity(0.8)
       }
+      .width('100%')
+      .margin({ bottom: 8 })
 
-      Blank()
+      // 位置、天气和水印状态行
+      Row() {
+        // 位置状态
+        Row() {
+          Circle()
+            .width(8)
+            .height(8)
+            .fill(this.getLocationStatusColor())
+            .margin({ right: 4 })
+          Text(this.getLocationStatusText())
+            .fontSize(12)
+            .fontColor(Color.White)
+            .opacity(0.8)
+        }
 
-      // 相机状态
-      Text(this.getCameraStateText())
-        .fontSize(14)
-        .fontColor(this.getStateColor())
-        .opacity(0.8)
+        Blank()
 
-      Blank()
+        // 天气状态
+        if (this.currentWeather) {
+          Row() {
+            Text(this.weatherService.getWeatherIcon(this.currentWeather.current.condition))
+              .fontSize(12)
+              .margin({ right: 4 })
+            Text(`${Math.round(this.currentWeather.current.temperature)}°C`)
+              .fontSize(12)
+              .fontColor(Color.White)
+              .opacity(0.8)
+          }
+        }
 
-      // 拍照配置
-      Text(`${this.cameraConfig.quality} ${this.cameraConfig.format.toUpperCase()}`)
-        .fontSize(14)
-        .fontColor(Color.White)
-        .opacity(0.8)
+        Blank()
+
+        // 水印状态
+        Text(`水印: ${this.getTemplateName()}`)
+          .fontSize(12)
+          .fontColor(this.showWatermarkPreview ? Color.White : Color.Gray)
+          .opacity(0.8)
+
+        Blank()
+
+        // 工点信息
+        if (this.pageParams.siteId) {
+          Text(`工点: ${this.getSiteName()}`)
+            .fontSize(12)
+            .fontColor(Color.White)
+            .opacity(0.8)
+        }
+      }
+      .width('100%')
     }
     .width('100%')
     .padding({ left: 16, right: 16, bottom: 16 })
@@ -886,5 +1249,120 @@ struct CameraPage {
   private getProjectName(): string {
     // 这里应该从ProjectStore获取项目名称
     return '工程项目' // 临时返回
+  }
+
+  /**
+   * 获取工点名称
+   */
+  private getSiteName(): string {
+    // 这里应该从SiteStore获取工点名称
+    return '工点A' // 临时返回
+  }
+
+  /**
+   * 获取公司名称
+   */
+  private getCompanyName(): string {
+    // 这里应该从UserStore获取公司名称
+    return '工程摄影有限公司' // 临时返回
+  }
+
+  /**
+   * 获取拍照模式描述
+   */
+  private getPhotoModeDescription(): string {
+    switch (this.pageParams.photoMode) {
+      case 'engineering':
+        return '工程拍摄'
+      case 'personal':
+        return '个人拍摄'
+      case 'inspection':
+        return '检查拍摄'
+      default:
+        return '标准拍摄'
+    }
+  }
+
+  /**
+   * 获取模板名称
+   */
+  private getTemplateName(): string {
+    switch (this.currentWatermarkTemplate) {
+      case WatermarkTemplateType.ENGINEERING:
+        return '工程标准'
+      case WatermarkTemplateType.CONSTRUCTION:
+        return '施工简易'
+      case WatermarkTemplateType.QUALITY:
+        return '质量详细'
+      case WatermarkTemplateType.SAFETY:
+        return '安全检查'
+      default:
+        return '标准模板'
+    }
+  }
+
+  /**
+   * 格式化日期时间
+   */
+  private formatDateTime(date: Date): string {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  }
+
+  /**
+   * 格式化位置信息
+   */
+  private formatLocation(location: LocationData): string {
+    const lat = Math.abs(location.latitude).toFixed(6)
+    const lng = Math.abs(location.longitude).toFixed(6)
+    const latDir = location.latitude >= 0 ? 'N' : 'S'
+    const lngDir = location.longitude >= 0 ? 'E' : 'W'
+
+    return `${lat}°${latDir} ${lng}°${lngDir}`
+  }
+
+  /**
+   * 获取位置状态文本
+   */
+  private getLocationStatusText(): string {
+    switch (this.locationState) {
+      case LocationState.DISABLED:
+        return '定位关闭'
+      case LocationState.INITIALIZING:
+        return '定位初始化'
+      case LocationState.SEARCHING:
+        return '定位搜索'
+      case LocationState.LOCATED:
+        return '定位成功'
+      case LocationState.ERROR:
+        return '定位失败'
+      default:
+        return '定位未知'
+    }
+  }
+
+  /**
+   * 获取位置状态颜色
+   */
+  private getLocationStatusColor(): Color {
+    switch (this.locationState) {
+      case LocationState.LOCATED:
+        return Color.Green
+      case LocationState.SEARCHING:
+      case LocationState.INITIALIZING:
+        return Color.Blue
+      case LocationState.ERROR:
+        return Color.Red
+      case LocationState.DISABLED:
+        return Color.Gray
+      default:
+        return Color.Gray
+    }
   }
 }
