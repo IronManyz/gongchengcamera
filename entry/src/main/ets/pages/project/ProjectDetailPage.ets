@@ -25,7 +25,7 @@ struct ProjectDetailPage {
   @State private selectedSite: Site | null = null
   @State private showDeleteSiteDialog: boolean = false
   @State private showProjectActionDialog: boolean = false
-  @State private currentTab: number = 0 // 0: 详情, 1: 工点, 2: 统计
+  @State private currentTab: number = 0 // 0: 概况, 1: 工点, 2: 相册, 3: 团队, 4: 设置
 
   // 数据
   @State private project: Project | null = null
@@ -256,11 +256,15 @@ struct ProjectDetailPage {
 
       // 内容区域
       if (this.currentTab === 0) {
-        this.buildProjectDetails()
+        this.buildProjectOverview()
       } else if (this.currentTab === 1) {
         this.buildSiteList()
-      } else {
-        this.buildProjectStatistics()
+      } else if (this.currentTab === 2) {
+        this.buildProjectGallery()
+      } else if (this.currentTab === 3) {
+        this.buildProjectTeam()
+      } else if (this.currentTab === 4) {
+        this.buildProjectSettings()
       }
 
       // 底部操作栏
@@ -360,9 +364,11 @@ struct ProjectDetailPage {
     Row() {
       ForEach(
         [
-          { key: 0, title: '项目详情', icon: $r('app.media.ic_info') },
-          { key: 1, title: '工点管理', icon: $r('app.media.ic_location') },
-          { key: 2, title: '项目统计', icon: $r('app.media.ic_chart') }
+          { key: 0, title: '概况', icon: $r('app.media.ic_info') },
+          { key: 1, title: '工点', icon: $r('app.media.ic_location') },
+          { key: 2, title: '相册', icon: $r('app.media.ic_gallery') },
+          { key: 3, title: '团队', icon: $r('app.media.ic_team') },
+          { key: 4, title: '设置', icon: $r('app.media.ic_settings') }
         ],
         (tab: { key: number, title: string, icon: Resource }) => {
           Column({ space: 4 }) {
@@ -392,10 +398,10 @@ struct ProjectDetailPage {
   }
 
   /**
-   * 构建项目详情页面
+   * 构建项目概况页面
    */
   @Builder
-  private buildProjectDetails() {
+  private buildProjectOverview() {
     if (this.project) {
       Refresh({ refreshing: $$isRefreshing, friction: 100 }) {
         ScrollView() {
@@ -1266,5 +1272,420 @@ struct ProjectDetailPage {
       offsetY: 2
     })
     .zIndex(10)
+  }
+
+  /**
+   * 构建项目相册页面
+   */
+  @Builder
+  private buildProjectGallery() {
+    if (!this.project) return
+
+    ScrollView() {
+      Column({ space: 16 }) {
+        // 相册标题和统计
+        Row() {
+          Text('项目相册')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#333333')
+            .layoutWeight(1)
+
+          Text(`${this.project.photoCount || 0}张照片`)
+            .fontSize(14)
+            .fontColor('#666666')
+        }
+        .width('100%')
+        .padding({ horizontal: 16, vertical: 12 })
+
+        // 照片网格布局
+        Grid() {
+          ForEach(Array.from({ length: Math.min(12, this.project.photoCount || 0) }), (index: number) => {
+            GridItem() {
+              // 照片缩略图占位符
+              Column() {
+                Image($r('app.media.ic_image_placeholder'))
+                  .width('100%')
+                  .height(120)
+                  .backgroundColor('#F5F5F5')
+                  .borderRadius(8)
+                  .objectFit(ImageFit.Cover)
+
+                Text(`照片 ${index + 1}`)
+                  .fontSize(12)
+                  .fontColor('#999999')
+                  .margin({ top: 8 })
+                  .textAlign(TextAlign.Center)
+              }
+              .padding(8)
+              .onClick(() => {
+                console.log(`查看照片 ${index + 1}`)
+                // TODO: 跳转到照片详情页面
+              })
+            }
+          }, (index: number) => index.toString())
+        }
+        .columnsTemplate('1fr 1fr 1fr')
+        .rowsGap(12)
+        .columnsGap(12)
+        .padding({ horizontal: 16 })
+        .width('100%')
+
+        // 查看更多按钮
+        if ((this.project.photoCount || 0) > 12) {
+          Button() {
+            Text(`查看全部 ${this.project.photoCount} 张照片`)
+              .fontSize(16)
+              .fontColor('#007AFF')
+          }
+          .width('100%')
+          .height(48)
+          .backgroundColor(Color.Transparent)
+          .border({ width: 1, color: '#007AFF' })
+          .borderRadius(24)
+          .margin({ horizontal: 16, top: 16 })
+          .onClick(() => {
+            console.log('查看全部照片')
+            // TODO: 跳转到完整相册页面
+          })
+        }
+
+        // 空状态
+        if (!this.project.photoCount || this.project.photoCount === 0) {
+          Column() {
+            Image($r('app.media.ic_gallery_empty'))
+              .width(80)
+              .height(80)
+              .fillColor('#C0C0C0')
+
+            Text('暂无照片')
+              .fontSize(16)
+              .fontColor('#999999')
+              .margin({ top: 16 })
+
+            Text('点击下方拍照按钮开始拍摄')
+              .fontSize(14)
+              .fontColor('#CCCCCC')
+              .margin({ top: 8 })
+              .textAlign(TextAlign.Center)
+          }
+          .width('100%')
+          .padding({ vertical: 80 })
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+        }
+      }
+    }
+    .layoutWeight(1)
+    .backgroundColor('#F5F5F5')
+  }
+
+  /**
+   * 构建项目团队页面
+   */
+  @Builder
+  private buildProjectTeam() {
+    if (!this.project) return
+
+    ScrollView() {
+      Column({ space: 16 }) {
+        // 团队标题
+        Row() {
+          Text('项目团队')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#333333')
+            .layoutWeight(1)
+
+          Button('+ 添加成员')
+            .fontSize(14)
+            .fontColor('#007AFF')
+            .backgroundColor(Color.Transparent)
+            .onClick(() => {
+              console.log('添加团队成员')
+              // TODO: 实现添加团队成员功能
+            })
+        }
+        .width('100%')
+        .padding({ horizontal: 16, vertical: 12 })
+
+        // 项目负责人信息
+        Column() {
+          Text('项目负责人')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#333333')
+            .alignSelf(ItemAlign.Start)
+            .margin({ bottom: 12 })
+
+          // 负责人卡片
+          Row() {
+            Column({ space: 8 }) {
+              Text(this.project.manager || '未指定')
+                .fontSize(18)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#333333')
+
+              Text('项目经理')
+                .fontSize(14)
+                .fontColor('#666666')
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
+
+            Image($r('app.media.ic_user'))
+              .width(48)
+              .height(48)
+              .backgroundColor('#E6F4FF')
+              .borderRadius(24)
+              .fillColor('#007AFF')
+          }
+          .width('100%')
+          .padding(16)
+          .backgroundColor('#FFFFFF')
+          .borderRadius(12)
+          .shadow({
+            radius: 4,
+            color: 'rgba(0, 0, 0, 0.08)',
+            offsetX: 0,
+            offsetY: 2
+          })
+        }
+
+        // 团队成员列表标题
+        Text('团队成员')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+          .alignSelf(ItemAlign.Start)
+          .margin({ top: 8, bottom: 12 })
+
+        // 团队成员占位符
+        Column() {
+          ForEach(Array.from({ length: 3 }), (index: number) => {
+            Row() {
+              Image($r('app.media.ic_user'))
+                .width(40)
+                .height(40)
+                .backgroundColor('#F0F0F0')
+                .borderRadius(20)
+                .fillColor('#999999')
+
+              Column({ space: 4 }) {
+                Text(`成员 ${index + 1}`)
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor('#333333')
+
+                Text(index === 0 ? '现场工程师' : index === 1 ? '质量检查员' : '安全员')
+                  .fontSize(14)
+                  .fontColor('#666666')
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              .margin({ left: 12 })
+            }
+            .width('100%')
+            .padding(16)
+            .backgroundColor('#FFFFFF')
+            .borderRadius(8)
+            .shadow({
+              radius: 2,
+              color: 'rgba(0, 0, 0, 0.06)',
+              offsetX: 0,
+              offsetY: 1
+            })
+          }, (index: number) => index.toString())
+        }
+        .width('100%')
+        .padding({ horizontal: 16 })
+
+        // 添加成员按钮
+        Button() {
+          Row({ space: 8 }) {
+            Image($r('app.media.ic_add'))
+              .width(20)
+              .height(20)
+              .fillColor('#FFFFFF')
+
+            Text('添加团队成员')
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+          }
+        }
+        .width('100%')
+        .height(48)
+        .backgroundColor('#007AFF')
+        .borderRadius(24)
+        .margin({ horizontal: 16, top: 16 })
+        .onClick(() => {
+          console.log('添加团队成员')
+          // TODO: 实现添加团队成员功能
+        })
+      }
+    }
+    .layoutWeight(1)
+    .backgroundColor('#F5F5F5')
+  }
+
+  /**
+   * 构建项目设置页面
+   */
+  @Builder
+  private buildProjectSettings() {
+    if (!this.project) return
+
+    ScrollView() {
+      Column({ space: 16 }) {
+        // 设置标题
+        Text('项目设置')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#333333')
+          .alignSelf(ItemAlign.Start)
+          .width('100%')
+          .padding({ horizontal: 16, vertical: 12 })
+
+        // 基本设置组
+        Column() {
+          Text('基本设置')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#333333')
+            .alignSelf(ItemAlign.Start)
+            .margin({ bottom: 16 })
+
+          // 项目状态设置
+          this.buildSettingItem('项目状态', this.project.getStatusText(), () => {
+            console.log('修改项目状态')
+            // TODO: 实现项目状态修改
+          })
+
+          // 水印模板设置
+          this.buildSettingItem('水印模板', '默认模板', () => {
+            console.log('配置水印模板')
+            // TODO: 跳转到水印配置页面
+          })
+
+          // 照片质量设置
+          this.buildSettingItem('照片质量', '高质量', () => {
+            console.log('设置照片质量')
+            // TODO: 实现照片质量设置
+          })
+
+          // 自动定位设置
+          this.buildSettingItem('自动定位', '开启', () => {
+            console.log('设置自动定位')
+            // TODO: 实现自动定位设置
+          })
+        }
+        .width('100%')
+        .padding(20)
+        .backgroundColor('#FFFFFF')
+        .borderRadius(12)
+        .shadow({
+          radius: 4,
+          color: 'rgba(0, 0, 0, 0.08)',
+          offsetX: 0,
+          offsetY: 2
+        })
+
+        // 数据管理组
+        Column() {
+          Text('数据管理')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#333333')
+            .alignSelf(ItemAlign.Start)
+            .margin({ bottom: 16 })
+
+          // 导出数据
+          this.buildSettingItem('导出数据', '导出项目数据', () => {
+            console.log('导出项目数据')
+            // TODO: 实现数据导出功能
+          })
+
+          // 备份设置
+          this.buildSettingItem('数据备份', '自动备份', () => {
+            console.log('配置数据备份')
+            // TODO: 实现数据备份设置
+          })
+
+          // 清理缓存
+          this.buildSettingItem('清理缓存', '清理临时文件', () => {
+            console.log('清理缓存')
+            // TODO: 实现缓存清理功能
+          })
+        }
+        .width('100%')
+        .padding(20)
+        .backgroundColor('#FFFFFF')
+        .borderRadius(12)
+        .shadow({
+          radius: 4,
+          color: 'rgba(0, 0, 0, 0.08)',
+          offsetX: 0,
+          offsetY: 2
+        })
+
+        // 危险操作组
+        Column() {
+          Text('危险操作')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#F44336')
+            .alignSelf(ItemAlign.Start)
+            .margin({ bottom: 16 })
+
+          // 删除项目
+          this.buildSettingItem('删除项目', '删除项目及所有数据', () => {
+            this.deleteProject()
+          }, true)
+        }
+        .width('100%')
+        .padding(20)
+        .backgroundColor('#FFFFFF')
+        .borderRadius(12)
+        .shadow({
+          radius: 4,
+          color: 'rgba(0, 0, 0, 0.08)',
+          offsetX: 0,
+          offsetY: 2
+        })
+        .margin({ bottom: 80 }) // 为底部操作栏留空间
+      }
+    }
+    .layoutWeight(1)
+    .backgroundColor('#F5F5F5')
+  }
+
+  /**
+   * 构建设置项
+   */
+  @Builder
+  private buildSettingItem(title: string, value: string, onTap: () => void, isDangerous: boolean = false) {
+    Row() {
+      Column({ space: 4 }) {
+        Text(title)
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+
+        Text(value)
+          .fontSize(14)
+          .fontColor('#666666')
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+
+      Image($r('app.media.ic_arrow_right'))
+        .width(16)
+        .height(16)
+        .fillColor(isDangerous ? '#F44336' : '#CCCCCC')
+    }
+    .width('100%')
+    .height(56)
+    .padding({ horizontal: 16 })
+    .onClick(onTap)
   }
 }
