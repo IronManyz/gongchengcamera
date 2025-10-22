@@ -19,6 +19,14 @@ import { hilog } from '@kit.PerformanceAnalysisKit'
 const TAG = 'ProjectStore'
 
 /**
+ * 日期范围接口
+ */
+export interface DateRange {
+  start?: Date
+  end?: Date
+}
+
+/**
  * 项目搜索和过滤参数接口
  */
 export interface ProjectSearchParams {
@@ -27,7 +35,7 @@ export interface ProjectSearchParams {
   manager?: string
   client?: string
   tags?: string[]
-  dateRange?: { start?: Date; end?: Date }
+  dateRange?: DateRange
   filter?: ProjectFilter
   sortOrder?: ProjectSortOrder
   pagination?: PaginationParams
@@ -43,6 +51,18 @@ export interface ProjectManagementState {
   isCreating: boolean
   isUpdating: boolean
   isDeleting: boolean
+}
+
+/**
+ * 项目管理状态实现类
+ */
+export class ProjectManagementStateImpl implements ProjectManagementState {
+  isLoading: boolean = false
+  error: string | null = null
+  lastSyncTime: Date | null = null
+  isCreating: boolean = false
+  isUpdating: boolean = false
+  isDeleting: boolean = false
 }
 
 /**
@@ -71,14 +91,7 @@ export class ProjectStore extends BaseStore {
   @Trace hasPrevPage: boolean = false
 
   // 管理状态
-  @Trace managementState: ProjectManagementState = {
-    isLoading: false,
-    error: null,
-    lastSyncTime: null,
-    isCreating: false,
-    isUpdating: false,
-    isDeleting: false
-  }
+  @Trace managementState: ProjectManagementState = new ProjectManagementStateImpl()
 
   // 统计信息
   @Trace projectStats: ProjectStats | null = null
@@ -143,9 +156,21 @@ export class ProjectStore extends BaseStore {
 
       // 构建查询参数
       const queryParams: ProjectQueryParams = {
-        ...params,
+        table: params?.table || 'projects',
+        columns: params?.columns,
+        selection: params?.selection,
+        selectionArgs: params?.selectionArgs,
         orderBy: this.getOrderByField(),
-        limit: this.pageSize
+        limit: this.pageSize,
+        offset: params?.offset,
+        status: params?.status,
+        manager: params?.manager,
+        client: params?.client,
+        tags: params?.tags,
+        startDateRange: params?.startDateRange,
+        dateRange: params?.dateRange,
+        nameKeyword: params?.nameKeyword,
+        codeKeyword: params?.codeKeyword
       }
 
       // 查询项目列表
@@ -617,7 +642,9 @@ export class ProjectStore extends BaseStore {
    * 设置加载状态
    */
   private setLoadingState(key: keyof ProjectManagementState, value: boolean): void {
-    this.managementState[key] = value
+    if (key === 'isLoading' || key === 'isCreating' || key === 'isUpdating' || key === 'isDeleting') {
+      this.managementState[key] = value
+    }
   }
 
   /**

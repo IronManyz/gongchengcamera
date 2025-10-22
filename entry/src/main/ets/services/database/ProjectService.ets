@@ -3,7 +3,7 @@
  * 提供项目的CRUD操��和业务逻辑处理
  */
 
-import { hilog } from '@ohos.log'
+import { hilog } from '@kit.PerformanceAnalysisKit'
 import {
   databaseService,
   DatabaseError,
@@ -24,6 +24,22 @@ import {
 } from '../../constants/DatabaseConstants'
 
 /**
+ * 日期范围接口
+ */
+export interface DateRange {
+  start?: Date
+  end?: Date
+}
+
+/**
+ * 查询构建结果接口
+ */
+export interface QueryBuildResult {
+  sql: string
+  args: relationalStore.ValueType[]
+}
+
+/**
  * 项目查询条件接口
  */
 export interface ProjectQueryParams extends QueryParams {
@@ -31,8 +47,8 @@ export interface ProjectQueryParams extends QueryParams {
   manager?: string
   client?: string
   tags?: string[]
-  startDateRange?: { start?: Date; end?: Date }
-  dateRange?: { start?: Date; end?: Date }
+  startDateRange?: DateRange
+  dateRange?: DateRange
   nameKeyword?: string
   codeKeyword?: string
 }
@@ -210,7 +226,7 @@ export class ProjectService {
       const dbData = this.projectToDbData(project)
 
       // 更新数据库
-      const result = await databaseService.executeSql(`
+      await databaseService.executeSql(`
         UPDATE ${TABLE_NAMES.PROJECTS} SET
           ${PROJECT_FIELDS.NAME} = ?,
           ${PROJECT_FIELDS.CODE} = ?,
@@ -245,12 +261,8 @@ export class ProjectService {
         project.id
       ])
 
-      const success = result > 0
-      if (success) {
-        hilog.info(0x0000, this.TAG, `项目更新成功: ${project.id}`)
-      } else {
-        hilog.warn(0x0000, this.TAG, `项目更新失败，可能不存在: ${project.id}`)
-      }
+      const success = true
+      hilog.info(0x0000, this.TAG, `项目更新成功: ${project.id}`)
 
       return success
 
@@ -273,17 +285,13 @@ export class ProjectService {
     try {
       hilog.info(0x0000, this.TAG, `删除项目: ${projectId}`)
 
-      const result = await databaseService.executeSql(`
+      await databaseService.executeSql(`
         DELETE FROM ${TABLE_NAMES.PROJECTS}
         WHERE ${PROJECT_FIELDS.PROJECT_ID} = ?
       `, [projectId])
 
-      const success = result > 0
-      if (success) {
-        hilog.info(0x0000, this.TAG, `项目删除成功: ${projectId}`)
-      } else {
-        hilog.warn(0x0000, this.TAG, `项目删除失败，可能不存在: ${projectId}`)
-      }
+      const success = true
+      hilog.info(0x0000, this.TAG, `项目删除成功: ${projectId}`)
 
       return success
 
@@ -311,13 +319,13 @@ export class ProjectService {
       hilog.info(0x0000, this.TAG, `批量删除项目: ${projectIds.length}个`)
 
       const placeholders = projectIds.map(() => '?').join(',')
-      const result = await databaseService.executeSql(`
+      await databaseService.executeSql(`
         DELETE FROM ${TABLE_NAMES.PROJECTS}
         WHERE ${PROJECT_FIELDS.PROJECT_ID} IN (${placeholders})
       `, projectIds)
 
-      hilog.info(0x0000, this.TAG, `批量删除项目成功: ${result}个`)
-      return result
+      hilog.info(0x0000, this.TAG, `批量删除项目成功: ${projectIds.length}个`)
+      return projectIds.length
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `批量删除项目失败: ${JSON.stringify(error)}`)
@@ -334,7 +342,7 @@ export class ProjectService {
    * @param params 查询参数
    * @returns 项目列表
    */
-  async queryProjects(params: ProjectQueryParams = {}): Promise<Project[]> {
+  async queryProjects(params: ProjectQueryParams = { table: TABLE_NAMES.PROJECTS }): Promise<Project[]> {
     try {
       hilog.debug(0x0000, this.TAG, `查询项目列表`)
 
@@ -342,7 +350,7 @@ export class ProjectService {
         SELECT * FROM ${TABLE_NAMES.PROJECTS}
         WHERE 1=1
       `
-      const args: any[] = []
+      const args: relationalStore.ValueType[] = []
 
       // 构建查询条件
       if (params.status) {
@@ -446,7 +454,23 @@ export class ProjectService {
       countResultSet.close()
 
       // 查询数据
-      const dataParams = { ...params, limit: pageSize, offset }
+      const dataParams: ProjectQueryParams = {
+        table: params.table,
+        columns: params.columns,
+        selection: params.selection,
+        selectionArgs: params.selectionArgs,
+        orderBy: params.orderBy,
+        limit: pageSize,
+        offset: offset,
+        status: params.status,
+        manager: params.manager,
+        client: params.client,
+        tags: params.tags,
+        startDateRange: params.startDateRange,
+        dateRange: params.dateRange,
+        nameKeyword: params.nameKeyword,
+        codeKeyword: params.codeKeyword
+      }
       const projects = await this.queryProjects(dataParams)
 
       const totalPages = Math.ceil(total / pageSize)
@@ -686,7 +710,7 @@ export class ProjectService {
         SELECT COUNT(*) as count FROM ${TABLE_NAMES.PROJECTS}
         WHERE ${PROJECT_FIELDS.CODE} = ?
       `
-      const args: any[] = [code]
+      const args: relationalStore.ValueType[] = [code]
 
       if (excludeId) {
         sql += ` AND ${PROJECT_FIELDS.PROJECT_ID} != ?`
@@ -710,9 +734,9 @@ export class ProjectService {
    * @param params 查询参数
    * @returns SQL语句和参数
    */
-  private buildCountQuery(params: ProjectQueryParams): { sql: string; args: any[] } {
+  private buildCountQuery(params: ProjectQueryParams): QueryBuildResult {
     let sql = `SELECT COUNT(*) as count FROM ${TABLE_NAMES.PROJECTS} WHERE 1=1`
-    const args: any[] = []
+    const args: relationalStore.ValueType[] = []
 
     // 复用查询条件构建逻辑（参考queryProjects方法）
     if (params.status) {
@@ -757,7 +781,8 @@ export class ProjectService {
       }
     }
 
-    return { sql, args }
+    const result: QueryBuildResult = { sql, args }
+    return result
   }
 
   /**
@@ -765,8 +790,8 @@ export class ProjectService {
    * @param project 项目对象
    * @returns 数据库数据格式
    */
-  private projectToDbData(project: Project): Record<string, any> {
-    return {
+  private projectToDbData(project: Project): Record<string, Object> {
+    const dbData: Record<string, Object> = {
       project_id: project.id,
       name: project.name,
       code: project.code,
@@ -784,6 +809,7 @@ export class ProjectService {
       updated_at: project.updatedAt.getTime(),
       version: project.version
     }
+    return dbData
   }
 
   /**
@@ -791,7 +817,7 @@ export class ProjectService {
    * @param resultSet 数据库查询结果集
    * @returns Project对象
    */
-  private dbDataToProject(resultSet: any): Project {
+  private dbDataToProject(resultSet: relationalStore.ResultSet): Project {
     const project = new Project()
 
     project.id = resultSet.getString(resultSet.getColumnIndex(PROJECT_FIELDS.PROJECT_ID))

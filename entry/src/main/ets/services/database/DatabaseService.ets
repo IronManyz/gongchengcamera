@@ -5,7 +5,7 @@
 
 import relationalStore from '@ohos.data.relationalStore'
 import { Context } from '@ohos.abilityAccessCtrl'
-import { hilog } from '@ohos.log'
+import { hilog } from '@kit.PerformanceAnalysisKit'
 import {
   DATABASE_CONFIG,
   ERROR_CODES,
@@ -84,16 +84,57 @@ export interface PaginationResult<T> {
 }
 
 /**
+ * 创建结果接口
+ */
+export interface CreateResult {
+  createdCount: number
+  totalCount: number
+}
+
+/**
+ * 重建结果接口
+ */
+export interface RebuildResult {
+  success: boolean
+  rebuiltCount: number
+  totalCount: number
+}
+
+/**
+ * 数据库统计信息接口
+ */
+export interface DatabaseStats {
+  version: number
+  tableCount: number
+  indexCount: number
+  indexStats: IndexStat[]
+}
+
+/**
+ * 索引统计信息接口
+ */
+export interface IndexStat {
+  name: string
+  tableName: string
+  definition: string
+}
+
+/**
  * 数据库错误类
  */
 export class DatabaseError extends Error {
+  public code: string
+  public cause?: Error
+
   constructor(
     message: string,
-    public code: string = ERROR_CODES.CONNECTION_FAILED,
-    public cause?: Error
+    code: string = ERROR_CODES.CONNECTION_FAILED,
+    cause?: Error
   ) {
     super(message)
     this.name = 'DatabaseError'
+    this.code = code
+    this.cause = cause
   }
 }
 
@@ -232,7 +273,7 @@ export class DatabaseService {
    * 创建所有表结构
    * @returns 表创建结果
    */
-  private async createTables(): Promise<{ createdCount: number; totalCount: number }> {
+  private async createTables(): Promise<CreateResult> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
@@ -253,13 +294,18 @@ export class DatabaseService {
           hilog.info(0x0000, this.TAG, `表创建成功: ${this.extractTableName(createTableSQL)}`)
         } catch (error) {
           hilog.error(0x0000, this.TAG, `表创建失败: ${createTableSQL}, 错误: ${JSON.stringify(error)}`)
-          throw error
+          throw new DatabaseError(
+            `表创建失败: ${error instanceof Error ? error.message : String(error)}`,
+            ERROR_CODES.CONNECTION_FAILED,
+            error instanceof Error ? error : undefined
+          )
         }
       }
 
       hilog.info(0x0000, this.TAG, `表结构创建完成: ${createdCount}/${totalTables}`)
 
-      return { createdCount, totalCount: totalTables }
+      const result: CreateResult = { createdCount, totalCount: totalTables }
+      return result
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `创建表结构失败: ${JSON.stringify(error)}`)
@@ -275,7 +321,7 @@ export class DatabaseService {
    * 创建所有索引
    * @returns 索引创建结果
    */
-  private async createIndexes(): Promise<{ createdCount: number; totalCount: number }> {
+  private async createIndexes(): Promise<CreateResult> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
@@ -297,7 +343,8 @@ export class DatabaseService {
 
       hilog.info(0x0000, this.TAG, `索引创建完成: ${createdCount}/${totalIndexes}`)
 
-      return { createdCount, totalCount: totalIndexes }
+      const indexResult: CreateResult = { createdCount, totalCount: totalIndexes }
+      return indexResult
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `创建索引失败: ${JSON.stringify(error)}`)
@@ -417,7 +464,7 @@ export class DatabaseService {
    * @param args 参数
    * @returns 查询结果
    */
-  async executeQuery(sql: string, args?: any[]): Promise<relationalStore.ResultSet> {
+  async executeQuery(sql: string, args?: relationalStore.ValueType[]): Promise<relationalStore.ResultSet> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
@@ -441,15 +488,14 @@ export class DatabaseService {
    * @param args 参数
    * @returns 执行结果
    */
-  async executeSql(sql: string, args?: any[]): Promise<number> {
+  async executeSql(sql: string, args?: relationalStore.ValueType[]): Promise<void> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
 
     try {
       hilog.debug(0x0000, this.TAG, `执行SQL: ${sql}, 参数: ${JSON.stringify(args)}`)
-      const result = await this.store.executeSql(sql, args)
-      return result
+      await this.store.executeSql(sql, args)
     } catch (error) {
       hilog.error(0x0000, this.TAG, `SQL执行失败: ${sql}, 错误: ${JSON.stringify(error)}`)
       throw new DatabaseError(
@@ -464,7 +510,7 @@ export class DatabaseService {
    * 重建所有索引
    * @returns 重建结果
    */
-  async rebuildIndexes(): Promise<{ success: boolean; rebuiltCount: number; totalCount: number }> {
+  async rebuildIndexes(): Promise<RebuildResult> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
@@ -484,18 +530,20 @@ export class DatabaseService {
 
       hilog.info(0x0000, this.TAG, `索引重建完成: ${result.createdCount}/${result.totalCount}`)
 
-      return {
+      const successResult: RebuildResult = {
         success: true,
         rebuiltCount: result.createdCount,
         totalCount: result.totalCount
       }
+      return successResult
     } catch (error) {
       hilog.error(0x0000, this.TAG, `索引重建失败: ${JSON.stringify(error)}`)
-      return {
+      const failResult: RebuildResult = {
         success: false,
         rebuiltCount: 0,
         totalCount: 0
       }
+      return failResult
     }
   }
 
@@ -503,12 +551,7 @@ export class DatabaseService {
    * 获取数据库统计信息
    * @returns 统计信息
    */
-  async getDatabaseStats(): Promise<{
-    version: number
-    tableCount: number
-    indexCount: number
-    indexStats: any[]
-  }> {
+  async getDatabaseStats(): Promise<DatabaseStats> {
     if (!this.store) {
       throw new DatabaseError('数据库连接未建立', ERROR_CODES.CONNECTION_FAILED)
     }
@@ -527,22 +570,24 @@ export class DatabaseService {
 
       // 获取索引统计信息
       const indexStatsResultSet = await this.store.querySql(INDEX_STATS_SQL)
-      const indexStats: any[] = []
+      const indexStats: IndexStat[] = []
       while (indexStatsResultSet.goToNextRow()) {
-        indexStats.push({
+        const indexStat: IndexStat = {
           name: indexStatsResultSet.getString(0),
           tableName: indexStatsResultSet.getString(1),
           definition: indexStatsResultSet.getString(2)
-        })
+        }
+        indexStats.push(indexStat)
       }
       indexStatsResultSet.close()
 
-      return {
+      const stats: DatabaseStats = {
         version,
         tableCount,
         indexCount: indexStats.length,
         indexStats
       }
+      return stats
     } catch (error) {
       hilog.error(0x0000, this.TAG, `获取数据库统计信息失败: ${JSON.stringify(error)}`)
       throw new DatabaseError(
