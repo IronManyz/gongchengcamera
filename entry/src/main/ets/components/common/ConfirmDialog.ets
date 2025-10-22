@@ -12,9 +12,9 @@ export struct ConfirmDialog {
   @Param cancelText: string = '取消'
   @Param showCancel: boolean = true
   @Param danger: boolean = false
-  @Param onConfirm?: () => void
-  @Param onCancel?: () => void
-  @Param onClose?: () => void
+  @Param @Require onConfirm?: () => void
+  @Param @Require onCancel?: () => void
+  @Param @Require onClose?: () => void
 
   build() {
     if (this.show) {
@@ -34,21 +34,21 @@ export struct ConfirmDialog {
           Text(this.title)
             .fontSize(18)
             .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
+            .fontColor('#262626')
             .textAlign(TextAlign.Center)
             .margin({ top: 24, left: 24, right: 24 })
 
           // 消息内容
           Text(this.message)
             .fontSize(16)
-            .fontColor($r('app.color.text_secondary'))
+            .fontColor('#8C8C8C')
             .textAlign(TextAlign.Center)
             .margin({ top: 16, left: 24, right: 24 })
             .lineHeight(22)
 
           // 分割线
           Divider()
-            .color($r('app.color.border_default'))
+            .color('#E8E8E8')
             .margin({ top: 24 })
 
           // 按钮区域
@@ -57,7 +57,7 @@ export struct ConfirmDialog {
             if (this.showCancel) {
               Button(this.cancelText)
                 .fontSize(16)
-                .fontColor($r('app.color.text_secondary'))
+                .fontColor('#8C8C8C')
                 .backgroundColor(Color.Transparent)
                 .layoutWeight(1)
                 .height(48)
@@ -70,7 +70,7 @@ export struct ConfirmDialog {
             // 确定按钮
             Button(this.confirmText)
               .fontSize(16)
-              .fontColor(this.danger ? $r('app.color.error') : $r('app.color.primary'))
+              .fontColor(this.danger ? '#FF4D4F' : '#1890FF')
               .backgroundColor(Color.Transparent)
               .layoutWeight(1)
               .height(48)
@@ -81,7 +81,7 @@ export struct ConfirmDialog {
           }
           .width('100%')
         }
-        .backgroundColor($r('app.color.dialog_background'))
+        .backgroundColor('#FFFFFF')
         .borderRadius(12)
         .margin({ left: 40, right: 40, top: 100, bottom: 100 })
         .shadow({
@@ -108,9 +108,9 @@ export struct DeleteConfirmDialog {
   @Param title: string = '删除确认'
   @Param message: string = '确定要删除吗？此操作不可恢复。'
   @Param itemName: string = ''
-  @Param onConfirm?: () => void
-  @Param onCancel?: () => void
-  @Param onClose?: () => void
+  @Require @Param onConfirm?: () => void
+  @Require @Param onCancel?: () => void
+  @Require @Param onClose?: () => void
 
   build() {
     ConfirmDialog({
@@ -135,9 +135,9 @@ export struct DeleteConfirmDialog {
 export struct ExitConfirmDialog {
   @Param show: boolean = false
   @Param message: string = '确定要退出吗？未保存的更改将会丢失。'
-  @Param onConfirm?: () => void
-  @Param onCancel?: () => void
-  @Param onClose?: () => void
+  @Require @Param onConfirm?: () => void
+  @Require @Param onCancel?: () => void
+  @Require @Param onClose?: () => void
 
   build() {
     ConfirmDialog({
@@ -163,9 +163,9 @@ export struct PermissionConfirmDialog {
   @Param show: boolean = false
   @Param permission: string = ''
   @Param description: string = ''
-  @Param onConfirm?: () => void
-  @Param onCancel?: () => void
-  @Param onClose?: () => void
+  @Require @Param onConfirm?: () => void
+  @Require @Param onCancel?: () => void
+  @Require @Param onClose?: () => void
 
   build() {
     ConfirmDialog({
