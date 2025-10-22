@@ -8,6 +8,12 @@ export { AppColors, SemanticColors, Gradients, ColorPalettes, ColorUtils } from 
 export { AppFonts, FontSizes, FontWeights, LineHeights, LetterSpacings, TypographyStyles, ResponsiveSizes, TypographyUtils, TextTransforms } from './AppTypography'
 export { Spacing, Padding, Margin, Sizes, Breakpoints, DeviceTypes, SpacingUtils, SizeUtils } from './AppSpacing'
 
+// 主题管理
+export { ThemeManager, ThemeType, ThemeName, ThemeConfig } from './ThemeManager'
+
+// 主题组件
+export { ThemeToggle } from '../components/theme/ThemeToggle'
+
 // UI组件
 export { DesignButton, ButtonType, ButtonSize, PrimaryButton, SecondaryButton, OutlineButton, TextButton } from './components/DesignButton'
 export { DesignCard, CardType, CardSize, CardHeader, CardContent, CardFooter, BasicCard, ElevatedCard, OutlinedCard, FilledCard } from './components/DesignCard'
