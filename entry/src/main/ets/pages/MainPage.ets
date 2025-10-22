@@ -38,12 +38,17 @@ struct MainPage {
           .onClick(() => {
             this.clickCount++
             console.log('项目管理按钮被点击')
-            // 跳转到简化版项目列表页面
+            // 跳转到完善版项目列表页面
             router.replaceUrl({
-              url: 'pages/project/SimpleProjectListPage',
+              url: 'pages/project/ProjectListPage',
               params: {}
             }).catch((error: Error) => {
               console.error('跳转到项目列表失败:', error)
+              // 降级到简化版
+              router.replaceUrl({
+                url: 'pages/project/SimpleProjectListPage',
+                params: {}
+              })
             })
           })
 
@@ -126,6 +131,28 @@ struct MainPage {
               })
             })
 
+          Button('简化测试')
+            .width('42%')
+            .height(48)
+            .fontSize(16)
+            .backgroundColor('#3498DB')
+            .fontColor(Color.White)
+            .borderRadius(8)
+            .onClick(() => {
+              this.clickCount++
+              console.log('简化测试页面按钮被点击')
+              router.replaceUrl({
+                url: 'pages/SimpleTestPage',
+                params: {}
+              }).catch((error: Error) => {
+                console.error('跳转到简化测试页面失败:', error)
+              })
+            })
+        }
+        .width('85%')
+        .margin({ top: 8 })
+
+        Row({ space: 12 }) {
           Button('返回启动页')
             .width('42%')
             .height(48)
