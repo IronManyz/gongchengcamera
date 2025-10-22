@@ -289,28 +289,6 @@ struct MainPage {
           // TODO: 添加触觉反馈
         })
 
-        // 拍照导航 - 突出显示
-        Column() {
-          Text('📸')
-            .fontSize(24)
-            .fontColor(this.currentTab === 'camera' ? '#1890FF' : '#8C8C8C')
-          Text('拍照')
-            .fontSize(12)
-            .fontColor(this.currentTab === 'camera' ? '#1890FF' : '#8C8C8C')
-            .margin({ top: 4 })
-        }
-        .layoutWeight(1)
-        .justifyContent(FlexAlign.Center)
-        .backgroundColor(this.currentTab === 'camera' ? '#E6F7FF' : Color.Transparent)
-        .borderRadius(8)
-        .padding({ top: 4, bottom: 4 })
-        .animation({ duration: 200, curve: Curve.EaseInOut })
-        .onClick(() => {
-          console.log('Camera tab clicked')
-          this.currentTab = 'camera'
-          this.navigateToCamera()
-        })
-
         // 相册导航
         Column() {
           Text('📱')

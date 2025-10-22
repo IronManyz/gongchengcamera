@@ -4,6 +4,7 @@
  */
 
 import router from '@ohos.router'
+import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 interface SettingItem {
   title: string
@@ -64,7 +65,10 @@ struct SettingsPage {
           .fontColor('#1890FF')
           .backgroundColor(Color.Transparent)
           .onClick(() => {
-            router.back()
+            router.replaceUrl({
+              url: 'pages/MainPage',
+              params: {}
+            })
           })
 
         Text('设置')
@@ -224,6 +228,9 @@ struct SettingsPage {
       }
       .layoutWeight(1)
       .backgroundColor('#F5F5F5')
+
+      // 底部导航栏
+      BottomNavigation({})
     }
     .width('100%')
     .height('100%')

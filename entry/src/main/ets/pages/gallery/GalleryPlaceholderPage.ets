@@ -4,6 +4,7 @@
  */
 
 import router from '@ohos.router'
+import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 interface PhotoItem {
   id: string
@@ -86,7 +87,10 @@ struct GalleryPage {
           .fontColor('#1890FF')
           .backgroundColor(Color.Transparent)
           .onClick(() => {
-            router.back()
+            router.replaceUrl({
+              url: 'pages/MainPage',
+              params: {}
+            })
           })
 
         Text('相册')
@@ -344,9 +348,12 @@ struct GalleryPage {
             })
         }
         .width('100%')
-        .padding({ left: 16, right: 16, top: 12, bottom: 20 })
+        .padding({ left: 16, right: 16, top: 12, bottom: 8 })
         .backgroundColor('#FFFFFF')
       }
+
+      // 底部导航栏
+      BottomNavigation({})
     }
     .width('100%')
     .height('100%')
