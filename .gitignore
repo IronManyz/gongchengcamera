@@ -1,5 +1,8 @@
+# Node.js modules
 /node_modules
 /oh_modules
+
+# IDE and build files
 /local.properties
 /.idea
 **/build
@@ -10,3 +13,47 @@
 /.clang-tidy
 **/.test
 /.appanalyzer
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.debug
+
+# Signature files (IMPORTANT: Do not commit signing files)
+signature/release/*.cer
+signature/release/*.p12
+signature/release/*.p7b
+signature/debug/*.cer
+signature/debug/*.p12
+signature/debug/*.p7b
+
+# Build outputs
+*.hap
+*.app
+*.aar
+*.jar
+
+# Log files
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Configuration files with sensitive data
+**/build-profile.*.json5
+oh-package-lock.json5

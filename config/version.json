@@ -1,0 +1,121 @@
+{
+  "app": {
+    "bundleName": "com.example.engineeringcamera",
+    "vendor": "EngineeringCamera Team",
+    "versionCode": 1000100,
+    "versionName": "1.0.1",
+    "buildNumber": 101,
+    "releaseDate": "2025-10-22",
+    "minAPIVersion": 50000005,
+    "targetAPIVersion": 50000019,
+    "apiReleaseType": "Release"
+  },
+  "build": {
+    "buildTime": "2025-10-22T12:00:00Z",
+    "buildEnvironment": "production",
+    "buildTools": {
+      "hvigor": "4.0.5",
+      "arkts": "5.0.0",
+      "harmonyOS": "5.1.1"
+    },
+    "compilerOptions": {
+      "mode": "release",
+      "optimization": true,
+      "obfuscation": true,
+      "sourceMap": false
+    }
+  },
+  "features": {
+    "camera": {
+      "enabled": true,
+      "modes": ["photo", "video"],
+      "maxResolution": "4000x3000"
+    },
+    "watermark": {
+      "enabled": true,
+      "templates": ["engineering", "construction", "municipal", "power", "traffic", "landscape", "renovation"]
+    },
+    "location": {
+      "enabled": true,
+      "precision": "high",
+      "supportsAltitude": true
+    },
+    "editing": {
+      "enabled": true,
+      "tools": ["crop", "rotate", "annotation", "filters"]
+    },
+    "export": {
+      "enabled": true,
+      "formats": ["jpeg", "png", "pdf"],
+      "quality": ["high", "medium", "low"]
+    },
+    "backup": {
+      "enabled": true,
+      "autoBackup": true,
+      "cloudBackup": false
+    }
+  },
+  "permissions": {
+    "required": [
+      "ohos.permission.CAMERA",
+      "ohos.permission.APPROXIMATELY_LOCATION",
+      "ohos.permission.READ_WRITE_MEDIA"
+    ],
+    "optional": [
+      "ohos.permission.LOCATION",
+      "ohos.permission.MICROPHONE"
+    ]
+  },
+  "compatibility": {
+    "deviceTypes": ["phone", "tablet"],
+    "screenSizes": {
+      "minWidth": 320,
+      "minHeight": 480,
+      "supportedOrientations": ["portrait", "landscape"]
+    },
+    "ramRequirement": {
+      "min": "4GB",
+      "recommended": "8GB"
+    }
+  },
+  "security": {
+    "signing": {
+      "algorithm": "SHA256withECDSA",
+      "minSdkVersion": 50000005
+    },
+    "dataProtection": {
+      "encryption": "AES-256",
+      "localStorage": true,
+      "networkEncryption": "TLS 1.3"
+    }
+  },
+  "performance": {
+    "startup": {
+      "target": "<3s",
+      "cold": "<5s",
+      "warm": "<2s"
+    },
+    "memory": {
+      "target": "<500MB",
+      "max": "1GB"
+    },
+    "storage": {
+      "required": "100MB",
+      "recommended": "500MB"
+    }
+  },
+  "release": {
+    "type": "production",
+    "distribution": [
+      "appgallery",
+      "enterprise"
+    ],
+    "changelog": [
+      "修复了照片编辑功能的稳定性问题",
+      "优化了相机启动速度",
+      "改进了水印渲染性能",
+      "增加了对新设备的支持"
+    ],
+    "knownIssues": []
+  }
+}

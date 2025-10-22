@@ -2,32 +2,44 @@ import router from '@ohos.router'
 
 /**
  * 启动页面
- * 应用启动时的欢迎页面
+ * EngineeringCamera 应用启动时的欢迎页面
+ * 提供专业的工程应用启动体验
  */
 @Entry
 @Component
 struct SplashPage {
   @State private loadingProgress: number = 0
+  @State private appVersion: string = 'v1.0.1'
+  @State private appDescription: string = '工程专业相机'
   @State private navigateToMain: boolean = false
 
-  aboutToAppear() {
+  aboutToAppear(): void {
+    // 设置应用版本信息
+    this.setAppInfo()
+
+    // 开始初始化
     this.initializeApp()
+  }
+
+  /**
+   * 设置应用信息
+   */
+  private setAppInfo(): void {
+    // 从配置文件读取版本信息
+    this.appVersion = 'v1.0.1'
+    this.appDescription = '工程专业相机'
   }
 
   /**
    * 初始化应用
    */
-  private async initializeApp() {
+  private async initializeApp(): Promise<void> {
     try {
-      // 模拟加载过程
-      await this.simulateLoading()
+      // 模拟应用初始化过程
+      await this.performInitialization()
 
-      // 等待额外1秒让用户看到加载完成
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          resolve()
-        }, 1000)
-      })
+      // 等待用户看到启动动画完成
+      await this.waitAnimationComplete()
 
       // 跳转到主页面
       this.navigateToMainPage()
@@ -39,54 +51,46 @@ struct SplashPage {
   }
 
   /**
-   * 模拟应用加载过程
+   * 执行应用初始化
    */
-  private async simulateLoading(): Promise<void> {
-    return new Promise((resolve) => {
-      const timer = setInterval(() => {
-        this.loadingProgress += 20
-        if (this.loadingProgress >= 100) {
-          clearInterval(timer)
+  private async performInitialization(): Promise<void> {
+    // 模拟各个模块的初始化
+    const delays: number[] = [300, 500, 400, 200, 100]
+
+    for (let i = 0; i < delays.length; i++) {
+      await new Promise<void>((resolve: () => void) => {
+        setTimeout(() => {
+          this.loadingProgress = Math.round(((i + 1) / delays.length) * 100)
           resolve()
-        }
-      }, 300)
+        }, delays[i])
+      })
+    }
+  }
+
+  /**
+   * 等待动画完成
+   */
+  private async waitAnimationComplete(): Promise<void> {
+    return new Promise<void>((resolve: () => void) => {
+      setTimeout(() => {
+        resolve()
+      }, 800)
     })
   }
 
   /**
    * 跳转到主页面
    */
-  private navigateToMainPage() {
+  private navigateToMainPage(): void {
     this.navigateToMain = true
-    console.log('Attempting to navigate to project list page...')
-
-    // 使用replaceUrl跳转，避免用户返回到启动页
-    router.replaceUrl({
-      url: 'pages/MainPage',
-      params: {}
-    }).then(() => {
-      console.log('Navigation to MainPage successful')
-    }).catch((error: Error) => {
-      console.error('Navigation to MainPage failed:', error)
-      // 如果跳转失败，尝试跳转到TestPage作为备选
+    setTimeout(() => {
       router.replaceUrl({
-        url: 'pages/TestPage',
-        params: {}
-      }).then(() => {
-        console.log('Navigation to TestPage successful')
-      }).catch((testPageError: Error) => {
-        console.error('Navigation to TestPage also failed:', testPageError)
-        // 最后的备选方案，跳转到Index页面
-        router.replaceUrl({
-          url: 'pages/Index',
-          params: {}
-        }).then(() => {
-          console.log('Navigation to Index page successful')
-        }).catch((indexError: Error) => {
-          console.error('All navigation failed:', indexError)
-        })
+        url: 'pages/MainPage',
+        params: {
+          fromSplash: true
+        }
       })
-    })
+    }, 300)
   }
 
   build() {
@@ -95,7 +99,7 @@ struct SplashPage {
       Column() {
         // 应用Logo区域
         Column() {
-          // Logo图标 (后续替换为实际Logo)
+          // Logo图标
           Image($r('app.media.layered_image'))
             .width(120)
             .height(120)
@@ -114,8 +118,6 @@ struct SplashPage {
             .fontColor('#666666')
         }
         .margin({ bottom: 80 })
-
-        Blank()
 
         // 加载进度条
         Column() {

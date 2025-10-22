@@ -1,23 +1,67 @@
-# Define project specific obfuscation rules here.
-# You can include the obfuscation configuration files in the current module's build-profile.json5.
+# EngineeringCamera 代码混淆规则
+# 用于生产环境的代码保护和优化
 #
-# For more details, see
-#   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/source-obfuscation-V5
+# 参考文档: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/source-obfuscation-V5
 
-# Obfuscation options:
-# -disable-obfuscation: disable all obfuscations
-# -enable-property-obfuscation: obfuscate the property names
-# -enable-toplevel-obfuscation: obfuscate the names in the global scope
-# -compact: remove unnecessary blank spaces and all line feeds
-# -remove-log: remove all console.* statements
-# -print-namecache: print the name cache that contains the mapping from the old names to new names
-# -apply-namecache: reuse the given cache file
+# 基础混淆选项
+-enable-property-obfuscation      # 启用属性名混淆
+-enable-toplevel-obfuscation     # 启用顶层作用域混淆
+-enable-filename-obfuscation     # 启用文件名混淆
+-enable-export-obfuscation        # 启用导出混淆
+-remove-log                      # 移除所有console.*语句
+-compact                         # 移除不必要的空格和换行符
 
-# Keep options:
-# -keep-property-name: specifies property names that you want to keep
-# -keep-global-name: specifies names that you want to keep in the global scope
+# 保留关键属性名，避免反射调用问题
+-keep-property-name Project, Site, Photo, WatermarkTemplate, User
+-keep-property-name id, name, code, createdAt, updatedAt, version
+-keep-property-name latitude, longitude, altitude, address
+-keep-property-name captureTime, fileSize, width, height
 
--enable-property-obfuscation
--enable-toplevel-obfuscation
--enable-filename-obfuscation
--enable-export-obfuscation
+# 保留全局名称，避免系统调用问题
+-keep-global-name App, Ability, Application
+-keep-global-name Logger, DatabaseService, CameraService
+
+# 保留数据模型类的结构，避免序列化问题
+-keep-property-name class Project.ets
+-keep-property-name class Site.ets
+-keep-property-name class Photo.ets
+-keep-property-name class WatermarkTemplate.ets
+-keep-property-name class User.ets
+
+# 保留��量和枚举
+-keep-property-name class DatabaseConstants.ets
+-keep-property-name class AppTypes.ets
+-keep-property-name ERROR_CODES, ProjectStatus, SiteStatus, PhotoStatus
+
+# 保留主要的API接口
+-keep-property-name class DatabaseService.ets
+-keep-property-name class ProjectService.ets
+-keep-property-name class PhotoService.ets
+-keep-property-name class CameraService.ets
+-keep-property-name class LocationService.ets
+
+# 保留组件类，避免UI渲染问题
+-keep-property-name class PhotoItem.ets
+-keep-property-name class PhotoGrid.ets
+-keep-property-name class PhotoViewer.ets
+-keep-property-name class LoadingDialog.ets
+
+# 保留Store类的响应式属性
+-keep-property-name class ProjectStore.ets
+-keep-property-name class PhotoStore.ets
+-keep-property-name class GalleryStore.ets
+
+# 移除调试相关的日志输出
+-keep-property-name class Logger.ets {
+  debug, info, warn, error
+}
+
+# 保留错误处理相关
+-keep-property-name class DatabaseError
+-keep-property-name class ValidationError
+-keep-property-name class PermissionError
+
+# 保留网络和文件操作的接口
+-keep-property-name class FileService.ets
+-keep-property-name class BackupService.ets
+-keep-property-name class CacheService.ets
