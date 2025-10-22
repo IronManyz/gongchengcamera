@@ -1,6 +1,6 @@
 /**
  * 应用主页面
- * 简单的主页面用于测试
+ * 工程相机应用主界面
  */
 
 import router from '@ohos.router'
@@ -20,16 +20,10 @@ struct MainPage {
         .margin({ top: 80, bottom: 20 })
 
       // 欢迎信息
-      Text('欢迎使用工程相机应用')
+      Text('专业的工程拍摄管理工具')
         .fontSize(18)
         .fontColor('#7F8C8D')
         .margin({ bottom: 40 })
-
-      // 点击计数器显示
-      Text(`点击次数: ${this.clickCount}`)
-        .fontSize(14)
-        .fontColor('#E74C3C')
-        .margin({ bottom: 30 })
 
       // 功能按钮
       Column({ space: 16 }) {
@@ -44,6 +38,13 @@ struct MainPage {
           .onClick(() => {
             this.clickCount++
             console.log('项目管理按钮被点击')
+            // 跳转到简化版项目列表页面
+            router.replaceUrl({
+              url: 'pages/project/SimpleProjectListPage',
+              params: {}
+            }).catch((error: Error) => {
+              console.error('跳转到项目列表失败:', error)
+            })
           })
 
         Button('相机拍照')
@@ -57,6 +58,8 @@ struct MainPage {
           .onClick(() => {
             this.clickCount++
             console.log('相机拍照按钮被点击')
+            // TODO: 跳转到相机页面
+            // router.replaceUrl({ url: 'pages/camera/CameraPage' })
           })
 
         Button('相册浏览')
@@ -70,9 +73,11 @@ struct MainPage {
           .onClick(() => {
             this.clickCount++
             console.log('相册浏览按钮被点击')
+            // TODO: 跳转到相册页面
+            // router.replaceUrl({ url: 'pages/gallery/GalleryPage' })
           })
 
-        Button('测试交互')
+        Button('照片编辑')
           .width('85%')
           .height(52)
           .fontSize(18)
@@ -82,22 +87,60 @@ struct MainPage {
           .borderRadius(8)
           .onClick(() => {
             this.clickCount++
-            console.log('测试交互按钮被点击')
+            console.log('照片编辑按钮被点击')
+            // TODO: 跳转到编辑页面
+            // router.replaceUrl({ url: 'pages/editor/PhotoEditorPage' })
           })
 
-        Button('返回启动页')
+        Button('应用设置')
           .width('85%')
           .height(52)
           .fontSize(18)
           .fontWeight(FontWeight.Medium)
-          .backgroundColor('#E74C3C')
+          .backgroundColor('#34495E')
           .fontColor(Color.White)
           .borderRadius(8)
           .onClick(() => {
             this.clickCount++
-            console.log('返回启动页按钮被点击')
-            router.back()
+            console.log('应用设置按钮被点击')
+            // TODO: 跳转到设置页面
+            // router.replaceUrl({ url: 'pages/settings/SettingsPage' })
           })
+
+        Row({ space: 12 }) {
+          Button('测试页面')
+            .width('42%')
+            .height(48)
+            .fontSize(16)
+            .backgroundColor('#95A5A6')
+            .fontColor(Color.White)
+            .borderRadius(8)
+            .onClick(() => {
+              this.clickCount++
+              console.log('测试页面按钮被点击')
+              router.replaceUrl({
+                url: 'pages/TestPage',
+                params: {}
+              }).catch((error: Error) => {
+                console.error('跳转到测试页面失败:', error)
+              })
+            })
+
+          Button('返回启动页')
+            .width('42%')
+            .height(48)
+            .fontSize(16)
+            .backgroundColor('#E74C3C')
+            .fontColor(Color.White)
+            .borderRadius(8)
+            .onClick(() => {
+              this.clickCount++
+              console.log('返回启动页按钮被点击')
+              router.back()
+            })
+        }
+        .width('85%')
+        .margin({ top: 8 })
       }
       .width('100%')
       .padding({ left: 20, right: 20 })
@@ -106,12 +149,12 @@ struct MainPage {
 
       // 版本信息
       Column() {
-        Text('版本: v1.0.0')
+        Text('Engineering Camera v1.0.0')
           .fontSize(14)
           .fontColor('#95A5A6')
           .margin({ bottom: 8 })
 
-        Text('点击任意按钮测试交互')
+        Text('专业的工程拍摄与管理解决方案')
           .fontSize(12)
           .fontColor('#BDC3C7')
       }

@@ -62,20 +62,20 @@ struct SplashPage {
 
     // 使用replaceUrl跳转，避免用户返回到启动页
     router.replaceUrl({
-      url: 'pages/TestPage',
+      url: 'pages/MainPage',
       params: {}
     }).then(() => {
-      console.log('Navigation to TestPage successful')
+      console.log('Navigation to MainPage successful')
     }).catch((error: Error) => {
-      console.error('Navigation to TestPage failed:', error)
-      // 如果跳转失败，尝试跳转到MainPage
+      console.error('Navigation to MainPage failed:', error)
+      // 如果跳转失败，尝试跳转到TestPage作为备选
       router.replaceUrl({
-        url: 'pages/MainPage',
+        url: 'pages/TestPage',
         params: {}
       }).then(() => {
-        console.log('Navigation to MainPage successful')
-      }).catch((mainPageError: Error) => {
-        console.error('Navigation to MainPage also failed:', mainPageError)
+        console.log('Navigation to TestPage successful')
+      }).catch((testPageError: Error) => {
+        console.error('Navigation to TestPage also failed:', testPageError)
         // 最后的备选方案，跳转到Index页面
         router.replaceUrl({
           url: 'pages/Index',
