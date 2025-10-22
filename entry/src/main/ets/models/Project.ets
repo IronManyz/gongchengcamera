@@ -1,4 +1,26 @@
 /**
+ * 项目JSON接口
+ */
+interface ProjectJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+  name: string
+  code: string
+  client: string
+  manager: string
+  startDate: number
+  endDate: number
+  description: string
+  tags: string[]
+  status: ProjectStatus
+  siteCount: number
+  photoCount: number
+  metadata: Map<string, Object>
+}
+
+/**
  * 项目数据模型
  * 用于管理工程项目的基本信息和状态
  */
@@ -21,7 +43,7 @@ export class Project extends BaseModel {
   @Trace status: ProjectStatus = ProjectStatus.ACTIVE
   @Trace siteCount: number = 0
   @Trace photoCount: number = 0
-  @Local metadata: Record<string, any> = {}
+  metadata: Map<string, Object> = new Map<string, Object>()
 
   // 关联数据 (通过查询获取，不直接序列化)
   sites: Site[] = []
@@ -135,16 +157,16 @@ export class Project extends BaseModel {
   /**
    * 设置元数据
    */
-  setMetadata(key: string, value: any): void {
-    this.metadata[key] = value
+  setMetadata(key: string, value: Object): void {
+    this.metadata.set(key, value)
     this.updateTimestamp()
   }
 
   /**
    * 获取元数据
    */
-  getMetadata(key: string, defaultValue: any = null): any {
-    return this.metadata[key] ?? defaultValue
+  getMetadata(key: string, defaultValue: Object = null): Object {
+    return this.metadata.get(key) ?? defaultValue
   }
 
   /**
@@ -190,9 +212,13 @@ export class Project extends BaseModel {
   /**
    * 转换为JSON对象（包含额外字段）
    */
-  override toJSON(): Record<string, any> {
+  toJSON(): ProjectJSON {
+    const baseData = super.toJSON()
     return {
-      ...super.toJSON(),
+      id: baseData.id,
+      createdAt: baseData.createdAt,
+      updatedAt: baseData.updatedAt,
+      version: baseData.version,
       name: this.name,
       code: this.code,
       client: this.client,
@@ -211,7 +237,7 @@ export class Project extends BaseModel {
   /**
    * 从JSON对象创建实例
    */
-  static override fromJSON(data: Record<string, any>): Project {
+  static fromJSON(data: ProjectJSON): Project {
     const project = new Project()
 
     if (data.id) project.id = data.id
@@ -238,7 +264,7 @@ export class Project extends BaseModel {
   /**
    * 深度克隆对象
    */
-  override clone(): Project {
+  clone(): Project {
     const cloned = super.clone() as Project
     cloned.startDate = new Date(this.startDate)
     cloned.endDate = new Date(this.endDate)
