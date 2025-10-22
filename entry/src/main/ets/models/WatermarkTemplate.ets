@@ -17,7 +17,7 @@ export class WatermarkTemplate extends BaseModel {
   @Trace isDefault: boolean = false
   @Trace isSystem: boolean = false
   @Trace usageCount: number = 0
-  @Local config: Record<string, any> = {}
+  @Local config: Record<string, string | number | boolean> = {}
 
   constructor() {
     super()
@@ -79,7 +79,11 @@ export class WatermarkTemplate extends BaseModel {
   updateField(fieldKey: string, updates: Partial<WatermarkField>): void {
     const field = this.fields.find(f => f.key === fieldKey)
     if (field) {
-      Object.assign(field, updates)
+      if (updates.key !== undefined) field.key = updates.key
+      if (updates.label !== undefined) field.label = updates.label
+      if (updates.enabled !== undefined) field.enabled = updates.enabled
+      if (updates.format !== undefined) field.format = updates.format
+      if (updates.position !== undefined) field.position = updates.position
       this.updateTimestamp()
     }
   }
@@ -106,7 +110,14 @@ export class WatermarkTemplate extends BaseModel {
    * 更新样式
    */
   updateStyle(styleUpdates: Partial<WatermarkStyle>): void {
-    Object.assign(this.style, styleUpdates)
+    if (styleUpdates.backgroundColor !== undefined) this.style.backgroundColor = styleUpdates.backgroundColor
+    if (styleUpdates.textColor !== undefined) this.style.textColor = styleUpdates.textColor
+    if (styleUpdates.fontSize !== undefined) this.style.fontSize = styleUpdates.fontSize
+    if (styleUpdates.fontFamily !== undefined) this.style.fontFamily = styleUpdates.fontFamily
+    if (styleUpdates.opacity !== undefined) this.style.opacity = styleUpdates.opacity
+    if (styleUpdates.borderRadius !== undefined) this.style.borderRadius = styleUpdates.borderRadius
+    if (styleUpdates.padding !== undefined) this.style.padding = styleUpdates.padding
+    if (styleUpdates.position !== undefined) this.style.position = styleUpdates.position
     this.updateTimestamp()
   }
 
@@ -141,7 +152,7 @@ export class WatermarkTemplate extends BaseModel {
   /**
    * 设置配置项
    */
-  setConfig(key: string, value: any): void {
+  setConfig(key: string, value: string | number | boolean): void {
     this.config[key] = value
     this.updateTimestamp()
   }
@@ -149,7 +160,7 @@ export class WatermarkTemplate extends BaseModel {
   /**
    * 获取配置项
    */
-  getConfig(key: string, defaultValue: any = null): any {
+  getConfig(key: string, defaultValue: string | number | boolean | null = null): string | number | boolean | null {
     return this.config[key] ?? defaultValue
   }
 
@@ -210,22 +221,65 @@ export class WatermarkTemplate extends BaseModel {
     cloned.name = name || `${this.name} 副本`
     cloned.description = this.description
     cloned.category = TemplateCategory.CUSTOM // 克隆的模板总是自定义的
-    cloned.fields = this.fields.map(field => ({ ...field }))
-    cloned.style = { ...this.style }
+
+    // Clone fields manually without spread operator
+    cloned.fields = []
+    for (const field of this.fields) {
+      const clonedField: WatermarkField = {
+        key: field.key,
+        label: field.label,
+        enabled: field.enabled,
+        format: field.format,
+        position: field.position
+      }
+      cloned.fields.push(clonedField)
+    }
+
+    // Clone style manually without spread operator
+    cloned.style = {
+      backgroundColor: this.style.backgroundColor,
+      textColor: this.style.textColor,
+      fontSize: this.style.fontSize,
+      fontFamily: this.style.fontFamily,
+      opacity: this.style.opacity,
+      borderRadius: this.style.borderRadius,
+      padding: this.style.padding,
+      position: this.style.position
+    }
+
     cloned.preview = this.preview
     cloned.isDefault = false // 克隆的模板不能是默认的
     cloned.isSystem = false // 克隆的模板不是系统的
     cloned.usageCount = 0 // 重置使用次数
-    cloned.config = { ...this.config }
+
+    // Clone config manually without spread operator
+    cloned.config = {}
+    const configKeys = Object.keys(this.config) as string[]
+    for (let i = 0; i < configKeys.length; i++) {
+      const key = configKeys[i]
+      cloned.config[key] = this.config[key]
+    }
 
     return cloned
   }
 
   /**
+   * 导出配置接口
+   */
+  interface ExportConfig {
+    name: string
+    description: string
+    category: TemplateCategory
+    fields: WatermarkField[]
+    style: WatermarkStyle
+    config: Record<string, string | number | boolean>
+  }
+
+  /**
    * 导出为JSON配置
    */
-  exportConfig(): Record<string, any> {
-    return {
+  exportConfig(): ExportConfig {
+    const config: ExportConfig = {
       name: this.name,
       description: this.description,
       category: this.category,
@@ -233,18 +287,36 @@ export class WatermarkTemplate extends BaseModel {
       style: this.style,
       config: this.config
     }
+    return config
   }
 
   /**
    * 从JSON配置导入
    */
-  importConfig(config: Record<string, any>): void {
+  importConfig(config: ExportConfig): void {
     if (config.name) this.name = config.name
     if (config.description) this.description = config.description
     if (config.category) this.category = config.category
     if (config.fields) this.fields = config.fields
-    if (config.style) this.style = { ...this.style, ...config.style }
-    if (config.config) this.config = { ...this.config, ...config.config }
+    if (config.style) {
+      const styleConfig = config.style
+      if (styleConfig.backgroundColor !== undefined) this.style.backgroundColor = styleConfig.backgroundColor
+      if (styleConfig.textColor !== undefined) this.style.textColor = styleConfig.textColor
+      if (styleConfig.fontSize !== undefined) this.style.fontSize = styleConfig.fontSize
+      if (styleConfig.fontFamily !== undefined) this.style.fontFamily = styleConfig.fontFamily
+      if (styleConfig.opacity !== undefined) this.style.opacity = styleConfig.opacity
+      if (styleConfig.borderRadius !== undefined) this.style.borderRadius = styleConfig.borderRadius
+      if (styleConfig.padding !== undefined) this.style.padding = styleConfig.padding
+      if (styleConfig.position !== undefined) this.style.position = styleConfig.position
+    }
+    if (config.config) {
+      const configConfig = config.config
+      const configKeys = Object.keys(configConfig)
+      for (let i = 0; i < configKeys.length; i++) {
+        const key = configKeys[i]
+        this.config[key] = configConfig[key]
+      }
+    }
     this.updateTimestamp()
   }
 
@@ -262,11 +334,35 @@ export class WatermarkTemplate extends BaseModel {
   }
 
   /**
+   * JSON数据接口
+   */
+  interface WatermarkTemplateJSON {
+    id: string
+    createdAt: Date | null
+    updatedAt: Date | null
+    version: number
+    name: string
+    description: string
+    category: TemplateCategory
+    fields: WatermarkField[]
+    style: WatermarkStyle
+    preview: string
+    isDefault: boolean
+    isSystem: boolean
+    usageCount: number
+    config: Record<string, string | number | boolean>
+  }
+
+  /**
    * 转换为JSON对象（包含额外字段）
    */
-  override toJSON(): Record<string, any> {
-    return {
-      ...super.toJSON(),
+  override toJSON(): WatermarkTemplateJSON {
+    const baseData = super.toJSON()
+    const jsonData: WatermarkTemplateJSON = {
+      id: baseData.id,
+      createdAt: baseData.createdAt,
+      updatedAt: baseData.updatedAt,
+      version: baseData.version,
       name: this.name,
       description: this.description,
       category: this.category,
@@ -278,12 +374,13 @@ export class WatermarkTemplate extends BaseModel {
       usageCount: this.usageCount,
       config: this.config
     }
+    return jsonData
   }
 
   /**
    * 从JSON对象创建实例
    */
-  static override fromJSON(data: Record<string, any>): WatermarkTemplate {
+  static override fromJSON(data: WatermarkTemplateJSON): WatermarkTemplate {
     const template = new WatermarkTemplate()
 
     if (data.id) template.id = data.id
@@ -295,12 +392,29 @@ export class WatermarkTemplate extends BaseModel {
     if (data.description) template.description = data.description
     if (data.category) template.category = data.category
     if (data.fields) template.fields = data.fields
-    if (data.style) template.style = { ...template.style, ...data.style }
+    if (data.style) {
+      const styleData = data.style
+      if (styleData.backgroundColor !== undefined) template.style.backgroundColor = styleData.backgroundColor
+      if (styleData.textColor !== undefined) template.style.textColor = styleData.textColor
+      if (styleData.fontSize !== undefined) template.style.fontSize = styleData.fontSize
+      if (styleData.fontFamily !== undefined) template.style.fontFamily = styleData.fontFamily
+      if (styleData.opacity !== undefined) template.style.opacity = styleData.opacity
+      if (styleData.borderRadius !== undefined) template.style.borderRadius = styleData.borderRadius
+      if (styleData.padding !== undefined) template.style.padding = styleData.padding
+      if (styleData.position !== undefined) template.style.position = styleData.position
+    }
     if (data.preview) template.preview = data.preview
     if (data.isDefault) template.isDefault = data.isDefault
     if (data.isSystem) template.isSystem = data.isSystem
     if (data.usageCount) template.usageCount = data.usageCount
-    if (data.config) template.config = data.config
+    if (data.config) {
+      const configData = data.config
+      const configKeys = Object.keys(configData)
+      for (let i = 0; i < configKeys.length; i++) {
+        const key = configKeys[i]
+        template.config[key] = configData[key]
+      }
+    }
 
     return template
   }
@@ -309,10 +423,53 @@ export class WatermarkTemplate extends BaseModel {
    * 深度克隆对象
    */
   override clone(): WatermarkTemplate {
-    const cloned = super.clone() as WatermarkTemplate
-    cloned.fields = this.fields.map(field => ({ ...field }))
-    cloned.style = { ...this.style }
-    cloned.config = { ...this.config }
+    const cloned = new WatermarkTemplate()
+
+    cloned.id = this.id
+    cloned.createdAt = new Date(this.createdAt)
+    cloned.updatedAt = new Date(this.updatedAt)
+    cloned.version = this.version
+    cloned.name = this.name
+    cloned.description = this.description
+    cloned.category = this.category
+    cloned.preview = this.preview
+    cloned.isDefault = this.isDefault
+    cloned.isSystem = this.isSystem
+    cloned.usageCount = this.usageCount
+
+    // Clone fields manually
+    cloned.fields = []
+    for (const field of this.fields) {
+      const clonedField: WatermarkField = {
+        key: field.key,
+        label: field.label,
+        enabled: field.enabled,
+        format: field.format,
+        position: field.position
+      }
+      cloned.fields.push(clonedField)
+    }
+
+    // Clone style manually
+    cloned.style = {
+      backgroundColor: this.style.backgroundColor,
+      textColor: this.style.textColor,
+      fontSize: this.style.fontSize,
+      fontFamily: this.style.fontFamily,
+      opacity: this.style.opacity,
+      borderRadius: this.style.borderRadius,
+      padding: this.style.padding,
+      position: this.style.position
+    }
+
+    // Clone config manually
+    cloned.config = {}
+    const configKeys = Object.keys(this.config) as string[]
+    for (let i = 0; i < configKeys.length; i++) {
+      const key = configKeys[i]
+      cloned.config[key] = this.config[key]
+    }
+
     return cloned
   }
 }
