@@ -24,6 +24,18 @@ export enum ThemeName {
 }
 
 /**
+ * 颜色调色板接口
+ */
+export interface ColorPalette {
+  primary: string
+  secondary: string
+  background: string
+  surface: string
+  text: string
+  border: string
+}
+
+/**
  * 主题配置接口
  */
 export interface ThemeConfig {
@@ -46,14 +58,14 @@ export class ThemeManager {
    * 获取当前主题配置
    */
   static getCurrentTheme(): ThemeConfig {
-    return this.currentTheme
+    return ThemeManager.currentTheme
   }
 
   /**
    * 设置主题
    */
   static setTheme(theme: ThemeConfig): void {
-    this.currentTheme = theme
+    ThemeManager.currentTheme = theme
     // TODO: 保存到本地存储
     console.log('设置主题:', theme)
   }
@@ -62,9 +74,9 @@ export class ThemeManager {
    * 切换到浅色主题
    */
   static setLightTheme(): void {
-    this.setTheme({
+    ThemeManager.setTheme({
       type: ThemeType.LIGHT,
-      name: this.currentTheme.name,
+      name: ThemeManager.currentTheme.name,
       isDark: false
     })
   }
@@ -73,9 +85,9 @@ export class ThemeManager {
    * 切换到深色主题
    */
   static setDarkTheme(): void {
-    this.setTheme({
+    ThemeManager.setTheme({
       type: ThemeType.DARK,
-      name: this.currentTheme.name,
+      name: ThemeManager.currentTheme.name,
       isDark: true
     })
   }
@@ -84,9 +96,9 @@ export class ThemeManager {
    * 切换到自动主题
    */
   static setAutoTheme(): void {
-    this.setTheme({
+    ThemeManager.setTheme({
       type: ThemeType.AUTO,
-      name: this.currentTheme.name,
+      name: ThemeManager.currentTheme.name,
       isDark: false // 默认浅色，实际会根据系统调整
     })
   }
@@ -95,18 +107,18 @@ export class ThemeManager {
    * 切换主题名称
    */
   static setThemeName(name: ThemeName): void {
-    this.setTheme({
-      type: this.currentTheme.type,
+    ThemeManager.setTheme({
+      type: ThemeManager.currentTheme.type,
       name: name,
-      isDark: this.currentTheme.isDark
+      isDark: ThemeManager.currentTheme.isDark
     })
   }
 
   /**
    * 获取当前颜色方案
    */
-  static getCurrentPalette(): any {
-    switch (this.currentTheme.name) {
+  static getCurrentPalette(): ColorPalette {
+    switch (ThemeManager.currentTheme.name) {
       case ThemeName.ENGINEERING:
         return ColorPalettes.engineering
       case ThemeName.SAFETY:
@@ -122,10 +134,10 @@ export class ThemeManager {
    * 获取当前背景色
    */
   static getCurrentBgColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return ColorPalettes.professional.background // 深色主题使用专业背景
     } else {
-      return this.getCurrentPalette().background
+      return ThemeManager.getCurrentPalette().background
     }
   }
 
@@ -133,10 +145,10 @@ export class ThemeManager {
    * 获取当前文本色
    */
   static getCurrentTextColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return ColorPalettes.professional.text // 深色主题使用专业文本色
     } else {
-      return this.getCurrentPalette().text
+      return ThemeManager.getCurrentPalette().text
     }
   }
 
@@ -144,10 +156,10 @@ export class ThemeManager {
    * 获取当前表面色（卡片背景）
    */
   static getCurrentSurfaceColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return ColorPalettes.professional.surface // 深色主题使用专业表面色
     } else {
-      return this.getCurrentPalette().surface
+      return ThemeManager.getCurrentPalette().surface
     }
   }
 
@@ -155,10 +167,10 @@ export class ThemeManager {
    * 获取当前边框色
    */
   static getCurrentBorderColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.borderTertiary // 深色主题使用浅边框
     } else {
-      return this.getCurrentPalette().border
+      return ThemeManager.getCurrentPalette().border
     }
   }
 
@@ -173,7 +185,7 @@ export class ThemeManager {
    * 获取适配当前主题的成功色
    */
   static getCurrentSuccessColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.successLight // 深色主题使用浅成功色
     } else {
       return AppColors.success
@@ -184,7 +196,7 @@ export class ThemeManager {
    * 获取适配当前主题的警告色
    */
   static getCurrentWarningColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.warningLight // 深色主题使用浅警告色
     } else {
       return AppColors.warning
@@ -195,7 +207,7 @@ export class ThemeManager {
    * 获取适配当前主题的错误色
    */
   static getCurrentErrorColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.errorLight // 深色主题使用浅错误色
     } else {
       return AppColors.error
@@ -206,7 +218,7 @@ export class ThemeManager {
    * 获取适配当前主题的文本次色
    */
   static getCurrentTextSecondaryColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.textQuaternary // 深色主题使用最浅文本色
     } else {
       return AppColors.textSecondary
@@ -217,7 +229,7 @@ export class ThemeManager {
    * 获取适配当前主题的分割线色
    */
   static getCurrentDividerColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.dividerLight // 深色主题使用浅分割线
     } else {
       return AppColors.divider
@@ -228,7 +240,7 @@ export class ThemeManager {
    * 获取适配当前主题的阴影色
    */
   static getCurrentShadowColor(): string {
-    if (this.currentTheme.isDark) {
+    if (ThemeManager.currentTheme.isDark) {
       return AppColors.overlayDark // 深色主题使用深阴影
     } else {
       return AppColors.shadowLight
@@ -239,10 +251,10 @@ export class ThemeManager {
    * 主题切换工具方法
    */
   static toggleTheme(): void {
-    if (this.currentTheme.isDark) {
-      this.setLightTheme()
+    if (ThemeManager.currentTheme.isDark) {
+      ThemeManager.setLightTheme()
     } else {
-      this.setDarkTheme()
+      ThemeManager.setDarkTheme()
     }
   }
 
@@ -250,7 +262,7 @@ export class ThemeManager {
    * 重置到默认主题
    */
   static resetToDefault(): void {
-    this.setTheme({
+    ThemeManager.setTheme({
       type: ThemeType.LIGHT,
       name: ThemeName.ENGINEERING,
       isDark: false
@@ -266,11 +278,11 @@ export class ThemeManager {
       // const savedTheme = localStorage.getItem('app_theme')
       // if (savedTheme) {
       //   const theme = JSON.parse(savedTheme)
-      //   this.setTheme(theme)
+      //   ThemeManager.setTheme(theme)
       // }
     } catch (error) {
       console.warn('加载主题设置失败:', error)
-      this.resetToDefault()
+      ThemeManager.resetToDefault()
     }
   }
 
@@ -280,7 +292,7 @@ export class ThemeManager {
   static saveToStorage(): void {
     // TODO: 保存用户主题偏好到AsyncStorage
     try {
-      // localStorage.setItem('app_theme', JSON.stringify(this.currentTheme))
+      // localStorage.setItem('app_theme', JSON.stringify(ThemeManager.currentTheme))
     } catch (error) {
       console.warn('保存主题设置失败:', error)
     }
@@ -290,7 +302,7 @@ export class ThemeManager {
    * 初始化主题管理器
    */
   static initialize(): void {
-    this.loadFromStorage()
-    console.log('主题管理器初始化完成:', this.currentTheme)
+    ThemeManager.loadFromStorage()
+    console.log('主题管理器初始化完成:', ThemeManager.currentTheme)
   }
 }
