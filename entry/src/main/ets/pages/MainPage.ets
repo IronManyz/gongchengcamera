@@ -136,7 +136,13 @@ struct MainPage {
         Text('🔍')
           .fontSize(20)
           .fontColor('#1890FF')
+          .backgroundColor('#E6F7FF')
+          .borderRadius(12)
+          .width(32)
+          .height(32)
+          .textAlign(TextAlign.Center)
           .margin({ right: 16 })
+          .animation({ duration: 150, curve: Curve.EaseInOut })
           .onClick(() => {
             console.log('Search clicked')
             // TODO: 显示搜索界面
@@ -146,7 +152,14 @@ struct MainPage {
         Text('⊕')
           .fontSize(20)
           .fontColor('#1890FF')
+          .backgroundColor('#E6F7FF')
+          .borderRadius(12)
+          .width(32)
+          .height(32)
+          .textAlign(TextAlign.Center)
+          .animation({ duration: 150, curve: Curve.EaseInOut })
           .onClick(() => {
+            console.log('Create project button clicked')
             this.createNewProject()
           })
       }
@@ -250,8 +263,15 @@ struct MainPage {
         }
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.currentTab === 'projects' ? '#E6F7FF' : Color.Transparent)
+        .borderRadius(8)
+        .padding({ top: 4, bottom: 4 })
+        .animation({ duration: 200, curve: Curve.EaseInOut })
         .onClick(() => {
+          console.log('Projects tab clicked')
           this.currentTab = 'projects'
+          // 添加触觉反馈效果
+          // TODO: 添加触觉反馈
         })
 
         // 拍照导航 - 突出显示
@@ -266,7 +286,13 @@ struct MainPage {
         }
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.currentTab === 'camera' ? '#E6F7FF' : Color.Transparent)
+        .borderRadius(8)
+        .padding({ top: 4, bottom: 4 })
+        .animation({ duration: 200, curve: Curve.EaseInOut })
         .onClick(() => {
+          console.log('Camera tab clicked')
+          this.currentTab = 'camera'
           this.navigateToCamera()
         })
 
@@ -282,7 +308,13 @@ struct MainPage {
         }
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.currentTab === 'gallery' ? '#E6F7FF' : Color.Transparent)
+        .borderRadius(8)
+        .padding({ top: 4, bottom: 4 })
+        .animation({ duration: 200, curve: Curve.EaseInOut })
         .onClick(() => {
+          console.log('Gallery tab clicked')
+          this.currentTab = 'gallery'
           this.navigateToGallery()
         })
 
@@ -298,7 +330,13 @@ struct MainPage {
         }
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.currentTab === 'settings' ? '#E6F7FF' : Color.Transparent)
+        .borderRadius(8)
+        .padding({ top: 4, bottom: 4 })
+        .animation({ duration: 200, curve: Curve.EaseInOut })
         .onClick(() => {
+          console.log('Settings tab clicked')
+          this.currentTab = 'settings'
           this.navigateToSettings()
         })
       }

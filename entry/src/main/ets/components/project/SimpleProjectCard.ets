@@ -134,12 +134,15 @@ export struct SimpleProjectCard {
       offsetX: 0,
       offsetY: 3
     })
+    .animation({ duration: 150, curve: Curve.EaseInOut })
     .onClick(() => {
+      console.log('Project card clicked:', this.project.name)
       this.onTap?.(this.project)
     })
     .gesture(
-      LongPressGesture()
+      LongPressGesture({ repeat: false, duration: 500 })
         .onAction(() => {
+          console.log('Project card long pressed:', this.project.name)
           this.onLongPress?.(this.project)
         })
     )
