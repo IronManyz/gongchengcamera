@@ -7,3 +7,4 @@ export { LoadingDialog, LoadingIndicator, FullScreenLoading } from './LoadingDia
 export { ConfirmDialog, DeleteConfirmDialog, ExitConfirmDialog, PermissionConfirmDialog } from './ConfirmDialog'
 export { SearchBar, AdvancedSearchBar, QuickSearch } from './SearchBar'
 export { EmptyView, ListEmptyView, PageEmptyView, ErrorView } from './EmptyView'
+export { StatCard } from './StatCard'
