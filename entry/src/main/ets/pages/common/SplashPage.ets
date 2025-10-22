@@ -22,6 +22,13 @@ struct SplashPage {
       // 模拟加载过程
       await this.simulateLoading()
 
+      // 等待额外1秒让用户看到加载完成
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve()
+        }, 1000)
+      })
+
       // 跳转到主页面
       this.navigateToMainPage()
     } catch (error) {
@@ -51,13 +58,27 @@ struct SplashPage {
    */
   private navigateToMainPage() {
     this.navigateToMain = true
-    // 跳转到简化版项目列表页面
-    router.pushNamedRoute({
-      name: 'pages/project/SimpleProjectListPage'
+    console.log('Attempting to navigate to project list page...')
+
+    // 使用replaceUrl跳转，避免用户返回到启动页
+    router.replaceUrl({
+      url: 'pages/MainPage',
+      params: {}
+    }).then(() => {
+      console.log('Navigation to MainPage successful')
     }).catch((error: Error) => {
-      console.error('Navigation failed:', error)
-      // 如果跳转失败，跳转到默认页面
-      router.pushNamedRoute({ name: 'pages/Index' })
+      console.error('Navigation to MainPage failed:', error)
+      // 如果跳转失败，尝试跳转到默认页面
+      router.replaceUrl({
+        url: 'pages/Index',
+        params: {}
+      }).then(() => {
+        console.log('Navigation to Index page successful')
+      }).catch((indexError: Error) => {
+        console.error('Navigation to Index page also failed:', indexError)
+        // 最后的备选方案：直接显示提示信息
+        console.log('Navigation failed, showing manual navigation option')
+      })
     })
   }
 
@@ -119,16 +140,18 @@ struct SplashPage {
       .alignItems(HorizontalAlign.Center)
       .backgroundColor('#FFFFFF')
 
-      // 跳转提示
-      if (this.navigateToMain) {
-        Text('点击进入应用')
-          .fontSize(14)
-          .fontColor('#007DFF')
-          .margin({ bottom: 80 })
-          .onClick(() => {
+      // 跳转提示 - 始终显示
+      Text(this.navigateToMain ? '点击进入应用' : '加载中，请稍候...')
+        .fontSize(14)
+        .fontColor('#007DFF')
+        .margin({ bottom: 80 })
+        .opacity(this.navigateToMain ? 1.0 : 0.6)
+        .onClick(() => {
+          if (this.navigateToMain) {
+            console.log('Manual navigation triggered')
             this.navigateToMainPage()
-          })
-      }
+          }
+        })
     }
     .width('100%')
     .height('100%')
