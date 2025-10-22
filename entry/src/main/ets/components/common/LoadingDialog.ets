@@ -76,7 +76,7 @@ export struct LoadingIndicator {
   @Param loading: boolean = false
   @Param message: string = ''
   @Param size: number = 24
-  @Param color: Resource = '#007AFF'
+  @Param color: string = '#007AFF'
 
   build() {
     if (this.loading) {
@@ -107,7 +107,7 @@ export struct LoadingIndicator {
 export struct FullScreenLoading {
   @Param show: boolean = false
   @Param message: string = '加载中...'
-  @Param backgroundColor: Resource = '#F5F5F5'
+  @Param backgroundColor: string = '#F5F5F5'
 
   build() {
     if (this.show) {

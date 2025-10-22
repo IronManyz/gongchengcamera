@@ -23,8 +23,8 @@ export struct ProjectCard {
         return '#1890FF' // 蓝色 - 已完成
       case ProjectStatus.PAUSED:
         return '#FAAD14' // 橙色 - 暂停
-      case ProjectStatus.PLANNING:
-        return '#722ED1' // 紫色 - 准备中
+      case ProjectStatus.CANCELLED:
+        return '#FF4D4F' // 红色 - 已取消
       default:
         return '#8C8C8C' // 灰色 - 未知
     }
@@ -39,8 +39,8 @@ export struct ProjectCard {
         return '已完成'
       case ProjectStatus.PAUSED:
         return '暂停'
-      case ProjectStatus.PLANNING:
-        return '准备中'
+      case ProjectStatus.CANCELLED:
+        return '已取消'
       default:
         return '未知'
     }
@@ -54,7 +54,7 @@ export struct ProjectCard {
         Column() {
           // 项目编号和名称
           Row() {
-            Text(`📁 ${this.project.getCode()}`)
+            Text(`📁 ${this.project.code}`)
               .fontSize(14)
               .fontColor('#1890FF')
               .fontWeight(FontWeight.Medium)

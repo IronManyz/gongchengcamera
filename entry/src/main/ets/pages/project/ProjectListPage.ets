@@ -13,6 +13,24 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { StatCard } from '../../components/common/StatCard'
 import { ProjectCard } from '../../components/project/ProjectCard'
 
+/**
+ * 统计数据接口
+ */
+interface StatisticsData {
+  totalProjects: number
+  activeProjects: number
+  totalSites: number
+  totalPhotos: number
+}
+
+/**
+ * 过滤选项接口
+ */
+interface FilterOption {
+  key: ProjectFilter
+  label: string
+}
+
 @Entry
 @Component
 struct ProjectListPage {
@@ -21,12 +39,21 @@ struct ProjectListPage {
   @State private isRefreshing: boolean = false
   @State private searchQuery: string = ''
   @State private currentFilter: ProjectFilter = ProjectFilter.ALL
-  @State private selectedProject: Project | null = null
+  @State private selectedProjectId: string = ''
   @State private showDeleteDialog: boolean = false
   @State private showFilterDialog: boolean = false
 
   // 项目Store
   private projectStore = projectStore
+
+  // 筛选选项
+  private readonly filterOptions: FilterOption[] = [
+    { key: ProjectFilter.ALL, label: '全部项目' },
+    { key: ProjectFilter.ACTIVE, label: '进行中' },
+    { key: ProjectFilter.COMPLETED, label: '已完成' },
+    { key: ProjectFilter.PAUSED, label: '已暂停' },
+    { key: ProjectFilter.CANCELLED, label: '已取消' }
+  ]
 
   aboutToAppear() {
     this.loadProjectData()
@@ -53,7 +80,7 @@ struct ProjectListPage {
   /**
    * 下拉刷新
    */
-  private async onRefresh() {
+  private async onRefresh(): Promise<void> {
     this.isRefreshing = true
     try {
       await this.projectStore.refresh()
@@ -67,7 +94,7 @@ struct ProjectListPage {
   /**
    * 搜索处理
    */
-  private onSearch(query: string) {
+  private onSearch(query: string): void {
     this.searchQuery = query
     this.projectStore.setSearchQuery(query)
   }
@@ -91,7 +118,7 @@ struct ProjectListPage {
   /**
    * 跳转到项目详情
    */
-  private navigateToProjectDetail(project: Project) {
+  private navigateToProjectDetail(project: Project): void {
     router.pushUrl({
       url: 'pages/project/ProjectDetailPage',
       params: {
@@ -128,11 +155,11 @@ struct ProjectListPage {
   /**
    * 删除项目
    */
-  private async deleteProject() {
-    if (this.selectedProject) {
-      const success = await this.projectStore.deleteProject(this.selectedProject.id)
+  private async deleteProject(): Promise<void> {
+    if (this.selectedProjectId) {
+      const success = await this.projectStore.deleteProject(this.selectedProjectId)
       if (success) {
-        this.selectedProject = null
+        this.selectedProjectId = ''
         this.showDeleteDialog = false
       }
     }
@@ -166,19 +193,20 @@ struct ProjectListPage {
   /**
    * 获取项目统计信息
    */
-  private getProjectStats() {
+  private getProjectStats(): StatisticsData {
     const projects = this.projectStore.projects
     const totalProjects = projects.length
     const activeProjects = projects.filter(p => p.status === ProjectStatus.ACTIVE).length
     const totalSites = projects.reduce((sum, p) => sum + (p.siteCount || 0), 0)
     const totalPhotos = projects.reduce((sum, p) => sum + (p.photoCount || 0), 0)
 
-    return {
-      totalProjects,
-      activeProjects,
-      totalSites,
-      totalPhotos
+    const result: StatisticsData = {
+      totalProjects: totalProjects,
+      activeProjects: activeProjects,
+      totalSites: totalSites,
+      totalPhotos: totalPhotos
     }
+    return result
   }
 
   build() {
@@ -204,16 +232,16 @@ struct ProjectListPage {
       }
 
       // 删除确认对话框
-      if (this.showDeleteDialog && this.selectedProject) {
+      if (this.showDeleteDialog) {
         ConfirmDialog({
           title: '删除项目',
-          message: `确定要删除项目"${this.selectedProject.getDisplayName()}"吗？此操作不可恢复。`,
+          message: `确定要删除选中的项目吗？此操作不可恢复。`,
           confirmText: '删除',
           cancelText: '取消',
           onConfirm: () => this.deleteProject(),
           onCancel: () => {
             this.showDeleteDialog = false
-            this.selectedProject = null
+            this.selectedProjectId = ''
           }
         })
       }
@@ -228,8 +256,6 @@ struct ProjectListPage {
    */
   @Builder
   private buildStatsOverview() {
-    const stats = this.getProjectStats()
-
     Column() {
       // 标题
       Text('📊 统计概览')
@@ -243,8 +269,8 @@ struct ProjectListPage {
       Row() {
         StatCard({
           title: '工程总数',
-          value: stats.totalProjects,
-          icon: $r('app.media.ic_folder'),
+          value: this.getProjectStats().totalProjects,
+          icon: '📁',
           color: '#1890FF',
           trend: 'stable'
         })
@@ -252,8 +278,8 @@ struct ProjectListPage {
 
         StatCard({
           title: '进行中',
-          value: stats.activeProjects,
-          icon: $r('app.media.ic_folder'),
+          value: this.getProjectStats().activeProjects,
+          icon: '📁',
           color: '#52C41A',
           trend: 'up'
         })
@@ -265,8 +291,8 @@ struct ProjectListPage {
       Row() {
         StatCard({
           title: '工点总计',
-          value: stats.totalSites,
-          icon: $r('app.media.ic_folder'),
+          value: this.getProjectStats().totalSites,
+          icon: '📁',
           color: '#FAAD14',
           trend: 'stable'
         })
@@ -274,8 +300,8 @@ struct ProjectListPage {
 
         StatCard({
           title: '照片总计',
-          value: stats.totalPhotos,
-          icon: $r('app.media.ic_folder'),
+          value: this.getProjectStats().totalPhotos,
+          icon: '📁',
           color: '#722ED1',
           trend: 'up'
         })
@@ -304,10 +330,10 @@ struct ProjectListPage {
     Row() {
       // 返回按钮
       Button() {
-        Image($r('app.media.ic_back'))
+        Text('🔙')
           .width(24)
           .height(24)
-          .fillColor('#333333')
+          .fontColor('#333333')
       }
       .width(40)
       .height(40)
@@ -326,7 +352,7 @@ struct ProjectListPage {
 
       // 统计信息
       if (this.projectStore.projectStats) {
-        Text(`${this.projectStore.projectStats.totalCount}`)
+        Text(`${this.projectStore.projectStats.totalProjects}`)
           .fontSize(14)
           .fontColor('#666666')
           .margin({ right: 12 })
@@ -363,10 +389,10 @@ struct ProjectListPage {
         // 筛选按钮
         Button() {
           Row({ space: 6 }) {
-            Image($r('app.media.ic_filter'))
+            Text('🔍')
               .width(16)
               .height(16)
-              .fillColor(this.currentFilter !== ProjectFilter.ALL ? '#007AFF' : '#666666')
+              .fontColor(this.currentFilter !== ProjectFilter.ALL ? '#007AFF' : '#666666')
 
             Text(this.getFilterText(this.currentFilter))
               .fontSize(14)
@@ -388,10 +414,10 @@ struct ProjectListPage {
         // 排序按钮
         Button() {
           Row({ space: 6 }) {
-            Image($r('app.media.ic_sort'))
+            Text('📊')
               .width(16)
               .height(16)
-              .fillColor('#666666')
+              .fontColor('#666666')
 
             Text('最新')
               .fontSize(14)
@@ -450,14 +476,8 @@ struct ProjectListPage {
     Column({ space: 0 }) {
       // 筛选选项
       ForEach(
-        [
-          { key: ProjectFilter.ALL, label: '全部项目' },
-          { key: ProjectFilter.ACTIVE, label: '进行中' },
-          { key: ProjectFilter.COMPLETED, label: '已完成' },
-          { key: ProjectFilter.PAUSED, label: '已暂停' },
-          { key: ProjectFilter.CANCELLED, label: '已取消' }
-        ],
-        (filter: { key: ProjectFilter, label: string }) => {
+        this.filterOptions,
+        (filter: FilterOption) => {
           Row() {
             Text(filter.label)
               .fontSize(16)
@@ -465,22 +485,22 @@ struct ProjectListPage {
               .layoutWeight(1)
 
             if (this.currentFilter === filter.key) {
-              Image($r('app.media.ic_check'))
+              Text('✅')
                 .width(20)
                 .height(20)
-                .fillColor('#007AFF')
+                .fontColor('#007AFF')
             }
           }
           .width('100%')
           .height(48)
-          .padding({ horizontal: 16 })
+          .padding({ left: 16, right: 16 })
           .onClick(() => this.onFilterChange(filter.key))
 
           if (filter.key !== ProjectFilter.CANCELLED) {
             Divider().color('#F0F0F0')
           }
         },
-        (filter: { key: ProjectFilter, label: string }) => filter.key
+        (filter: FilterOption) => filter.key
       )
     }
     .width('100%')
@@ -503,7 +523,7 @@ struct ProjectListPage {
   private buildProjectList() {
     Refresh({ refreshing: $$isRefreshing, friction: 100 }) {
       if (this.projectStore.hasFilteredProjects) {
-        List({ space: 12, onRefresh: () => this.onRefresh() }) {
+        List({ space: 12 }) {
           ForEach(
             this.projectStore.filteredProjects,
             (project: Project) => {
@@ -519,10 +539,10 @@ struct ProjectListPage {
         .padding({ left: 16, right: 16, top: 8, bottom: 8 })
       } else {
         Column() {
-          Image($r('app.media.ic_folder'))
+          Text('📁')
             .width(120)
             .height(120)
-            .fillColor('#C0C0C0')
+            .fontColor('#C0C0C0')
             .margin({ bottom: 16 })
 
           Text(this.searchQuery ? '未找到匹配的项目' : '暂无项目')
@@ -558,7 +578,7 @@ struct ProjectListPage {
       showStats: true,
       onTap: (project) => this.navigateToProjectDetail(project),
       onLongPress: (project) => {
-        this.selectedProject = project
+        this.selectedProjectId = project.id
         this.showDeleteDialog = true
       }
     })
@@ -572,10 +592,10 @@ struct ProjectListPage {
     Row() {
       Button() {
         Row({ space: 8 }) {
-          Image($r('app.media.ic_add'))
+          Text('➕')
             .width(20)
             .height(20)
-            .fillColor('#FFFFFF')
+            .fontColor('#FFFFFF')
 
           Text('新建项目')
             .fontSize(16)
@@ -583,7 +603,7 @@ struct ProjectListPage {
         }
       }
       .height(48)
-      .padding({ horizontal: 24 })
+      .padding({ left: 24, right: 24 })
       .backgroundColor('#007AFF')
       .borderRadius(24)
       .margin({ bottom: 20 })

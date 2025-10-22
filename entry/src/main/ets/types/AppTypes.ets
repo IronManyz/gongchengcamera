@@ -358,6 +358,11 @@ export interface PaginatedResponse<T> {
 }
 
 /**
+ * 分页结果接口（别名）
+ */
+export type PaginationResult<T> = PaginatedResponse<T>
+
+/**
  * 搜索参数接口
  */
 export interface SearchParams {

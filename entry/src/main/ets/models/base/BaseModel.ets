@@ -52,15 +52,14 @@ export class BaseModel {
   }
 
   /**
-   * 从JSON对象创建实例
+   * 从JSON对象填充基础字段
+   * 子类应该重写此方法并调用 super.fromJSONBase(data)
    */
-  static fromJSON<T extends BaseModel>(data: BaseModelJSON): T {
-    const instance = new T() as T
-    if (data.id) instance.id = data.id
-    if (data.createdAt) instance.createdAt = new Date(data.createdAt)
-    if (data.updatedAt) instance.updatedAt = new Date(data.updatedAt)
-    if (data.version) instance.version = data.version
-    return instance
+  protected fromJSONBase(data: BaseModelJSON): void {
+    if (data.id) this.id = data.id
+    if (data.createdAt) this.createdAt = new Date(data.createdAt)
+    if (data.updatedAt) this.updatedAt = new Date(data.updatedAt)
+    if (data.version) this.version = data.version
   }
 
   /**

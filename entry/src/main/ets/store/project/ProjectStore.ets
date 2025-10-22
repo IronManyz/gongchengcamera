@@ -12,7 +12,7 @@ import {
   ProjectFilter,
   ProjectSortOrder,
   PaginationParams,
-  PaginationResult
+  PaginatedResponse
 } from '../../types/AppTypes'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 
@@ -152,7 +152,7 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isLoading', true)
       this.clearError()
 
-      this.log('开始加载项目列表', params)
+      this.log('开始加载项目列表')
 
       // 构建查询参数
       const queryParams: ProjectQueryParams = {
@@ -186,7 +186,7 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isLoading', false)
       this.managementState.lastSyncTime = new Date()
 
-      this.log('项目列表加载完成', { count: projects.length })
+      this.log('项目列表加载完成')
 
     }, 'loadProjects', '加载项目列表失败')
   }
@@ -195,20 +195,23 @@ export class ProjectStore extends BaseStore {
    * 分页加载项目列表
    */
   async loadProjectsWithPagination(
-    params: ProjectQueryParams = {},
-    pagination: PaginationParams = { page: this.currentPage, pageSize: this.pageSize }
+    params?: ProjectQueryParams,
+    pagination?: PaginationParams
   ): Promise<void> {
     await this.safeExecute(async () => {
       this.checkInitialized()
       this.setLoadingState('isLoading', true)
       this.clearError()
 
-      this.log('开始分页加载项目', { params, pagination })
+      this.log('开始分页加载项目')
 
-      const result = await this.projectService.queryProjectsWithPagination(params, pagination)
+      const actualParams: ProjectQueryParams = params || { table: 'projects' }
+      const actualPagination: PaginationParams = pagination || { page: this.currentPage, pageSize: this.pageSize }
+
+      const result: PaginatedResponse<Project> = await this.projectService.queryProjectsWithPagination(actualParams, actualPagination)
 
       // 更新状态
-      if (pagination.page === 1) {
+      if (actualPagination.page === 1) {
         this.projects.splice(0, this.projects.length, ...result.data)
       } else {
         this.projects.push(...result.data)
@@ -225,7 +228,7 @@ export class ProjectStore extends BaseStore {
       this.applyFiltersAndSort()
       this.setLoadingState('isLoading', false)
 
-      this.log('分页加载项目完成', result)
+      this.log('分页加载项目完成')
 
     }, 'loadProjectsWithPagination', '分页加载项目失败')
   }
@@ -239,11 +242,23 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isCreating', true)
       this.clearError()
 
-      this.log('开始创建项目', projectData)
+      this.log('开始创建项目')
 
       // 创建项目实例
       const project = new Project()
-      Object.assign(project, projectData)
+      // 手动赋值属性
+      if (projectData.name) project.name = projectData.name
+      if (projectData.code) project.code = projectData.code
+      if (projectData.client) project.client = projectData.client
+      if (projectData.manager) project.manager = projectData.manager
+      if (projectData.startDate) project.startDate = projectData.startDate
+      if (projectData.endDate) project.endDate = projectData.endDate
+      if (projectData.status) project.status = projectData.status
+      if (projectData.description) project.description = projectData.description
+      if (projectData.tags && projectData.tags.length > 0) {
+        project.tags.splice(0, project.tags.length, ...projectData.tags)
+      }
+      if (projectData.metadata) project.metadata = projectData.metadata
 
       // 验证项目数据
       if (!project.isValid()) {
@@ -261,7 +276,7 @@ export class ProjectStore extends BaseStore {
       await this.loadProjectStats()
 
       this.setLoadingState('isCreating', false)
-      this.log('项目创建成功', createdProject)
+      this.log('项目创建成功')
 
       return createdProject
 
@@ -277,7 +292,7 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isUpdating', true)
       this.clearError()
 
-      this.log('开始更新项目', { id: project.id, name: project.name })
+      this.log('开始更新项目')
 
       // 验证项目数据
       if (!project.isValid()) {
@@ -304,7 +319,7 @@ export class ProjectStore extends BaseStore {
       }
 
       this.setLoadingState('isUpdating', false)
-      this.log('项目更新完成', { success, projectId: project.id })
+      this.log('项目更新完成')
 
       return success
 
@@ -322,7 +337,7 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isDeleting', true)
       this.clearError()
 
-      this.log('开始删除项目', { projectId })
+      this.log('开始删除项目')
 
       // 从数据库删除
       const success = await this.projectService.deleteProject(projectId)
@@ -344,7 +359,7 @@ export class ProjectStore extends BaseStore {
       }
 
       this.setLoadingState('isDeleting', false)
-      this.log('项目删除完成', { success, projectId })
+      this.log('项目删除完成')
 
       return success
 
@@ -362,7 +377,7 @@ export class ProjectStore extends BaseStore {
       this.setLoadingState('isDeleting', true)
       this.clearError()
 
-      this.log('开始批量删除项目', { count: projectIds.length })
+      this.log('开始批量删除项目')
 
       const deletedCount = await this.projectService.deleteProjects(projectIds)
 
@@ -380,7 +395,7 @@ export class ProjectStore extends BaseStore {
       }
 
       this.setLoadingState('isDeleting', false)
-      this.log('批量删除项目完成', { deletedCount })
+      this.log('批量删除项目完成')
 
       return deletedCount
 
@@ -397,7 +412,7 @@ export class ProjectStore extends BaseStore {
       this.checkInitialized()
       this.clearError()
 
-      this.log('查询项目详情', { projectId })
+      this.log('查询项目详情')
 
       // 先从本地缓存查找
       let project = this.projects.find(p => p.id === projectId)
@@ -413,7 +428,7 @@ export class ProjectStore extends BaseStore {
       }
 
       this.currentProject = project || null
-      this.log('项目详情查询完成', { found: !!project })
+      this.log('项目详情查询完成')
 
       return project
 
@@ -430,10 +445,10 @@ export class ProjectStore extends BaseStore {
       this.checkInitialized()
       this.clearError()
 
-      this.log('搜索项目', { query, limit })
+      this.log('搜索项目')
 
       const projects = await this.projectService.searchProjects(query, limit)
-      this.log('项目搜索完成', { count: projects.length })
+      this.log('项目搜索完成')
 
       return projects
 
@@ -455,7 +470,7 @@ export class ProjectStore extends BaseStore {
       const stats = await this.projectService.getProjectStats()
       this.projectStats = stats
 
-      this.log('项目统计信息加载完成', stats)
+      this.log('项目统计信息加载完成')
 
     }, 'loadProjectStats', '加载项目统计信息失败')
   }
@@ -467,7 +482,7 @@ export class ProjectStore extends BaseStore {
     if (this.searchQuery !== query) {
       this.searchQuery = query
       this.applyFiltersAndSort()
-      this.log('设置搜索查询', { query })
+      this.log('设置搜索查询')
     }
   }
 
@@ -478,7 +493,7 @@ export class ProjectStore extends BaseStore {
     if (this.currentFilter !== filter) {
       this.currentFilter = filter
       this.applyFiltersAndSort()
-      this.log('设置过滤器', { filter })
+      this.log('设置过滤器')
     }
   }
 
@@ -489,7 +504,7 @@ export class ProjectStore extends BaseStore {
     if (this.currentSortOrder !== sortOrder) {
       this.currentSortOrder = sortOrder
       this.applyFiltersAndSort()
-      this.log('设置排序方式', { sortOrder })
+      this.log('设置排序方式')
     }
   }
 
@@ -499,7 +514,7 @@ export class ProjectStore extends BaseStore {
   setSelectedTags(tags: string[]): void {
     this.selectedTags = [...tags]
     this.applyFiltersAndSort()
-    this.log('设置选中标签', { tags })
+    this.log('设置选中标签')
   }
 
   /**
@@ -509,7 +524,7 @@ export class ProjectStore extends BaseStore {
     if (!this.selectedTags.includes(tag)) {
       this.selectedTags.push(tag)
       this.applyFiltersAndSort()
-      this.log('添加选中标签', { tag })
+      this.log('添加选中标签')
     }
   }
 
@@ -521,7 +536,7 @@ export class ProjectStore extends BaseStore {
     if (index > -1) {
       this.selectedTags.splice(index, 1)
       this.applyFiltersAndSort()
-      this.log('移除选中标签', { tag })
+      this.log('移除选中标签')
     }
   }
 
@@ -564,8 +579,9 @@ export class ProjectStore extends BaseStore {
 
     // 应用状态过滤器
     if (this.currentFilter !== ProjectFilter.ALL) {
+      const filterStatus = this.currentFilter as string
       filtered = filtered.filter(project =>
-        project.status === this.currentFilter
+        project.status === filterStatus as ProjectStatus
       )
     }
 
@@ -582,13 +598,7 @@ export class ProjectStore extends BaseStore {
     // 更新过滤后的项目列表
     this.filteredProjects.splice(0, this.filteredProjects.length, ...filtered)
 
-    this.log('应用过滤和排序', {
-      total: this.projects.length,
-      filtered: filtered.length,
-      query: this.searchQuery,
-      filter: this.currentFilter,
-      sort: this.currentSortOrder
-    })
+    this.log('应用过滤和排序')
   }
 
   /**
@@ -653,8 +663,21 @@ export class ProjectStore extends BaseStore {
    * 设置加载状态
    */
   private setLoadingState(key: keyof ProjectManagementState, value: boolean): void {
-    if (key === 'isLoading' || key === 'isCreating' || key === 'isUpdating' || key === 'isDeleting') {
-      this.managementState[key] = value
+    switch (key) {
+      case 'isLoading':
+        this.managementState.isLoading = value
+        break
+      case 'isCreating':
+        this.managementState.isCreating = value
+        break
+      case 'isUpdating':
+        this.managementState.isUpdating = value
+        break
+      case 'isDeleting':
+        this.managementState.isDeleting = value
+        break
+      default:
+        break
     }
   }
 
