@@ -19,6 +19,8 @@ export class Project extends BaseModel {
   @Trace description: string = ''
   @Trace tags: string[] = []
   @Trace status: ProjectStatus = ProjectStatus.ACTIVE
+  @Trace priority: string = 'medium' // high, medium, low
+  @Trace progress: number = 0 // 完成进度百分比 (0-100)
   @Trace siteCount: number = 0
   @Trace photoCount: number = 0
   metadata: Map<string, Object> = new Map<string, Object>()
@@ -207,6 +209,8 @@ export class Project extends BaseModel {
       description: this.description,
       tags: this.tags,
       status: this.status,
+      priority: this.priority,
+      progress: this.progress,
       siteCount: this.siteCount,
       photoCount: this.photoCount,
       metadata: this.metadata
@@ -233,6 +237,8 @@ export class Project extends BaseModel {
     if (data.description) project.description = data.description
     if (data.tags) project.tags = data.tags
     if (data.status) project.status = data.status
+    if (data.priority) project.priority = data.priority
+    if (data.progress) project.progress = data.progress
     if (data.siteCount) project.siteCount = data.siteCount
     if (data.photoCount) project.photoCount = data.photoCount
     if (data.metadata) project.metadata = data.metadata
@@ -261,6 +267,8 @@ export class Project extends BaseModel {
     cloned.endDate = new Date(this.endDate)
     cloned.description = this.description
     cloned.status = this.status
+    cloned.priority = this.priority
+    cloned.progress = this.progress
     cloned.siteCount = this.siteCount
     cloned.photoCount = this.photoCount
 

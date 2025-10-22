@@ -46,6 +46,40 @@ export struct ProjectCard {
     }
   }
 
+  // 优先级文本映射
+  private getPriorityText(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case '高':
+        return '高优先级'
+      case 'medium':
+      case '中':
+        return '中优先级'
+      case 'low':
+      case '低':
+        return '低优先级'
+      default:
+        return priority
+    }
+  }
+
+  // 优先级颜色映射
+  private getPriorityColor(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case '高':
+        return '#FF4D4F' // 红色
+      case 'medium':
+      case '中':
+        return '#FAAD14' // 橙色
+      case 'low':
+      case '低':
+        return '#52C41A' // 绿色
+      default:
+        return '#8C8C8C' // 灰色
+    }
+  }
+
   build() {
     Column() {
       // 主要内容区域
@@ -81,40 +115,103 @@ export struct ProjectCard {
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
 
-          // 负责人和状态信息
+          // 负责人信息
           Row() {
-            Text(`负责人: ${this.project.manager || '未指定'}`)
+            Text(`👤 ${this.project.manager || '未指定'}`)
               .fontSize(14)
               .fontColor('#595959')
               .margin({ top: 6 })
 
             Blank()
 
-            Text(this.getStatusText(this.project.status))
-              .fontSize(14)
-              .fontColor(this.getStatusColor(this.project.status))
-              .margin({ top: 6 })
+            // 项目优先级或类型标签
+            if (this.project.priority) {
+              Text(this.getPriorityText(this.project.priority))
+                .fontSize(12)
+                .fontColor('#FFFFFF')
+                .backgroundColor(this.getPriorityColor(this.project.priority))
+                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                .borderRadius(3)
+                .margin({ top: 6 })
+            }
           }
           .width('100%')
 
           // 统计信息
           if (this.showStats) {
-            Row() {
-              Text(`${this.project.siteCount || 0}个工点`)
-                .fontSize(14)
-                .fontColor('#8C8C8C')
+            Column() {
+              // 统计数据行
+              Row() {
+                // 工点统计
+                Row() {
+                  Text('📍')
+                    .fontSize(14)
+                    .fontColor('#1890FF')
+                  Text(`${this.project.siteCount || 0}`)
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor('#262626')
+                    .margin({ left: 4 })
+                  Text('个工点')
+                    .fontSize(12)
+                    .fontColor('#8C8C8C')
+                    .margin({ left: 2 })
+                }
+                .layoutWeight(1)
 
-              Text(' | ')
+                // 照片统计
+                Row() {
+                  Text('📷')
+                    .fontSize(14)
+                    .fontColor('#722ED1')
+                  Text(`${this.project.photoCount || 0}`)
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor('#262626')
+                    .margin({ left: 4 })
+                  Text('张照片')
+                    .fontSize(12)
+                    .fontColor('#8C8C8C')
+                    .margin({ left: 2 })
+                }
+                .layoutWeight(1)
+              }
+              .width('100%')
 
-              Text(`${this.project.photoCount || 0}张照片`)
-                .fontSize(14)
-                .fontColor('#8C8C8C')
+              // 进度条（如果有的话）
+              if (this.project.progress !== undefined) {
+                Row() {
+                  Text('完成进度')
+                    .fontSize(12)
+                    .fontColor('#8C8C8C')
+                    .margin({ right: 8 })
 
-              Blank()
+                  Progress({
+                    value: this.project.progress,
+                    total: 100,
+                    type: ProgressType.Linear
+                  })
+                    .layoutWeight(1)
+                    .color('#1890FF')
+                    .backgroundColor('#F0F0F0')
+                    .height(6)
 
+                  Text(`${this.project.progress}%`)
+                    .fontSize(12)
+                    .fontColor('#1890FF')
+                    .fontWeight(FontWeight.Medium)
+                    .margin({ left: 8 })
+                }
+                .width('100%')
+                .margin({ top: 8 })
+              }
+
+              // 时间信息
               Text(this.getRelativeTime(this.project.updatedAt))
                 .fontSize(12)
                 .fontColor('#BFBFBF')
+                .alignSelf(ItemAlign.Start)
+                .margin({ top: 6 })
             }
             .width('100%')
             .margin({ top: 8 })

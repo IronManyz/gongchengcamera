@@ -576,6 +576,8 @@ export interface ProjectJSON {
   description: string
   tags: string[]
   status: ProjectStatus
+  priority: string
+  progress: number
   siteCount: number
   photoCount: number
   metadata: Map<string, Object>

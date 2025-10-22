@@ -42,6 +42,10 @@ struct ProjectListPage {
   @State private selectedProjectId: string = ''
   @State private showDeleteDialog: boolean = false
   @State private showFilterDialog: boolean = false
+  @State private showAdvancedFilter: boolean = false
+  @State private selectedManager: string = 'all'
+  @State private selectedTimeRange: string = 'all'
+  @State private selectedPriority: string = 'all'
 
   // 项目Store
   private projectStore = projectStore
@@ -53,6 +57,24 @@ struct ProjectListPage {
     { key: ProjectFilter.COMPLETED, label: '已完成' },
     { key: ProjectFilter.PAUSED, label: '已暂停' },
     { key: ProjectFilter.CANCELLED, label: '已取消' }
+  ]
+
+  // 时间范围选项
+  private readonly timeRangeOptions = [
+    { key: 'all', label: '全部时间' },
+    { key: 'today', label: '今天' },
+    { key: 'week', label: '本周' },
+    { key: 'month', label: '本月' },
+    { key: 'quarter', label: '本季度' },
+    { key: 'year', label: '本年' }
+  ]
+
+  // 优先级选项
+  private readonly priorityOptions = [
+    { key: 'all', label: '全部优先级' },
+    { key: 'high', label: '高优先级' },
+    { key: 'medium', label: '中优先级' },
+    { key: 'low', label: '低优先级' }
   ]
 
   aboutToAppear() {
@@ -420,6 +442,31 @@ struct ProjectListPage {
           this.showFilterDialog = !this.showFilterDialog
         })
 
+        // 高级筛选按钮
+        Button() {
+          Row({ space: 6 }) {
+            Text('⚙️')
+              .width(16)
+              .height(16)
+              .fontColor(this.hasAdvancedFilters() ? '#007AFF' : '#666666')
+
+            Text('高级')
+              .fontSize(14)
+              .fontColor(this.hasAdvancedFilters() ? '#007AFF' : '#666666')
+          }
+        }
+        .height(36)
+        .padding({ left: 12, right: 12 })
+        .backgroundColor('#FFFFFF')
+        .borderRadius(18)
+        .border({
+          width: 1,
+          color: this.hasAdvancedFilters() ? '#007AFF' : '#E0E0E0'
+        })
+        .onClick(() => {
+          this.showAdvancedFilter = !this.showAdvancedFilter
+        })
+
         // 排序按钮
         Button() {
           Row({ space: 6 }) {
@@ -470,6 +517,11 @@ struct ProjectListPage {
       // 筛选选项弹窗
       if (this.showFilterDialog) {
         this.buildFilterDialog()
+      }
+
+      // 高级筛选弹窗
+      if (this.showAdvancedFilter) {
+        this.buildAdvancedFilterDialog()
       }
     }
     .width('100%')
@@ -621,6 +673,184 @@ struct ProjectListPage {
     .width('100%')
     .justifyContent(FlexAlign.Center)
     .backgroundColor(Color.Transparent)
+  }
+
+  /**
+   * 构建高级筛选对话框
+   */
+  @Builder
+  private buildAdvancedFilterDialog() {
+    Column() {
+      // 头部
+      Row() {
+        Text('高级筛选')
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#333333')
+
+        Blank()
+
+        Button('关闭')
+          .fontSize(14)
+          .fontColor('#007AFF')
+          .backgroundColor(Color.Transparent)
+          .onClick(() => {
+            this.showAdvancedFilter = false
+          })
+      }
+      .width('100%')
+      .padding(16)
+      .borderRadius({ topLeft: 8, topRight: 8 })
+
+      Divider().color('#F0F0F0')
+
+      // 时间范围筛选
+      Column() {
+        Text('时间范围')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+          .alignSelf(ItemAlign.Start)
+          .margin({ bottom: 12 })
+
+        Grid() {
+          ForEach(
+            this.timeRangeOptions,
+            (option) => {
+              GridItem() {
+                Text(option.label)
+                  .fontSize(14)
+                  .fontColor(this.selectedTimeRange === option.key ? '#007AFF' : '#333333')
+                  .backgroundColor(this.selectedTimeRange === option.key ? '#E6F4FF' : '#F8F8F8')
+                  .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+                  .borderRadius(6)
+                  .textAlign(TextAlign.Center)
+                  .onClick(() => {
+                    this.selectedTimeRange = option.key
+                  })
+              }
+            },
+            (option) => option.key
+          )
+        }
+        .columnsTemplate('1fr 1fr 1fr')
+        .rowsGap(8)
+        .columnsGap(8)
+      }
+      .width('100%')
+      .padding(16)
+      .alignItems(HorizontalAlign.Start)
+
+      Divider().color('#F0F0F0')
+
+      // 优先级筛选
+      Column() {
+        Text('优先级')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+          .alignSelf(ItemAlign.Start)
+          .margin({ bottom: 12 })
+
+        Row({ space: 8 }) {
+          ForEach(
+            this.priorityOptions,
+            (option) => {
+              Text(option.label)
+                .fontSize(14)
+                .fontColor(this.selectedPriority === option.key ? '#007AFF' : '#333333')
+                .backgroundColor(this.selectedPriority === option.key ? '#E6F4FF' : '#F8F8F8')
+                .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+                .borderRadius(6)
+                .textAlign(TextAlign.Center)
+                .onClick(() => {
+                  this.selectedPriority = option.key
+                })
+            },
+            (option) => option.key
+          )
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .padding(16)
+      .alignItems(HorizontalAlign.Start)
+
+      Divider().color('#F0F0F0')
+
+      // 操作按钮
+      Row({ space: 12 }) {
+        Button('重置')
+          .fontSize(16)
+          .fontColor('#666666')
+          .backgroundColor('#F8F8F8')
+          .layoutWeight(1)
+          .height(44)
+          .borderRadius(22)
+          .onClick(() => {
+            this.resetAdvancedFilters()
+          })
+
+        Button('应用筛选')
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#007AFF')
+          .layoutWeight(1)
+          .height(44)
+          .borderRadius(22)
+          .onClick(() => {
+            this.applyAdvancedFilters()
+          })
+      }
+      .width('100%')
+      .padding(16)
+    }
+    .width('100%')
+    .backgroundColor('#FFFFFF')
+    .borderRadius(8)
+    .margin({ left: 16, right: 16 })
+    .shadow({
+      radius: 8,
+      color: 'rgba(0, 0, 0, 0.15)',
+      offsetX: 0,
+      offsetY: 2
+    })
+    .zIndex(10)
+  }
+
+  /**
+   * 检查是否有高级筛选
+   */
+  private hasAdvancedFilters(): boolean {
+    return this.selectedTimeRange !== 'all' ||
+           this.selectedPriority !== 'all' ||
+           this.selectedManager !== 'all'
+  }
+
+  /**
+   * 重置高级筛选
+   */
+  private resetAdvancedFilters(): void {
+    this.selectedTimeRange = 'all'
+    this.selectedPriority = 'all'
+    this.selectedManager = 'all'
+    this.showAdvancedFilter = false
+    // 触发重新筛选
+    this.applyAdvancedFilters()
+  }
+
+  /**
+   * 应用高级筛选
+   */
+  private applyAdvancedFilters(): void {
+    // TODO: 这里应该调用ProjectStore的高级筛选方法
+    // 目前先关闭弹窗
+    this.showAdvancedFilter = false
+    console.log('应用高级筛选:', {
+      timeRange: this.selectedTimeRange,
+      priority: this.selectedPriority,
+      manager: this.selectedManager
+    })
   }
 
   /**
