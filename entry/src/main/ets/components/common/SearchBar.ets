@@ -10,14 +10,14 @@ export struct SearchBar {
   @Param showCancel: boolean = false
   @Param autoFocus: boolean = false
   @Param maxLength: number = 100
-  @Param onSearch?: (query: string) => void
-  @Param onChange?: (query: string) => void
-  @Param onCancel?: () => void
-  @Param onFocus?: () => void
-  @Param onBlur?: () => void
+  @Param onSearch?: (query: string) => void = () => {}
+  @Param onChange?: (query: string) => void = () => {}
+  @Param onCancel?: () => void = () => {}
+  @Param onFocusEvent?: () => void = () => {}
+  @Param onBlurEvent?: () => void = () => {}
 
-  @State private isFocused: boolean = false
-  @State private internalQuery: string = ''
+  @Local private isFocused: boolean = false
+  @Local private internalQuery: string = ''
 
   aboutToAppear() {
     this.internalQuery = this.query
@@ -31,10 +31,9 @@ export struct SearchBar {
   build() {
     Row() {
       // 搜索图标
-      Image($r('app.media.ic_search'))
-        .width(20)
-        .height(20)
-        .fillColor('#999999')
+      Text('🔍')
+        .fontSize(20)
+        .fontColor('#999999')
         .margin({ left: 12, right: 8 })
 
       // 输入框
@@ -61,20 +60,19 @@ export struct SearchBar {
         })
         .onFocus(() => {
           this.isFocused = true
-          this.onFocus?.()
+          this.onFocusEvent?.()
         })
         .onBlur(() => {
           this.isFocused = false
-          this.onBlur?.()
+          this.onBlurEvent?.()
         })
 
       // 清除按钮
       if (this.internalQuery.length > 0) {
         Button() {
-          Image($r('app.media.ic_close'))
-            .width(16)
-            .height(16)
-            .fillColor('#999999')
+          Text('✕')
+            .fontSize(16)
+            .fontColor('#999999')
         }
         .width(32)
         .height(32)
@@ -127,22 +125,21 @@ export struct AdvancedSearchBar {
   @Param placeholder: string = '搜索...'
   @Param filters: SearchFilter[] = []
   @Param selectedFilter: SearchFilter | null = null
-  @Param onSearch?: (query: string, filter?: SearchFilter) => void
-  @Param onChange?: (query: string) => void
-  @Param onFilterChange?: (filter: SearchFilter | null) => void
+  @Param onSearch?: (query: string, filter?: SearchFilter) => void = () => {}
+  @Param onChange?: (query: string) => void = () => {}
+  @Param onFilterChange?: (filter: SearchFilter | null) => void = () => {}
 
-  @State private showFilters: boolean = false
-  @State private isFocused: boolean = false
+  @Local private showFilters: boolean = false
+  @Local private isFocused: boolean = false
 
   build() {
     Column() {
       // 主搜索栏
       Row() {
         // 搜索图标
-        Image($r('app.media.ic_search'))
-          .width(20)
-          .height(20)
-          .fillColor('#999999')
+        Text('🔍')
+          .fontSize(20)
+          .fontColor('#999999')
           .margin({ left: 12, right: 8 })
 
         // 输入框
@@ -176,10 +173,9 @@ export struct AdvancedSearchBar {
         // 筛选按钮
         if (this.filters.length > 0) {
           Button() {
-            Image($r('app.media.ic_filter'))
-              .width(20)
-              .height(20)
-              .fillColor(this.selectedFilter ? '#007AFF' : '#999999')
+            Text('⚙')
+              .fontSize(20)
+              .fontColor(this.selectedFilter ? '#007AFF' : '#999999')
           }
           .width(40)
           .height(40)
@@ -193,10 +189,9 @@ export struct AdvancedSearchBar {
         // 清除按钮
         if (this.query.length > 0) {
           Button() {
-            Image($r('app.media.ic_close'))
-              .width(16)
-              .height(16)
-              .fillColor('#999999')
+            Text('✕')
+              .fontSize(16)
+              .fontColor('#999999')
           }
           .width(32)
           .height(32)
@@ -224,11 +219,10 @@ export struct AdvancedSearchBar {
           Row() {
             Text('全部')
               .fontSize(14)
-              .fontColor(!this.selectedFilter ? '#007AFF' : $r('app.color.text_secondary'))
+              .fontColor(!this.selectedFilter ? '#007AFF' : '#666666')
               .layoutWeight(1)
               .padding(12)
               .onClick(() => {
-                this.selectedFilter = null
                 this.onFilterChange?.(null)
                 this.showFilters = false
                 this.onSearch?.(this.query)
@@ -245,11 +239,10 @@ export struct AdvancedSearchBar {
               Row() {
                 Text(filter.label)
                   .fontSize(14)
-                  .fontColor(this.selectedFilter?.key === filter.key ? '#007AFF' : $r('app.color.text_secondary'))
+                  .fontColor(this.selectedFilter?.key === filter.key ? '#007AFF' : '#666666')
                   .layoutWeight(1)
                   .padding(12)
                   .onClick(() => {
-                    this.selectedFilter = filter
                     this.onFilterChange?.(filter)
                     this.showFilters = false
                     this.onSearch?.(this.query, filter)
@@ -281,11 +274,11 @@ export struct AdvancedSearchBar {
 @ComponentV2
 export struct QuickSearch {
   @Param suggestions: string[] = []
-  @Param onSuggestionClick?: (suggestion: string) => void
-  @Param onSearch?: (query: string) => void
+  @Require @Param onSuggestionClick: (suggestion: string) => void
+  @Require @Param onSearch: (query: string) => void
 
-  @State private showSuggestions: boolean = false
-  @State private query: string = ''
+  @Local private showSuggestions: boolean = false
+  @Local private query: string = ''
 
   build() {
     Column() {
@@ -312,15 +305,14 @@ export struct QuickSearch {
             ).slice(0, 5),
             (suggestion: string) => {
               Row() {
-                Image($r('app.media.ic_history'))
-                  .width(16)
-                  .height(16)
-                  .fillColor('#999999')
+                Text('📋')
+                  .fontSize(16)
+                  .fontColor('#999999')
                   .margin({ right: 8 })
 
                 Text(suggestion)
                   .fontSize(14)
-                  .fontColor($r('app.color.text_secondary'))
+                  .fontColor('#666666')
                   .layoutWeight(1)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -355,5 +347,5 @@ export struct QuickSearch {
 export interface SearchFilter {
   key: string
   label: string
-  value?: any
+  value?: Object
 }

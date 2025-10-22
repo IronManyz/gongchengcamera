@@ -4,6 +4,7 @@
  */
 
 import { hilog } from '@kit.PerformanceAnalysisKit'
+import { relationalStore } from '@kit.ArkData'
 import {
   databaseService,
   DatabaseError,
@@ -42,16 +43,50 @@ export interface QueryBuildResult {
 /**
  * 项目查询条件接口
  */
-export interface ProjectQueryParams extends QueryParams {
+export interface ProjectQueryParams {
+  table: string
+  columns?: string[]
+  selection?: string
+  selectionArgs?: string[]
+  orderBy?: string
+  limit?: number
+  offset?: number
   status?: ProjectStatus
   manager?: string
   client?: string
   tags?: string[]
   startDateRange?: DateRange
+  endDateRange?: DateRange
+  createdDateRange?: DateRange
   dateRange?: DateRange
   nameKeyword?: string
   codeKeyword?: string
 }
+
+/**
+ * 项目数据库数据接口
+ */
+export interface ProjectDbData {
+  project_id: string
+  name: string
+  code: string
+  client: string
+  manager: string
+  start_date: number
+  end_date: number
+  description: string
+  tags: string
+  status: string
+  site_count: number
+  photo_count: number
+  metadata: string
+  created_at: number
+  updated_at: number
+  version: number
+}
+
+// 使用Record类型替换索引签名
+export type ProjectMetadata = Record<string, Object>
 
 /**
  * 项目统计信息
@@ -437,7 +472,7 @@ export class ProjectService {
    * @returns 分页查询结果
    */
   async queryProjectsWithPagination(
-    params: ProjectQueryParams = {},
+    params: ProjectQueryParams = { table: TABLE_NAMES.PROJECTS },
     pagination: PaginationParams = { page: 1, pageSize: PAGINATION.DEFAULT_PAGE_SIZE }
   ): Promise<PaginationResult<Project>> {
     try {
@@ -661,14 +696,15 @@ export class ProjectService {
    */
   async updateProjectPhotoCount(projectId: string, increment: number): Promise<boolean> {
     try {
-      const result = await databaseService.executeSql(`
+      await databaseService.executeSql(`
         UPDATE ${TABLE_NAMES.PROJECTS}
         SET ${PROJECT_FIELDS.PHOTO_COUNT} = ${PROJECT_FIELDS.PHOTO_COUNT} + ?,
             updated_at = ?
         WHERE ${PROJECT_FIELDS.PROJECT_ID} = ?
       `, [increment, Date.now(), projectId])
 
-      return result > 0
+      // 如果执行没有抛出异常，说明更新成功
+      return true
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `更新项目照片数量失败: ${projectId}, 错误: ${JSON.stringify(error)}`)
@@ -683,14 +719,15 @@ export class ProjectService {
    */
   async updateProjectSiteCount(projectId: string, increment: number): Promise<boolean> {
     try {
-      const result = await databaseService.executeSql(`
+      await databaseService.executeSql(`
         UPDATE ${TABLE_NAMES.PROJECTS}
         SET ${PROJECT_FIELDS.SITE_COUNT} = ${PROJECT_FIELDS.SITE_COUNT} + ?,
             updated_at = ?
         WHERE ${PROJECT_FIELDS.PROJECT_ID} = ?
       `, [increment, Date.now(), projectId])
 
-      return result > 0
+      // 如果执行没有抛出异常，说明更新成功
+      return true
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `更新项目工点数量失败: ${projectId}, 错误: ${JSON.stringify(error)}`)
@@ -790,8 +827,34 @@ export class ProjectService {
    * @param project 项目对象
    * @returns 数据库数据格式
    */
-  private projectToDbData(project: Project): Record<string, Object> {
-    const dbData: Record<string, Object> = {
+  /**
+   * 将Map转换为Object
+   * @param map Map对象
+   * @returns 普通对象
+   */
+  private mapToObject(map: Map<string, Object>): ProjectMetadata {
+    const obj: ProjectMetadata = {}
+    map.forEach((value, key) => {
+      obj[key] = value
+    })
+    return obj
+  }
+
+  /**
+   * 将Object转换为Map
+   * @param obj 普通对象
+   * @returns Map对象
+   */
+  private objectToMap(obj: ProjectMetadata): Map<string, Object> {
+    const map = new Map<string, Object>()
+    Object.keys(obj).forEach(key => {
+      map.set(key, obj[key])
+    })
+    return map
+  }
+
+  private projectToDbData(project: Project): ProjectDbData {
+    const dbData: ProjectDbData = {
       project_id: project.id,
       name: project.name,
       code: project.code,
@@ -804,7 +867,7 @@ export class ProjectService {
       status: project.status,
       site_count: project.siteCount,
       photo_count: project.photoCount,
-      metadata: JSON.stringify(project.metadata),
+      metadata: JSON.stringify(this.mapToObject(project.metadata)),
       created_at: project.createdAt.getTime(),
       updated_at: project.updatedAt.getTime(),
       version: project.version
@@ -832,7 +895,12 @@ export class ProjectService {
     // 解析JSON字段
     try {
       const tagsJson = resultSet.getString(resultSet.getColumnIndex(PROJECT_FIELDS.TAGS))
-      project.tags = tagsJson ? JSON.parse(tagsJson) : []
+      if (tagsJson) {
+        const parsedTags: Object[] = JSON.parse(tagsJson) as Object[]
+        project.tags = Array.isArray(parsedTags) ? parsedTags as string[] : []
+      } else {
+        project.tags = []
+      }
     } catch (e) {
       project.tags = []
     }
@@ -843,9 +911,17 @@ export class ProjectService {
 
     try {
       const metadataJson = resultSet.getString(resultSet.getColumnIndex(PROJECT_FIELDS.METADATA))
-      project.metadata = metadataJson ? JSON.parse(metadataJson) : {}
+      if (metadataJson) {
+        const parsedMetadata: ProjectMetadata = JSON.parse(metadataJson) as ProjectMetadata
+        const metadataObj: ProjectMetadata = typeof parsedMetadata === 'object' && parsedMetadata !== null
+          ? parsedMetadata
+          : {}
+        project.metadata = this.objectToMap(metadataObj)
+      } else {
+        project.metadata = new Map()
+      }
     } catch (e) {
-      project.metadata = {}
+      project.metadata = new Map()
     }
 
     project.createdAt = new Date(resultSet.getLong(resultSet.getColumnIndex('created_at')))

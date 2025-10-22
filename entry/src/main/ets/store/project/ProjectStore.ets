@@ -272,7 +272,7 @@ export class ProjectStore extends BaseStore {
    * 更新项目
    */
   async updateProject(project: Project): Promise<boolean> {
-    return await this.safeExecute(async () => {
+    const result = await this.safeExecute(async () => {
       this.checkInitialized()
       this.setLoadingState('isUpdating', true)
       this.clearError()
@@ -309,13 +309,15 @@ export class ProjectStore extends BaseStore {
       return success
 
     }, 'updateProject', '更新项目失败')
+
+    return result ?? false
   }
 
   /**
    * 删除项目
    */
   async deleteProject(projectId: string): Promise<boolean> {
-    return await this.safeExecute(async () => {
+    const result = await this.safeExecute(async () => {
       this.checkInitialized()
       this.setLoadingState('isDeleting', true)
       this.clearError()
@@ -347,13 +349,15 @@ export class ProjectStore extends BaseStore {
       return success
 
     }, 'deleteProject', '删除项目失败')
+
+    return result ?? false
   }
 
   /**
    * 批量删除项目
    */
   async deleteProjects(projectIds: string[]): Promise<number> {
-    return await this.safeExecute(async () => {
+    const result = await this.safeExecute(async () => {
       this.checkInitialized()
       this.setLoadingState('isDeleting', true)
       this.clearError()
@@ -381,13 +385,15 @@ export class ProjectStore extends BaseStore {
       return deletedCount
 
     }, 'deleteProjects', '批量删除项目失败')
+
+    return result ?? 0
   }
 
   /**
    * 根据ID获取项目
    */
   async getProjectById(projectId: string): Promise<Project | null> {
-    return await this.safeExecute(async () => {
+    const result = await this.safeExecute(async () => {
       this.checkInitialized()
       this.clearError()
 
@@ -398,26 +404,29 @@ export class ProjectStore extends BaseStore {
 
       if (!project) {
         // 从数据库查询
-        project = await this.projectService.getProjectById(projectId)
-        if (project) {
+        const dbProject = await this.projectService.getProjectById(projectId)
+        if (dbProject) {
+          project = dbProject
           this.projects.push(project)
           this.applyFiltersAndSort()
         }
       }
 
-      this.currentProject = project
+      this.currentProject = project || null
       this.log('项目详情查询完成', { found: !!project })
 
       return project
 
     }, 'getProjectById', '查询项目详情失败')
+
+    return result ?? null
   }
 
   /**
    * 搜索项目
    */
   async searchProjects(query: string, limit: number = 50): Promise<Project[]> {
-    return await this.safeExecute(async () => {
+    const result = await this.safeExecute(async () => {
       this.checkInitialized()
       this.clearError()
 
@@ -429,6 +438,8 @@ export class ProjectStore extends BaseStore {
       return projects
 
     }, 'searchProjects', '搜索项目失败')
+
+    return result ?? []
   }
 
   /**
