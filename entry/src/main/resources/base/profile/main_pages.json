@@ -2,6 +2,7 @@
   "src": [
     "pages/common/SplashPage",
     "pages/Index",
+    "pages/TestPage",
     "pages/MainPage",
     "pages/project/SimpleProjectListPage"
   ]
