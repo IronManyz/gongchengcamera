@@ -13,7 +13,7 @@ import {
   PaginationResult
 } from './DatabaseService'
 import { Project } from '../../models/Project'
-import { ProjectStatus } from '../../types/AppTypes'
+import { ProjectStatus, PaginatedResponse, PaginatedResponseImpl } from '../../types/AppTypes'
 import {
   TABLE_NAMES,
   PROJECT_FIELDS,
@@ -474,7 +474,7 @@ export class ProjectService {
   async queryProjectsWithPagination(
     params: ProjectQueryParams = { table: TABLE_NAMES.PROJECTS },
     pagination: PaginationParams = { page: 1, pageSize: PAGINATION.DEFAULT_PAGE_SIZE }
-  ): Promise<PaginationResult<Project>> {
+  ): Promise<PaginatedResponseImpl<Project>> {
     try {
       hilog.debug(0x0000, this.TAG, `分页查询项目: page=${pagination.page}, size=${pagination.pageSize}`)
 
@@ -512,13 +512,7 @@ export class ProjectService {
 
       hilog.debug(0x0000, this.TAG, `分页查询完成: ${projects.length}/${total}条`)
 
-      return {
-        data: projects,
-        total,
-        page: pagination.page,
-        pageSize,
-        totalPages
-      }
+      return new PaginatedResponseImpl(projects, total, pagination.page, pageSize)
 
     } catch (error) {
       hilog.error(0x0000, this.TAG, `分页查询项目失败: ${JSON.stringify(error)}`)

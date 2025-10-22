@@ -228,18 +228,27 @@ struct ProjectListPage {
 
       // 加载对话框
       if (this.isLoading) {
-        LoadingDialog({ message: '加载中...' })
+        LoadingDialog({
+          show: this.isLoading,
+          message: '加载中...',
+          onCancel: () => {}
+        })
       }
 
       // 删除确认对话框
       if (this.showDeleteDialog) {
         ConfirmDialog({
+          show: this.showDeleteDialog,
           title: '删除项目',
           message: `确定要删除选中的项目吗？此操作不可恢复。`,
           confirmText: '删除',
           cancelText: '取消',
           onConfirm: () => this.deleteProject(),
           onCancel: () => {
+            this.showDeleteDialog = false
+            this.selectedProjectId = ''
+          },
+          onClose: () => {
             this.showDeleteDialog = false
             this.selectedProjectId = ''
           }

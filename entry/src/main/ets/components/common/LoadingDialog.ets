@@ -8,7 +8,7 @@ export struct LoadingDialog {
   @Param show: boolean = false
   @Param message: string = '加载中...'
   @Param showCancel: boolean = false
-  @Require @Param onCancel?: () => void
+  @Require @Param onCancel: () => void = () => {}
 
   build() {
     if (this.show) {
@@ -75,15 +75,15 @@ export struct LoadingDialog {
 export struct LoadingIndicator {
   @Param loading: boolean = false
   @Param message: string = ''
-  @Param size: number = 24
+  @Param indicatorSize: number = 24
   @Param color: string = '#007AFF'
 
   build() {
     if (this.loading) {
       Row() {
         LoadingProgress()
-          .width(this.size)
-          .height(this.size)
+          .width(this.indicatorSize)
+          .height(this.indicatorSize)
           .color(this.color)
 
         if (this.message) {
@@ -107,7 +107,7 @@ export struct LoadingIndicator {
 export struct FullScreenLoading {
   @Param show: boolean = false
   @Param message: string = '加载中...'
-  @Param backgroundColor: string = '#F5F5F5'
+  @Param bgColor: string = '#F5F5F5'
 
   build() {
     if (this.show) {
@@ -127,7 +127,7 @@ export struct FullScreenLoading {
       .height('100%')
       .justifyContent(FlexAlign.Center)
       .alignItems(HorizontalAlign.Center)
-      .backgroundColor(this.backgroundColor)
+      .backgroundColor(this.bgColor)
       .zIndex(999)
     }
   }

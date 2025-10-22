@@ -122,6 +122,96 @@ struct AdvancedComponent {
 }
 ```
 
+#### ComponentV2 @Require 装饰器使用规范
+```typescript
+// ✅ 正确：@Require 装饰的 @Param 必须提供默认值
+@ComponentV2
+export struct ConfirmDialog {
+  @Param show: boolean = false
+  @Param title: string = '确认'
+  @Require @Param onConfirm: () => void = () => {}  // 必须提供默认值
+  @Require @Param onCancel: () => void = () => {}    // 必须提供默认值
+  @Require @Param onClose: () => void = () => {}      // 必须提供默认值
+
+  build() {
+    // 组件构建逻辑
+  }
+}
+
+// ✅ 正确：使用组件时传递所有必需参数
+ConfirmDialog({
+  show: this.showDialog,
+  title: '删除确认',
+  onConfirm: () => this.handleConfirm(),
+  onCancel: () => this.handleCancel(),
+  onClose: () => this.handleClose()
+})
+
+// ❌ 错误：@Require 装饰器没有默认值
+@ComponentV2
+export struct BadDialog {
+  @Require @Param onConfirm?: () => void  // 编译错误：必须提供默认值
+}
+```
+
+#### CustomComponent 属性命名规范
+```typescript
+// ✅ 正确：避免与 CustomComponent 内置属性冲突
+@ComponentV2
+export struct LoadingIndicator {
+  @Param loading: boolean = false
+  @Param indicatorSize: number = 24      // 避免使用 'size' (内置属性)
+  @Param bgColor: string = '#F5F5F5'     // 避免使用 'backgroundColor' (内置属性)
+  @Param message: string = ''
+
+  build() {
+    LoadingProgress()
+      .width(this.indicatorSize)         // 使用自定义属性名
+      .height(this.indicatorSize)
+      .color('#007AFF')
+  }
+}
+
+// ❌ 错误：与内置属性名冲突
+@ComponentV2
+export struct BadIndicator {
+  @Param size: number = 24              // 编译错误：与内置 size 属性冲突
+  @Param backgroundColor: string = '#FFF' // 编译错误：与内置 backgroundColor 属性冲突
+}
+```
+
+#### ArkTS 结构化类型限制
+```typescript
+// ✅ 正确：使用具体类而不是接口类型转换
+export class PaginatedResponseImpl<T> implements PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+
+  constructor(data: T[], total: number, page: number, pageSize: number) {
+    this.data = data
+    this.total = total
+    this.page = page
+    this.pageSize = pageSize
+    this.totalPages = Math.ceil(total / pageSize)
+    this.hasNext = page < this.totalPages
+    this.hasPrev = page > 1
+  }
+}
+
+// 服务返回具体类型
+async queryProjectsWithPagination(): Promise<PaginatedResponseImpl<Project>> {
+  return new PaginatedResponseImpl(projects, total, page, pageSize)
+}
+
+// ❌ 错误：ArkTS 不支持结构化类型转换
+const result: PaginatedResponse<Project> = serviceResult as PaginatedResponse<Project>  // 编译错误
+```
+
 ## 2. 组件开发规范
 
 ### 2.1 页面组件结构

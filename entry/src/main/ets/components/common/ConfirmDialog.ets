@@ -12,9 +12,9 @@ export struct ConfirmDialog {
   @Param cancelText: string = '取消'
   @Param showCancel: boolean = true
   @Param danger: boolean = false
-  @Require @Param onConfirm?: () => void
-  @Require @Param onCancel?: () => void
-  @Require @Param onClose?: () => void
+  @Require @Param onConfirm: () => void = () => {}
+  @Require @Param onCancel: () => void = () => {}
+  @Require @Param onClose: () => void = () => {}
 
   build() {
     if (this.show) {
@@ -108,9 +108,9 @@ export struct DeleteConfirmDialog {
   @Param title: string = '删除确认'
   @Param message: string = '确定要删除吗？此操作不可恢复。'
   @Param itemName: string = ''
-  @Require @Param onConfirm?: () => void
-  @Require @Param onCancel?: () => void
-  @Require @Param onClose?: () => void
+  @Require @Param onConfirm: () => void = () => {}
+  @Require @Param onCancel: () => void = () => {}
+  @Require @Param onClose: () => void = () => {}
 
   build() {
     ConfirmDialog({
@@ -135,9 +135,9 @@ export struct DeleteConfirmDialog {
 export struct ExitConfirmDialog {
   @Param show: boolean = false
   @Param message: string = '确定要退出吗？未保存的更改将会丢失。'
-  @Require @Param onConfirm?: () => void
-  @Require @Param onCancel?: () => void
-  @Require @Param onClose?: () => void
+  @Require @Param onConfirm: () => void = () => {}
+  @Require @Param onCancel: () => void = () => {}
+  @Require @Param onClose: () => void = () => {}
 
   build() {
     ConfirmDialog({
@@ -163,9 +163,9 @@ export struct PermissionConfirmDialog {
   @Param show: boolean = false
   @Param permission: string = ''
   @Param description: string = ''
-  @Require @Param onConfirm?: () => void
-  @Require @Param onCancel?: () => void
-  @Require @Param onClose?: () => void
+  @Require @Param onConfirm: () => void = () => {}
+  @Require @Param onCancel: () => void = () => {}
+  @Require @Param onClose: () => void = () => {}
 
   build() {
     ConfirmDialog({

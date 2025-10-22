@@ -358,6 +358,29 @@ export interface PaginatedResponse<T> {
 }
 
 /**
+ * 分页响应实现类
+ */
+export class PaginatedResponseImpl<T> implements PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+
+  constructor(data: T[], total: number, page: number, pageSize: number) {
+    this.data = data
+    this.total = total
+    this.page = page
+    this.pageSize = pageSize
+    this.totalPages = Math.ceil(total / pageSize)
+    this.hasNext = page < this.totalPages
+    this.hasPrev = page > 1
+  }
+}
+
+/**
  * 分页结果接口（别名）
  */
 export type PaginationResult<T> = PaginatedResponse<T>

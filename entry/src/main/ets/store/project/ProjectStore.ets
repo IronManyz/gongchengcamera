@@ -12,7 +12,8 @@ import {
   ProjectFilter,
   ProjectSortOrder,
   PaginationParams,
-  PaginatedResponse
+  PaginatedResponse,
+  PaginatedResponseImpl
 } from '../../types/AppTypes'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 
@@ -208,7 +209,7 @@ export class ProjectStore extends BaseStore {
       const actualParams: ProjectQueryParams = params || { table: 'projects' }
       const actualPagination: PaginationParams = pagination || { page: this.currentPage, pageSize: this.pageSize }
 
-      const result: PaginatedResponse<Project> = await this.projectService.queryProjectsWithPagination(actualParams, actualPagination)
+      const result: PaginatedResponseImpl<Project> = await this.projectService.queryProjectsWithPagination(actualParams, actualPagination)
 
       // 更新状态
       if (actualPagination.page === 1) {
