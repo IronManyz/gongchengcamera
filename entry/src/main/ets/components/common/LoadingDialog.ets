@@ -8,7 +8,7 @@ export struct LoadingDialog {
   @Param show: boolean = false
   @Param message: string = '加载中...'
   @Param showCancel: boolean = false
-  @Param onCancel?: () => void
+  @Require @Param onCancel?: () => void
 
   build() {
     if (this.show) {
@@ -28,12 +28,12 @@ export struct LoadingDialog {
           LoadingProgress()
             .width(48)
             .height(48)
-            .color($r('app.color.loading_color'))
+            .color('#007AFF')
 
           // 加载文字
           Text(this.message)
             .fontSize(16)
-            .fontColor($r('app.color.text_primary'))
+            .fontColor('#333333')
             .margin({ top: 16 })
             .textAlign(TextAlign.Center)
 
@@ -41,7 +41,7 @@ export struct LoadingDialog {
           if (this.showCancel && this.onCancel) {
             Button('取消')
               .fontSize(14)
-              .fontColor($r('app.color.text_secondary'))
+              .fontColor('#666666')
               .backgroundColor(Color.Transparent)
               .margin({ top: 20 })
               .onClick(() => {
@@ -50,7 +50,7 @@ export struct LoadingDialog {
           }
         }
         .padding(24)
-        .backgroundColor($r('app.color.dialog_background'))
+        .backgroundColor('#FFFFFF')
         .borderRadius(12)
         .margin({ left: 40, right: 40 })
         .shadow({
@@ -76,7 +76,7 @@ export struct LoadingIndicator {
   @Param loading: boolean = false
   @Param message: string = ''
   @Param size: number = 24
-  @Param color: Resource = $r('app.color.primary')
+  @Param color: Resource = '#007AFF'
 
   build() {
     if (this.loading) {
@@ -89,7 +89,7 @@ export struct LoadingIndicator {
         if (this.message) {
           Text(this.message)
             .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
+            .fontColor('#666666')
             .margin({ left: 8 })
         }
       }
@@ -107,7 +107,7 @@ export struct LoadingIndicator {
 export struct FullScreenLoading {
   @Param show: boolean = false
   @Param message: string = '加载中...'
-  @Param backgroundColor: Resource = $r('app.color.background')
+  @Param backgroundColor: Resource = '#F5F5F5'
 
   build() {
     if (this.show) {
@@ -115,11 +115,11 @@ export struct FullScreenLoading {
         LoadingProgress()
           .width(56)
           .height(56)
-          .color($r('app.color.primary'))
+          .color('#007AFF')
 
         Text(this.message)
           .fontSize(18)
-          .fontColor($r('app.color.text_secondary'))
+          .fontColor('#666666')
           .margin({ top: 16 })
           .textAlign(TextAlign.Center)
       }

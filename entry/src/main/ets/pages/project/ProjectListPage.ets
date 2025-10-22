@@ -287,7 +287,7 @@ struct ProjectListPage {
     .padding(16)
     .backgroundColor('#FFFFFF')
     .borderRadius(8)
-    .margin({ horizontal: 16, vertical: 12 })
+    .margin({ left: 16, right: 16, top: 12, bottom: 12 })
     .shadow({
       radius: 6,
       color: '#00000008',
@@ -430,7 +430,7 @@ struct ProjectListPage {
         }
       }
       .width('100%')
-      .padding({ horizontal: 16 })
+      .padding({ left: 16, right: 16 })
 
       // 筛选选项弹窗
       if (this.showFilterDialog) {
@@ -486,7 +486,7 @@ struct ProjectListPage {
     .width('100%')
     .backgroundColor('#FFFFFF')
     .borderRadius(8)
-    .margin({ horizontal: 16 })
+    .margin({ left: 16, right: 16 })
     .shadow({
       radius: 8,
       color: 'rgba(0, 0, 0, 0.15)',
@@ -503,7 +503,7 @@ struct ProjectListPage {
   private buildProjectList() {
     Refresh({ refreshing: $$isRefreshing, friction: 100 }) {
       if (this.projectStore.hasFilteredProjects) {
-        List({ space: 12 }) {
+        List({ space: 12, onRefresh: () => this.onRefresh() }) {
           ForEach(
             this.projectStore.filteredProjects,
             (project: Project) => {
@@ -516,8 +516,7 @@ struct ProjectListPage {
         }
         .width('100%')
         .layoutWeight(1)
-        .padding({ horizontal: 16, vertical: 8 })
-        .onRefresh(() => this.onRefresh())
+        .padding({ left: 16, right: 16, top: 8, bottom: 8 })
       } else {
         Column() {
           Image($r('app.media.ic_folder'))
@@ -544,7 +543,7 @@ struct ProjectListPage {
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
         .layoutWeight(1)
-        .margin({ horizontal: 16 })
+        .margin({ left: 16, right: 16 })
       }
     }
   }

@@ -34,7 +34,7 @@ export struct SearchBar {
       Image($r('app.media.ic_search'))
         .width(20)
         .height(20)
-        .fillColor($r('app.color.text_tertiary'))
+        .fillColor('#999999')
         .margin({ left: 12, right: 8 })
 
       // 输入框
@@ -43,14 +43,14 @@ export struct SearchBar {
         text: this.internalQuery
       })
         .fontSize(16)
-        .fontColor($r('app.color.text_primary'))
-        .placeholderColor($r('app.color.text_tertiary'))
+        .fontColor('#333333')
+        .placeholderColor('#999999')
         .backgroundColor(Color.Transparent)
         .layoutWeight(1)
         .height(40)
         .maxLength(this.maxLength)
         .type(InputType.Normal)
-        .caretColor($r('app.color.primary'))
+        .caretColor('#007AFF')
         .enableAutoFill(false)
         .onChange((value: string) => {
           this.internalQuery = value
@@ -74,7 +74,7 @@ export struct SearchBar {
           Image($r('app.media.ic_close'))
             .width(16)
             .height(16)
-            .fillColor($r('app.color.text_tertiary'))
+            .fillColor('#999999')
         }
         .width(32)
         .height(32)
@@ -91,7 +91,7 @@ export struct SearchBar {
       if (this.showCancel && this.isFocused) {
         Button('取消')
           .fontSize(16)
-          .fontColor($r('app.color.primary'))
+          .fontColor('#007AFF')
           .backgroundColor(Color.Transparent)
           .margin({ left: 8, right: 12 })
           .onClick(() => {
@@ -103,11 +103,11 @@ export struct SearchBar {
     }
     .width('100%')
     .height(48)
-    .backgroundColor($r('app.color.search_background'))
+    .backgroundColor('#F8F9FA')
     .borderRadius(24)
     .border({
       width: this.isFocused ? 1 : 0,
-      color: $r('app.color.primary')
+      color: '#007AFF'
     })
     .shadow({
       radius: 4,
@@ -142,7 +142,7 @@ export struct AdvancedSearchBar {
         Image($r('app.media.ic_search'))
           .width(20)
           .height(20)
-          .fillColor($r('app.color.text_tertiary'))
+          .fillColor('#999999')
           .margin({ left: 12, right: 8 })
 
         // 输入框
@@ -151,14 +151,14 @@ export struct AdvancedSearchBar {
           text: this.query
         })
           .fontSize(16)
-          .fontColor($r('app.color.text_primary'))
-          .placeholderColor($r('app.color.text_tertiary'))
+          .fontColor('#333333')
+          .placeholderColor('#999999')
           .backgroundColor(Color.Transparent)
           .layoutWeight(1)
           .height(40)
           .maxLength(100)
           .type(InputType.Normal)
-          .caretColor($r('app.color.primary'))
+          .caretColor('#007AFF')
           .enableAutoFill(false)
           .onChange((value: string) => {
             this.onChange?.(value)
@@ -179,7 +179,7 @@ export struct AdvancedSearchBar {
             Image($r('app.media.ic_filter'))
               .width(20)
               .height(20)
-              .fillColor(this.selectedFilter ? $r('app.color.primary') : $r('app.color.text_tertiary'))
+              .fillColor(this.selectedFilter ? '#007AFF' : '#999999')
           }
           .width(40)
           .height(40)
@@ -196,7 +196,7 @@ export struct AdvancedSearchBar {
             Image($r('app.media.ic_close'))
               .width(16)
               .height(16)
-              .fillColor($r('app.color.text_tertiary'))
+              .fillColor('#999999')
           }
           .width(32)
           .height(32)
@@ -210,11 +210,11 @@ export struct AdvancedSearchBar {
       }
       .width('100%')
       .height(48)
-      .backgroundColor($r('app.color.search_background'))
+      .backgroundColor('#F8F9FA')
       .borderRadius(24)
       .border({
         width: this.isFocused ? 1 : 0,
-        color: $r('app.color.primary')
+        color: '#007AFF'
       })
 
       // 筛选选项
@@ -224,7 +224,7 @@ export struct AdvancedSearchBar {
           Row() {
             Text('全部')
               .fontSize(14)
-              .fontColor(!this.selectedFilter ? $r('app.color.primary') : $r('app.color.text_secondary'))
+              .fontColor(!this.selectedFilter ? '#007AFF' : $r('app.color.text_secondary'))
               .layoutWeight(1)
               .padding(12)
               .onClick(() => {
@@ -245,7 +245,7 @@ export struct AdvancedSearchBar {
               Row() {
                 Text(filter.label)
                   .fontSize(14)
-                  .fontColor(this.selectedFilter?.key === filter.key ? $r('app.color.primary') : $r('app.color.text_secondary'))
+                  .fontColor(this.selectedFilter?.key === filter.key ? '#007AFF' : $r('app.color.text_secondary'))
                   .layoutWeight(1)
                   .padding(12)
                   .onClick(() => {
@@ -261,7 +261,7 @@ export struct AdvancedSearchBar {
           )
         }
         .width('100%')
-        .backgroundColor($r('app.color.surface'))
+        .backgroundColor('#FFFFFF')
         .borderRadius(8)
         .margin({ top: 8 })
         .shadow({
@@ -315,7 +315,7 @@ export struct QuickSearch {
                 Image($r('app.media.ic_history'))
                   .width(16)
                   .height(16)
-                  .fillColor($r('app.color.text_tertiary'))
+                  .fillColor('#999999')
                   .margin({ right: 8 })
 
                 Text(suggestion)
@@ -338,7 +338,7 @@ export struct QuickSearch {
           )
         }
         .width('100%')
-        .backgroundColor($r('app.color.surface'))
+        .backgroundColor('#FFFFFF')
         .borderRadius(8)
         .margin({ top: 8 })
         .shadow({

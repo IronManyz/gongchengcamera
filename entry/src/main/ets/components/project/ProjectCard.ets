@@ -9,10 +9,10 @@ import router from '@ohos.router'
 
 @ComponentV2
 export struct ProjectCard {
-  @Param @Require project: Project = new Project()
+  @Require @Param project: Project = new Project()
   @Param showStats: boolean = true
-  @Param @Require onTap?: (project: Project) => void
-  @Param @Require onLongPress?: (project: Project) => void
+  @Require @Param onTap?: (project: Project) => void
+  @Require @Param onLongPress?: (project: Project) => void
 
   // 状态颜色映射
   private getStatusColor(status: ProjectStatus): string {

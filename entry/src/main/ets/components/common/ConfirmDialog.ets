@@ -12,9 +12,9 @@ export struct ConfirmDialog {
   @Param cancelText: string = '取消'
   @Param showCancel: boolean = true
   @Param danger: boolean = false
-  @Param @Require onConfirm?: () => void
-  @Param @Require onCancel?: () => void
-  @Param @Require onClose?: () => void
+  @Require @Param onConfirm?: () => void
+  @Require @Param onCancel?: () => void
+  @Require @Param onClose?: () => void
 
   build() {
     if (this.show) {
