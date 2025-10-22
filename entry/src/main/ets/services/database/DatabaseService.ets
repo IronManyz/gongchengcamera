@@ -11,19 +11,19 @@ import {
   ERROR_CODES,
   TABLE_NAMES,
   FILE_PATHS
-} from '../constants/DatabaseConstants'
+} from '../../constants/DatabaseConstants'
 import {
   CREATE_TABLES_SQL,
   CREATE_VERSION_TABLE,
   INSERT_VERSION_SQL,
   GET_CURRENT_VERSION_SQL,
   TABLE_EXISTS_SQL
-} from '../constants/TableSchemas'
+} from '../../constants/TableSchemas'
 import {
   ALL_INDEXES_SQL,
   DROP_INDEXES_SQL,
   INDEX_STATS_SQL
-} from '../constants/IndexDefinitions'
+} from '../../constants/IndexDefinitions'
 
 /**
  * 数据库配置接口
