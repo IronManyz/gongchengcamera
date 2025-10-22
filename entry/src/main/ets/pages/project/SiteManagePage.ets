@@ -49,6 +49,9 @@ struct SiteManagePage {
   @State private isGettingLocation: boolean = false
   @State private locationError: string = ''
   @State private showLocationPicker: boolean = false
+  @State private tempLatitude: number = 0
+  @State private tempLongitude: number = 0
+  @State private mapZoomLevel: number = 15
   @State private showMapPreview: boolean = false
 
   // 当前工点数据（查看模式）
@@ -231,8 +234,10 @@ struct SiteManagePage {
    * 在地图上选择位置
    */
   private selectLocationOnMap() {
+    // 初始化临时坐标为当前值
+    this.tempLatitude = this.latitude || 39.9042 // 默认北京坐标
+    this.tempLongitude = this.longitude || 116.4074
     this.showLocationPicker = true
-    // TODO: 实现地图选择功能
     console.log('打开地图选择位置')
   }
 
@@ -409,6 +414,11 @@ struct SiteManagePage {
           onConfirm: () => this.confirmGoBack(),
           onCancel: () => this.cancelGoBack()
         })
+      }
+
+      // 地图选择器对话框
+      if (this.showLocationPicker) {
+        this.buildLocationPickerDialog()
       }
     }
     .width('100%')
