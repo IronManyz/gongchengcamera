@@ -6,6 +6,10 @@
     "pages/SimpleTestPage",
     "pages/MainPage",
     "pages/project/ProjectListPage",
-    "pages/project/SimpleProjectListPage"
+    "pages/project/SimpleProjectListPage",
+    "pages/project/ProjectDetailPage_Simple",
+    "pages/camera/CameraPage_Simple",
+    "pages/photo/PhotoPreviewPage",
+    "pages/site/SitePhotoPage"
   ]
 }

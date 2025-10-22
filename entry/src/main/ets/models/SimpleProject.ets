@@ -18,6 +18,7 @@ export class SimpleProject {
   @Trace status: ProjectStatus = ProjectStatus.ACTIVE
   @Trace siteCount: number = 0
   @Trace photoCount: number = 0
+  @Trace description: string = ''
   @Trace createdAt: Date = new Date()
   @Trace updatedAt: Date = new Date()
 
