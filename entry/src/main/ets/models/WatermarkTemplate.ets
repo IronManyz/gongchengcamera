@@ -4,7 +4,7 @@
  */
 
 import { BaseModel } from './base/BaseModel'
-import { TemplateCategory, WatermarkField, WatermarkStyle } from '../types/AppTypes'
+import { TemplateCategory, WatermarkField, WatermarkStyle, ExportConfig, WatermarkTemplateJSON, BaseModelJSON } from '../types/AppTypes'
 
 @ObservedV2
 export class WatermarkTemplate extends BaseModel {
@@ -12,7 +12,16 @@ export class WatermarkTemplate extends BaseModel {
   @Trace description: string = ''
   @Trace category: TemplateCategory = TemplateCategory.CUSTOM
   @Trace fields: WatermarkField[] = []
-  @Trace style: WatermarkStyle = {}
+  @Trace style: WatermarkStyle = {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    textColor: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'HarmonyOS Sans',
+    opacity: 0.9,
+    borderRadius: 8,
+    padding: 12,
+    position: 'bottom-right'
+  }
   @Trace preview: string = ''
   @Trace isDefault: boolean = false
   @Trace isSystem: boolean = false
@@ -24,25 +33,9 @@ export class WatermarkTemplate extends BaseModel {
     if (this.id === '') {
       this.id = BaseModel.generateId()
     }
-    this.initializeDefaultStyle()
   }
 
-  /**
-   * 初始化默认样式
-   */
-  private initializeDefaultStyle(): void {
-    this.style = {
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      textColor: '#FFFFFF',
-      fontSize: 14,
-      fontFamily: 'HarmonyOS Sans',
-      opacity: 0.9,
-      borderRadius: 8,
-      padding: 12,
-      position: 'bottom-right'
-    }
-  }
-
+  
   /**
    * 验证模板数据是否完整
    */
@@ -212,69 +205,8 @@ export class WatermarkTemplate extends BaseModel {
     return !this.isSystemTemplate() && !this.isDefault
   }
 
-  /**
-   * 克隆模板（用于创建副本）
-   */
-  clone(name?: string): WatermarkTemplate {
-    const cloned = new WatermarkTemplate()
-
-    cloned.name = name || `${this.name} 副本`
-    cloned.description = this.description
-    cloned.category = TemplateCategory.CUSTOM // 克隆的模板总是自定义的
-
-    // Clone fields manually without spread operator
-    cloned.fields = []
-    for (const field of this.fields) {
-      const clonedField: WatermarkField = {
-        key: field.key,
-        label: field.label,
-        enabled: field.enabled,
-        format: field.format,
-        position: field.position
-      }
-      cloned.fields.push(clonedField)
-    }
-
-    // Clone style manually without spread operator
-    cloned.style = {
-      backgroundColor: this.style.backgroundColor,
-      textColor: this.style.textColor,
-      fontSize: this.style.fontSize,
-      fontFamily: this.style.fontFamily,
-      opacity: this.style.opacity,
-      borderRadius: this.style.borderRadius,
-      padding: this.style.padding,
-      position: this.style.position
-    }
-
-    cloned.preview = this.preview
-    cloned.isDefault = false // 克隆的模板不能是默认的
-    cloned.isSystem = false // 克隆的模板不是系统的
-    cloned.usageCount = 0 // 重置使用次数
-
-    // Clone config manually without spread operator
-    cloned.config = {}
-    const configKeys = Object.keys(this.config) as string[]
-    for (let i = 0; i < configKeys.length; i++) {
-      const key = configKeys[i]
-      cloned.config[key] = this.config[key]
-    }
-
-    return cloned
-  }
-
-  /**
-   * 导出配置接口
-   */
-  interface ExportConfig {
-    name: string
-    description: string
-    category: TemplateCategory
-    fields: WatermarkField[]
-    style: WatermarkStyle
-    config: Record<string, string | number | boolean>
-  }
-
+  
+  
   /**
    * 导出为JSON配置
    */
@@ -333,30 +265,11 @@ export class WatermarkTemplate extends BaseModel {
            this.fields.some(field => field.label.toLowerCase().includes(lowercaseQuery))
   }
 
+  
   /**
-   * JSON数据接口
+   * 转换为完整的JSON对象（包含额外字段）
    */
-  interface WatermarkTemplateJSON {
-    id: string
-    createdAt: Date | null
-    updatedAt: Date | null
-    version: number
-    name: string
-    description: string
-    category: TemplateCategory
-    fields: WatermarkField[]
-    style: WatermarkStyle
-    preview: string
-    isDefault: boolean
-    isSystem: boolean
-    usageCount: number
-    config: Record<string, string | number | boolean>
-  }
-
-  /**
-   * 转换为JSON对象（包含额外字段）
-   */
-  override toJSON(): WatermarkTemplateJSON {
+  toFullJSON(): WatermarkTemplateJSON {
     const baseData = super.toJSON()
     const jsonData: WatermarkTemplateJSON = {
       id: baseData.id,
@@ -380,7 +293,7 @@ export class WatermarkTemplate extends BaseModel {
   /**
    * 从JSON对象创建实例
    */
-  static override fromJSON(data: WatermarkTemplateJSON): WatermarkTemplate {
+  static fromFullJSON(data: WatermarkTemplateJSON): WatermarkTemplate {
     const template = new WatermarkTemplate()
 
     if (data.id) template.id = data.id

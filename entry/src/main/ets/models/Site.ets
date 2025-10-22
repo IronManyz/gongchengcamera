@@ -4,7 +4,7 @@
  */
 
 import { BaseModel } from './base/BaseModel'
-import { LocationData } from '../types/AppTypes'
+import { LocationData, SiteJSON } from '../types/AppTypes'
 import { Photo } from './Photo'
 import { Project } from './Project'
 
@@ -169,11 +169,11 @@ export class Site extends BaseModel {
            this.address.toLowerCase().includes(lowercaseQuery) ||
            this.description.toLowerCase().includes(lowercaseQuery) ||
            this.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
-           (this.locationData && (
+           (this.locationData ? (
              this.locationData.city.toLowerCase().includes(lowercaseQuery) ||
              this.locationData.district.toLowerCase().includes(lowercaseQuery) ||
              this.locationData.street.toLowerCase().includes(lowercaseQuery)
-           ))
+           ) : false)
   }
 
   /**
@@ -200,11 +200,15 @@ export class Site extends BaseModel {
   }
 
   /**
-   * 转换为JSON对象（包含额外字段）
+   * 转换为完整的JSON对象（包含额外字段）
    */
-  override toJSON(): Record<string, any> {
-    return {
-      ...super.toJSON(),
+  toFullJSON(): SiteJSON {
+    const baseData = super.toJSON()
+    const jsonData: SiteJSON = {
+      id: baseData.id,
+      createdAt: baseData.createdAt,
+      updatedAt: baseData.updatedAt,
+      version: baseData.version,
       projectId: this.projectId,
       name: this.name,
       address: this.address,
@@ -216,12 +220,13 @@ export class Site extends BaseModel {
       photoCount: this.photoCount,
       locationData: this.locationData
     }
+    return jsonData
   }
 
   /**
    * 从JSON对象创建实例
    */
-  static override fromJSON(data: Record<string, any>): Site {
+  static fromFullJSON(data: SiteJSON): Site {
     const site = new Site()
 
     if (data.id) site.id = data.id
@@ -247,9 +252,44 @@ export class Site extends BaseModel {
    * 深度克隆对象
    */
   override clone(): Site {
-    const cloned = super.clone() as Site
-    cloned.tags = [...this.tags]
-    cloned.locationData = this.locationData ? { ...this.locationData } : null
+    const cloned = new Site()
+
+    // Copy base properties
+    cloned.id = this.id
+    cloned.createdAt = new Date(this.createdAt)
+    cloned.updatedAt = new Date(this.updatedAt)
+    cloned.version = this.version
+
+    // Copy Site properties
+    cloned.projectId = this.projectId
+    cloned.name = this.name
+    cloned.address = this.address
+    cloned.latitude = this.latitude
+    cloned.longitude = this.longitude
+    cloned.altitude = this.altitude
+    cloned.description = this.description
+    cloned.photoCount = this.photoCount
+
+    // Clone tags manually
+    cloned.tags = []
+    for (let i = 0; i < this.tags.length; i++) {
+      cloned.tags.push(this.tags[i])
+    }
+
+    // Clone locationData manually
+    if (this.locationData) {
+      cloned.locationData = {
+        country: this.locationData.country,
+        province: this.locationData.province,
+        city: this.locationData.city,
+        district: this.locationData.district,
+        street: this.locationData.street,
+        postalCode: this.locationData.postalCode
+      }
+    } else {
+      cloned.locationData = null
+    }
+
     return cloned
   }
 }

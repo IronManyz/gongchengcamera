@@ -4,7 +4,7 @@
  */
 
 import { BaseModel } from './base/BaseModel'
-import { WeatherInfo, Annotation } from '../types/AppTypes'
+import { WeatherInfo, Annotation, ExifData, BaseModelJSON, PhotoJSON } from '../types/AppTypes'
 import { Project } from './Project'
 import { Site } from './Site'
 import { WatermarkTemplate } from './WatermarkTemplate'
@@ -29,7 +29,7 @@ export class Photo extends BaseModel {
   @Trace width: number = 0
   @Trace height: number = 0
   @Trace edited: boolean = false
-  @Local exifData: Record<string, any> = {}
+  @Local exifData: ExifData = new ExifData()
   @Local annotations: Annotation[] = []
 
   // 关联数据 (通过查询获取，不直接序列化)
@@ -146,7 +146,7 @@ export class Photo extends BaseModel {
       return '无天气信息'
     }
 
-    const parts = []
+    const parts: string[] = []
     if (this.weather.temperature) {
       parts.push(`${this.weather.temperature}°C`)
     }
@@ -227,16 +227,17 @@ export class Photo extends BaseModel {
   /**
    * 设置EXIF数据
    */
-  setExifData(key: string, value: any): void {
-    this.exifData[key] = value
+  setExifData(key: string, value: string | number | boolean | null): void {
+    this.exifData.set(key, value)
     this.updateTimestamp()
   }
 
   /**
    * 获取EXIF数据
    */
-  getExifData(key: string, defaultValue: any = null): any {
-    return this.exifData[key] ?? defaultValue
+  getExifData(key: string, defaultValue: string | number | boolean | null = null): string | number | boolean | null {
+    const value = this.exifData.get(key)
+    return value !== null ? value : defaultValue
   }
 
   /**
@@ -249,7 +250,7 @@ export class Photo extends BaseModel {
     return this.notes.toLowerCase().includes(lowercaseQuery) ||
            this.address.toLowerCase().includes(lowercaseQuery) ||
            this.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
-           (this.weather && this.weather.condition.toLowerCase().includes(lowercaseQuery))
+           (this.weather && this.weather.condition ? this.weather.condition.toLowerCase().includes(lowercaseQuery) : false)
   }
 
   /**
@@ -306,11 +307,15 @@ export class Photo extends BaseModel {
   }
 
   /**
-   * 转换为JSON对象（包含额外字段）
+   * 转换为完整的JSON对象（包含额外字段）
    */
-  override toJSON(): Record<string, any> {
-    return {
-      ...super.toJSON(),
+  toFullJSON(): PhotoJSON {
+    const baseData = super.toJSON()
+    const jsonData: PhotoJSON = {
+      id: baseData.id,
+      createdAt: baseData.createdAt,
+      updatedAt: baseData.updatedAt,
+      version: baseData.version,
       projectId: this.projectId,
       siteId: this.siteId,
       filePath: this.filePath,
@@ -329,15 +334,29 @@ export class Photo extends BaseModel {
       width: this.width,
       height: this.height,
       edited: this.edited,
-      exifData: this.exifData,
+      exifData: this.exifDataToRecord(),
       annotations: this.annotations
     }
+    return jsonData
+  }
+
+  /**
+   * 将ExifData转换为Record
+   */
+  private exifDataToRecord(): Record<string, string | number | boolean | null> {
+    const result: Record<string, string | number | boolean | null> = {}
+    const keys = this.exifData.keys()
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+      result[key] = this.exifData.get(key)
+    }
+    return result
   }
 
   /**
    * 从JSON对象创建实例
    */
-  static override fromJSON(data: Record<string, any>): Photo {
+  static fromFullJSON(data: PhotoJSON): Photo {
     const photo = new Photo()
 
     if (data.id) photo.id = data.id
@@ -363,7 +382,13 @@ export class Photo extends BaseModel {
     if (data.width) photo.width = data.width
     if (data.height) photo.height = data.height
     if (data.edited) photo.edited = data.edited
-    if (data.exifData) photo.exifData = data.exifData
+    if (data.exifData) {
+      const exifKeys = Object.keys(data.exifData)
+      for (let i = 0; i < exifKeys.length; i++) {
+        const key = exifKeys[i]
+        photo.exifData.set(key, data.exifData[key])
+      }
+    }
     if (data.annotations) photo.annotations = data.annotations
 
     return photo
@@ -373,12 +398,71 @@ export class Photo extends BaseModel {
    * 深度克隆对象
    */
   override clone(): Photo {
-    const cloned = super.clone() as Photo
+    const cloned = new Photo()
+
+    // Copy base properties
+    cloned.id = this.id
+    cloned.createdAt = new Date(this.createdAt)
+    cloned.updatedAt = new Date(this.updatedAt)
+    cloned.version = this.version
+
+    // Copy Photo properties
+    cloned.projectId = this.projectId
+    cloned.siteId = this.siteId
+    cloned.filePath = this.filePath
+    cloned.thumbnailPath = this.thumbnailPath
     cloned.takenAt = new Date(this.takenAt)
-    cloned.tags = [...this.tags]
-    cloned.exifData = { ...this.exifData }
-    cloned.annotations = this.annotations.map(a => ({ ...a, createdAt: new Date(a.createdAt) }))
-    cloned.weather = this.weather ? { ...this.weather } : null
+    cloned.latitude = this.latitude
+    cloned.longitude = this.longitude
+    cloned.altitude = this.altitude
+    cloned.azimuth = this.azimuth
+    cloned.address = this.address
+    if (this.weather) {
+      cloned.weather = {
+        temperature: this.weather.temperature,
+        humidity: this.weather.humidity,
+        condition: this.weather.condition,
+        icon: this.weather.icon
+      }
+    } else {
+      cloned.weather = null
+    }
+    cloned.templateId = this.templateId
+    cloned.notes = this.notes
+    cloned.fileSize = this.fileSize
+    cloned.width = this.width
+    cloned.height = this.height
+    cloned.edited = this.edited
+
+    // Clone tags manually
+    cloned.tags = []
+    for (let i = 0; i < this.tags.length; i++) {
+      cloned.tags.push(this.tags[i])
+    }
+
+    // Clone exifData manually
+    cloned.exifData = new ExifData()
+    const exifKeys = this.exifData.keys()
+    for (let i = 0; i < exifKeys.length; i++) {
+      const key = exifKeys[i]
+      cloned.exifData.set(key, this.exifData.get(key))
+    }
+
+    // Clone annotations manually
+    cloned.annotations = []
+    for (let i = 0; i < this.annotations.length; i++) {
+      const annotation = this.annotations[i]
+      const clonedAnnotation: Annotation = {
+        id: annotation.id,
+        type: annotation.type,
+        content: annotation.content,
+        position: annotation.position,
+        style: annotation.style,
+        createdAt: new Date(annotation.createdAt)
+      }
+      cloned.annotations.push(clonedAnnotation)
+    }
+
     return cloned
   }
 }

@@ -4,20 +4,44 @@
  */
 
 /**
+ * 数据库配置接口
+ */
+interface DatabaseConfig {
+  NAME: string
+  VERSION: number
+  SECURITY_LEVEL: string
+  BACKUP_SUFFIX: string
+  TEMP_SUFFIX: string
+}
+
+/**
  * 数据库配置
  */
-export const DATABASE_CONFIG = {
+export const DATABASE_CONFIG: DatabaseConfig = {
   NAME: 'engineering_camera.db',
   VERSION: 1,
-  SECURITY_LEVEL: 'S1' as const, // 安全级别 S1-S4
+  SECURITY_LEVEL: 'S1', // 安全级别 S1-S4
   BACKUP_SUFFIX: '.backup',
   TEMP_SUFFIX: '.tmp'
 }
 
 /**
+ * 数据表名称接口
+ */
+interface TableNames {
+  PROJECTS: string
+  SITES: string
+  PHOTOS: string
+  WATERMARK_TEMPLATES: string
+  USERS: string
+  BACKUPS: string
+  APP_SETTINGS: string
+}
+
+/**
  * 数据表名称
  */
-export const TABLE_NAMES = {
+export const TABLE_NAMES: TableNames = {
   PROJECTS: 'projects',
   SITES: 'sites',
   PHOTOS: 'photos',
@@ -25,7 +49,7 @@ export const TABLE_NAMES = {
   USERS: 'users',
   BACKUPS: 'backups',
   APP_SETTINGS: 'app_settings'
-} as const
+}
 
 /**
  * 通用字段名称

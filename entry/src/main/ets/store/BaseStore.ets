@@ -96,7 +96,7 @@ export abstract class BaseStore {
   /**
    * 记录Store操作日志
    */
-  protected log(action: string, data?: any): void {
+  protected log(action: string, data?: Object): void {
     const message = data ? `${action}: ${JSON.stringify(data)}` : action
     hilog.debug(0x0000, TAG, `Store[${this.storeName}] ${message}`)
   }
@@ -104,7 +104,7 @@ export abstract class BaseStore {
   /**
    * 记录Store错误日志
    */
-  protected logError(action: string, error: any): void {
+  protected logError(action: string, error: Object): void {
     hilog.error(0x0000, TAG, `Store[${this.storeName}] ${action} failed: ${JSON.stringify(error)}`)
   }
 }

@@ -420,3 +420,155 @@ export interface LogInfo {
   tag?: string
   data?: Object
 }
+
+/**
+ * BaseModel JSON接口
+ */
+export interface BaseModelJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+}
+
+/**
+ * 水印模板导出配置接口
+ */
+export interface ExportConfig {
+  name: string
+  description: string
+  category: TemplateCategory
+  fields: WatermarkField[]
+  style: WatermarkStyle
+  config: Record<string, string | number | boolean>
+}
+
+/**
+ * EXIF数据类
+ */
+@ObservedV2
+export class ExifData {
+  @Trace data: Map<string, string | number | boolean | null> = new Map()
+
+  set(key: string, value: string | number | boolean | null): void {
+    this.data.set(key, value)
+  }
+
+  get(key: string): string | number | boolean | null {
+    return this.data.get(key) ?? null
+  }
+
+  has(key: string): boolean {
+    return this.data.has(key)
+  }
+
+  delete(key: string): boolean {
+    return this.data.delete(key)
+  }
+
+  clear(): void {
+    this.data.clear()
+  }
+
+  keys(): string[] {
+    return Array.from(this.data.keys())
+  }
+
+  entries: Array<[string, string | number | boolean | null]> = []
+
+  updateEntries(): void {
+    this.entries = Array.from(this.data.entries())
+  }
+}
+
+/**
+ * 照片JSON数据接口
+ */
+export interface PhotoJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+  projectId: string
+  siteId: string
+  filePath: string
+  thumbnailPath: string
+  takenAt: number
+  latitude: number
+  longitude: number
+  altitude: number
+  azimuth: number
+  address: string
+  weather: WeatherInfo | null
+  templateId: string
+  notes: string
+  tags: string[]
+  fileSize: number
+  width: number
+  height: number
+  edited: boolean
+  exifData: Record<string, string | number | boolean | null>
+  annotations: Annotation[]
+}
+
+/**
+ * 工点JSON数据接口
+ */
+export interface SiteJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+  projectId: string
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+  altitude: number
+  description: string
+  tags: string[]
+  photoCount: number
+  locationData: LocationData | null
+}
+
+/**
+ * 项目JSON数据接口
+ */
+export interface ProjectJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+  name: string
+  code: string
+  client: string
+  manager: string
+  startDate: number
+  endDate: number
+  description: string
+  tags: string[]
+  status: ProjectStatus
+  siteCount: number
+  photoCount: number
+  metadata: Map<string, Object>
+}
+
+/**
+ * 水印模板JSON数据接口
+ */
+export interface WatermarkTemplateJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
+  name: string
+  description: string
+  category: TemplateCategory
+  fields: WatermarkField[]
+  style: WatermarkStyle
+  preview: string
+  isDefault: boolean
+  isSystem: boolean
+  usageCount: number
+  config: Record<string, string | number | boolean>
+}

@@ -1,32 +1,10 @@
 /**
- * 项目JSON接口
- */
-interface ProjectJSON {
-  id: string
-  createdAt: number
-  updatedAt: number
-  version: number
-  name: string
-  code: string
-  client: string
-  manager: string
-  startDate: number
-  endDate: number
-  description: string
-  tags: string[]
-  status: ProjectStatus
-  siteCount: number
-  photoCount: number
-  metadata: Map<string, Object>
-}
-
-/**
  * 项目数据模型
  * 用于管理工程项目的基本信息和状态
  */
 
 import { BaseModel } from './base/BaseModel'
-import { ProjectStatus } from '../types/AppTypes'
+import { ProjectStatus, ProjectJSON } from '../types/AppTypes'
 import { Site } from './Site'
 import { Photo } from './Photo'
 
@@ -165,8 +143,9 @@ export class Project extends BaseModel {
   /**
    * 获取元数据
    */
-  getMetadata(key: string, defaultValue: Object = null): Object {
-    return this.metadata.get(key) ?? defaultValue
+  getMetadata(key: string, defaultValue: Object | null = null): Object | null {
+    const value = this.metadata.get(key)
+    return value !== undefined ? value : defaultValue
   }
 
   /**
@@ -264,12 +243,44 @@ export class Project extends BaseModel {
   /**
    * 深度克隆对象
    */
-  clone(): Project {
-    const cloned = super.clone() as Project
+  override clone(): Project {
+    const cloned = new Project()
+
+    // Copy base properties
+    cloned.id = this.id
+    cloned.createdAt = new Date(this.createdAt)
+    cloned.updatedAt = new Date(this.updatedAt)
+    cloned.version = this.version
+
+    // Copy Project properties
+    cloned.name = this.name
+    cloned.code = this.code
+    cloned.client = this.client
+    cloned.manager = this.manager
     cloned.startDate = new Date(this.startDate)
     cloned.endDate = new Date(this.endDate)
-    cloned.tags = [...this.tags]
-    cloned.metadata = { ...this.metadata }
+    cloned.description = this.description
+    cloned.status = this.status
+    cloned.siteCount = this.siteCount
+    cloned.photoCount = this.photoCount
+
+    // Clone tags manually
+    cloned.tags = []
+    for (let i = 0; i < this.tags.length; i++) {
+      cloned.tags.push(this.tags[i])
+    }
+
+    // Clone metadata manually
+    cloned.metadata = new Map()
+    const metadataKeys = Array.from(this.metadata.keys())
+    for (let i = 0; i < metadataKeys.length; i++) {
+      const key = metadataKeys[i]
+      const value = this.metadata.get(key)
+      if (value !== undefined) {
+        cloned.metadata.set(key, value)
+      }
+    }
+
     return cloned
   }
 }
