@@ -3,6 +3,34 @@
  * 统一管理应用的颜色系统
  */
 
+// 选项接口
+interface OptionItem {
+  key: string
+  label: string
+}
+
+/**
+ * 工程主题色类型
+ */
+interface EngineeringColorsType {
+  safetyGreen: string
+  safetyYellow: string
+  safetyRed: string
+  safetyBlue: string
+  active: string
+  completed: string
+  paused: string
+  cancelled: string
+  high: string
+  medium: string
+  low: string
+  excellent: string
+  good: string
+  average: string
+  poor: string
+  critical: string
+}
+
 // 主品牌色 - 蓝色系
 export const primary = '#1890FF'
 export const primaryLight = '#40A9FF'
@@ -183,7 +211,7 @@ export const AppColors: ColorCollection = {
 /**
  * 工程主题色
  */
-export const EngineeringColors = {
+export const EngineeringColors: EngineeringColorsType = {
   safetyGreen: '#52C41A',
   safetyYellow: '#FAAD14',
   safetyRed: '#FF4D4F',

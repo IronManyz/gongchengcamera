@@ -31,6 +31,24 @@ interface FilterOption {
   label: string
 }
 
+/**
+ * 选项接口
+ */
+interface OptionItem {
+  key: string
+  label: string
+}
+
+/**
+ * 时间范围选项类型
+ */
+type TimeRangeKey = 'all' | 'today' | 'week' | 'month' | 'quarter' | 'year'
+
+/**
+ * 优先级选项类型
+ */
+type PriorityKey = 'all' | 'high' | 'medium' | 'low'
+
 @Entry
 @Component
 struct ProjectListPage {
@@ -60,7 +78,7 @@ struct ProjectListPage {
   ]
 
   // 时间范围选项
-  private readonly timeRangeOptions = [
+  private readonly timeRangeOptions: OptionItem[] = [
     { key: 'all', label: '全部时间' },
     { key: 'today', label: '今天' },
     { key: 'week', label: '本周' },
@@ -70,7 +88,7 @@ struct ProjectListPage {
   ]
 
   // 优先级选项
-  private readonly priorityOptions = [
+  private readonly priorityOptions: OptionItem[] = [
     { key: 'all', label: '全部优先级' },
     { key: 'high', label: '高优先级' },
     { key: 'medium', label: '中优先级' },
@@ -716,21 +734,21 @@ struct ProjectListPage {
         Grid() {
           ForEach(
             this.timeRangeOptions,
-            (option) => {
+            (option: OptionItem) => {
               GridItem() {
                 Text(option.label)
                   .fontSize(14)
-                  .fontColor(this.selectedTimeRange === option.key ? '#007AFF' : '#333333')
-                  .backgroundColor(this.selectedTimeRange === option.key ? '#E6F4FF' : '#F8F8F8')
+                  .fontColor(this.selectedTimeRange === (option.key as TimeRangeKey) ? '#007AFF' : '#333333')
+                  .backgroundColor(this.selectedTimeRange === (option.key as TimeRangeKey) ? '#E6F4FF' : '#F8F8F8')
                   .padding({ left: 16, right: 16, top: 8, bottom: 8 })
                   .borderRadius(6)
                   .textAlign(TextAlign.Center)
                   .onClick(() => {
-                    this.selectedTimeRange = option.key
+                    this.selectedTimeRange = option.key as TimeRangeKey
                   })
               }
             },
-            (option) => option.key
+            (option: OptionItem) => option.key
           )
         }
         .columnsTemplate('1fr 1fr 1fr')
@@ -755,7 +773,7 @@ struct ProjectListPage {
         Row({ space: 8 }) {
           ForEach(
             this.priorityOptions,
-            (option) => {
+            (option: OptionItem) => {
               Text(option.label)
                 .fontSize(14)
                 .fontColor(this.selectedPriority === option.key ? '#007AFF' : '#333333')
@@ -764,10 +782,10 @@ struct ProjectListPage {
                 .borderRadius(6)
                 .textAlign(TextAlign.Center)
                 .onClick(() => {
-                  this.selectedPriority = option.key
+                  this.selectedPriority = option.key as PriorityKey
                 })
             },
-            (option) => option.key
+            (option: OptionItem) => option.key as string
           )
         }
         .width('100%')
