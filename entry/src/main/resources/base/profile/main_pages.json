@@ -3,7 +3,9 @@
     "pages/common/SplashPage",
     "pages/Index",
     "pages/TestPage",
+    "pages/SimpleTestPage",
     "pages/MainPage",
+    "pages/project/ProjectListPage",
     "pages/project/SimpleProjectListPage"
   ]
 }
