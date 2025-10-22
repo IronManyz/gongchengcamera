@@ -8,9 +8,10 @@ import { Project } from '../../models/Project'
 import { projectStore } from '../../store/project/ProjectStore'
 import { ProjectFilter, ProjectSortOrder, ProjectStatus } from '../../types/AppTypes'
 import { SearchBar } from '../../components/common/SearchBar'
-import { EmptyView } from '../../components/common/EmptyView'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
 import { ConfirmDialog } from '../../components/common/ConfirmDialog'
+import { StatCard } from '../../components/common/StatCard'
+import { ProjectCard } from '../../components/project/ProjectCard'
 
 @Entry
 @Component
@@ -162,10 +163,31 @@ struct ProjectListPage {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
+  /**
+   * 获取项目统计信息
+   */
+  private getProjectStats() {
+    const projects = this.projectStore.projects
+    const totalProjects = projects.length
+    const activeProjects = projects.filter(p => p.status === ProjectStatus.ACTIVE).length
+    const totalSites = projects.reduce((sum, p) => sum + (p.siteCount || 0), 0)
+    const totalPhotos = projects.reduce((sum, p) => sum + (p.photoCount || 0), 0)
+
+    return {
+      totalProjects,
+      activeProjects,
+      totalSites,
+      totalPhotos
+    }
+  }
+
   build() {
     Column() {
       // 顶部导航栏
       this.buildTopBar()
+
+      // 统计概览卡片
+      this.buildStatsOverview()
 
       // 搜索和筛选栏
       this.buildSearchAndFilterBar()
@@ -199,6 +221,79 @@ struct ProjectListPage {
     .width('100%')
     .height('100%')
     .backgroundColor('#F5F5F5')
+  }
+
+  /**
+   * 构建统计概览卡片
+   */
+  @Builder
+  private buildStatsOverview() {
+    const stats = this.getProjectStats()
+
+    Column() {
+      // 标题
+      Text('📊 统计概览')
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#262626')
+        .alignSelf(ItemAlign.Start)
+        .margin({ bottom: 12 })
+
+      // 统计卡片网格
+      Row() {
+        StatCard({
+          title: '工程总数',
+          value: stats.totalProjects,
+          icon: $r('app.media.ic_folder'),
+          color: '#1890FF',
+          trend: 'stable'
+        })
+        .layoutWeight(1)
+
+        StatCard({
+          title: '进行中',
+          value: stats.activeProjects,
+          icon: $r('app.media.ic_folder'),
+          color: '#52C41A',
+          trend: 'up'
+        })
+        .layoutWeight(1)
+      }
+      .width('100%')
+      .margin({ bottom: 12 })
+
+      Row() {
+        StatCard({
+          title: '工点总计',
+          value: stats.totalSites,
+          icon: $r('app.media.ic_folder'),
+          color: '#FAAD14',
+          trend: 'stable'
+        })
+        .layoutWeight(1)
+
+        StatCard({
+          title: '照片总计',
+          value: stats.totalPhotos,
+          icon: $r('app.media.ic_folder'),
+          color: '#722ED1',
+          trend: 'up'
+        })
+        .layoutWeight(1)
+      }
+      .width('100%')
+    }
+    .width('100%')
+    .padding(16)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(8)
+    .margin({ horizontal: 16, vertical: 12 })
+    .shadow({
+      radius: 6,
+      color: '#00000008',
+      offsetX: 0,
+      offsetY: 3
+    })
   }
 
   /**
@@ -424,13 +519,32 @@ struct ProjectListPage {
         .padding({ horizontal: 16, vertical: 8 })
         .onRefresh(() => this.onRefresh())
       } else {
-        EmptyView({
-          icon: $r('app.media.ic_empty_projects'),
-          message: this.searchQuery ? '未找到匹配的项目' : '暂无项目',
-          description: this.searchQuery ? '尝试修改搜索条件' : '点击下方按钮创建第一个项目'
-        })
-          .layoutWeight(1)
-          .margin({ horizontal: 16 })
+        Column() {
+          Image($r('app.media.ic_folder'))
+            .width(120)
+            .height(120)
+            .fillColor('#C0C0C0')
+            .margin({ bottom: 16 })
+
+          Text(this.searchQuery ? '未找到匹配的项目' : '暂无项目')
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#666666')
+            .margin({ bottom: 8 })
+
+          Text(this.searchQuery ? '尝试修改搜索条件' : '点击下方按钮创建第一个项目')
+            .fontSize(14)
+            .fontColor('#999999')
+            .textAlign(TextAlign.Center)
+            .lineHeight(20)
+            .padding({ left: 32, right: 32 })
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+        .margin({ horizontal: 16 })
       }
     }
   }
@@ -440,150 +554,14 @@ struct ProjectListPage {
    */
   @Builder
   private buildProjectItem(project: Project) {
-    Column() {
-      // 项目基本信息
-      Row({ space: 12 }) {
-        // 项目状态指示器
-        Column() {
-          Text('')
-            .width(4)
-            .height(40)
-            .borderRadius(2)
-            .backgroundColor(this.getProjectStatusColor(project.status))
-        }
-        .margin({ left: 4 })
-
-        // 项目信息
-        Column({ space: 8 }) {
-          // 项目名称和状态
-          Row() {
-            Text(project.getDisplayName())
-              .fontSize(18)
-              .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .layoutWeight(1)
-
-            Text(project.getStatusText())
-              .fontSize(12)
-              .fontColor(this.getProjectStatusColor(project.status))
-              .padding({ horizontal: 8, vertical: 4 })
-              .backgroundColor(`${this.getProjectStatusColor(project.status)}20`)
-              .borderRadius(12)
-          }
-          .width('100%')
-
-          // 项目代码和客户
-          Row({ space: 16 }) {
-            if (project.code) {
-              Text(`编号: ${project.code}`)
-                .fontSize(14)
-                .fontColor('#666666')
-            }
-
-            if (project.client) {
-              Text(`客户: ${project.client}`)
-                .fontSize(14)
-                .fontColor('#666666')
-            }
-
-            Blank()
-
-            Text(`${this.formatDate(project.startDate)} - ${this.formatDate(project.endDate)}`)
-              .fontSize(12)
-              .fontColor('#999999')
-          }
-          .width('100%')
-
-          // 项目描述（如果有）
-          if (project.description) {
-            Text(project.description)
-              .fontSize(14)
-              .fontColor('#666666')
-              .maxLines(2)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .width('100%')
-          }
-
-          // 统计信息和标签
-          Row({ space: 16 }) {
-            // 工点和照片统计
-            Row({ space: 12 }) {
-              Text(`${project.siteCount} 个工点`)
-                .fontSize(12)
-                .fontColor('#666666')
-
-              Text(`${project.photoCount} 张照片`)
-                .fontSize(12)
-                .fontColor('#666666')
-            }
-
-            // 标签
-            if (project.tags.length > 0) {
-              Row({ space: 8 }) {
-                ForEach(
-                  project.tags.slice(0, 3),
-                  (tag: string) => {
-                    Text(tag)
-                      .fontSize(10)
-                      .fontColor('#007AFF')
-                      .padding({ horizontal: 6, vertical: 2 })
-                      .backgroundColor('#007AFF20')
-                      .borderRadius(10)
-                  },
-                  (tag: string) => tag
-                )
-
-                if (project.tags.length > 3) {
-                  Text(`+${project.tags.length - 3}`)
-                    .fontSize(10)
-                    .fontColor('#666666')
-                    .padding({ horizontal: 6, vertical: 2 })
-                    .backgroundColor('#F0F0F0')
-                    .borderRadius(10)
-                }
-              }
-            }
-          }
-          .width('100%')
-          .margin({ top: 4 })
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
-
-        // 操作按钮
-        Column({ space: 8 }) {
-          Button() {
-            Image($r('app.media.ic_more'))
-              .width(20)
-              .height(20)
-              .fillColor('#666666')
-          }
-          .width(36)
-          .height(36)
-          .backgroundColor(Color.Transparent)
-          .onClick(() => {
-            // 显示更多操作菜单
-          })
-        }
+    ProjectCard({
+      project: project,
+      showStats: true,
+      onTap: (project) => this.navigateToProjectDetail(project),
+      onLongPress: (project) => {
+        this.selectedProject = project
+        this.showDeleteDialog = true
       }
-      .width('100%')
-      .padding(16)
-    }
-    .width('100%')
-    .backgroundColor('#FFFFFF')
-    .borderRadius(12)
-    .shadow({
-      radius: 4,
-      color: 'rgba(0, 0, 0, 0.08)',
-      offsetX: 0,
-      offsetY: 2
-    })
-    .onClick(() => this.navigateToProjectDetail(project))
-    .onLongPress(() => {
-      this.selectedProject = project
-      this.showDeleteDialog = true
     })
   }
 
