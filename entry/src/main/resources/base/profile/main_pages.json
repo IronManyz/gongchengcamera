@@ -10,6 +10,8 @@
     "pages/project/ProjectDetailPage_Simple",
     "pages/camera/CameraPage_Simple",
     "pages/photo/PhotoPreviewPage",
-    "pages/site/SitePhotoPage"
+    "pages/site/SitePhotoPage",
+    "pages/gallery/GalleryPlaceholderPage",
+    "pages/settings/SettingsPlaceholderPage"
   ]
 }

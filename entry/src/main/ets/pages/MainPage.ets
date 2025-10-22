@@ -55,39 +55,57 @@ struct MainPage {
    * 跳转到拍照页面
    */
   private navigateToCamera(): void {
-    console.log('Navigate to camera')
-    router.pushUrl({
-      url: 'pages/camera/cameraPage',
-      params: {}
-    }).catch((error: Error) => {
-      console.error('跳转到相机页面失败:', error)
-    })
+    console.log('Navigate to camera - Starting navigation')
+    try {
+      router.pushUrl({
+        url: 'pages/camera/CameraPage_Simple',
+        params: {}
+      }).then(() => {
+        console.log('Successfully navigated to camera page')
+      }).catch((error: Error) => {
+        console.error('跳转到相机页面失败:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to camera failed with exception:', error)
+    }
   }
 
   /**
    * 跳转到相册页面
    */
   private navigateToGallery(): void {
-    console.log('Navigate to gallery')
-    router.pushUrl({
-      url: 'pages/gallery/galleryPage',
-      params: {}
-    }).catch((error: Error) => {
-      console.error('跳转到相册页面失败:', error)
-    })
+    console.log('Navigate to gallery - Starting navigation')
+    try {
+      router.pushUrl({
+        url: 'pages/gallery/GalleryPlaceholderPage',
+        params: {}
+      }).then(() => {
+        console.log('Successfully navigated to gallery page')
+      }).catch((error: Error) => {
+        console.error('跳转到相册页面失败:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to gallery failed with exception:', error)
+    }
   }
 
   /**
    * 跳转到设置页面
    */
   private navigateToSettings(): void {
-    console.log('Navigate to settings')
-    router.pushUrl({
-      url: 'pages/settings/settingsPage',
-      params: {}
-    }).catch((error: Error) => {
-      console.error('跳转到设置页面失败:', error)
-    })
+    console.log('Navigate to settings - Starting navigation')
+    try {
+      router.pushUrl({
+        url: 'pages/settings/SettingsPlaceholderPage',
+        params: {}
+      }).then(() => {
+        console.log('Successfully navigated to settings page')
+      }).catch((error: Error) => {
+        console.error('跳转到设置页面失败:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to settings failed with exception:', error)
+    }
   }
 
   /**
