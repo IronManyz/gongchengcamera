@@ -11,8 +11,11 @@ import router from '@ohos.router'
 export struct ProjectCard {
   @Require @Param project: Project = new Project()
   @Param showStats: boolean = true
-  @Require @Param onTap?: (project: Project) => void
+  @Param onTap?: (project: Project) => void
   @Require @Param onLongPress?: (project: Project) => void
+  @Param showTeamMember?: boolean = true // 新增团队成员显示
+  @Param compact?: boolean = false // 新增紧凑布局模式
+  @Param elevation?: boolean = false // 新增高程效果
 
   // 状态颜色映射
   private getStatusColor(status: ProjectStatus): string {
@@ -38,11 +41,26 @@ export struct ProjectCard {
       case ProjectStatus.COMPLETED:
         return '已完成'
       case ProjectStatus.PAUSED:
-        return '暂停'
+        return '暂停中'
       case ProjectStatus.CANCELLED:
         return '已取消'
       default:
         return '未知'
+    }
+  }
+
+  // 项目健康状态文本映射
+  private getHealthStatusText(project: Project): string {
+    if (project.progress >= 100) {
+      return '项目完成'
+    } else if (project.progress >= 75) {
+      return '即将完成'
+    } else if (project.progress >= 50) {
+      return '进展良好'
+    } else if (project.progress >= 25) {
+      return '需要关注'
+    } else {
+      return '需要启动'
     }
   }
 
