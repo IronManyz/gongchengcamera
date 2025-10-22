@@ -11,8 +11,8 @@ import router from '@ohos.router'
 export struct ProjectCard {
   @Require @Param project: Project = new Project()
   @Param showStats: boolean = true
-  @Param onTap?: (project: Project) => void
-  @Require @Param onLongPress?: (project: Project) => void
+  @Param onTap: (project: Project) => void = () => {}
+  @Require @Param onLongPress: (project: Project) => void = () => {}
   @Param showTeamMember?: boolean = true // 新增团队成员显示
   @Param compact?: boolean = false // 新增紧凑布局模式
   @Param elevation?: boolean = false // 新增高程效果

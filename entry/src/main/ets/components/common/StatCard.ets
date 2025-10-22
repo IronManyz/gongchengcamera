@@ -13,7 +13,7 @@ export struct StatCard {
   @Param subtitle?: string = ''
   @Param progress?: number = undefined // 新增进度参数
   @Param showLoading?: boolean = false // 新增加载状态
-  @Param onClick?: () => void = () => {} // 新增点击回调
+  @Param onTap?: () => void = () => {} // 新增点击回调
 
   build() {
     Column() {
@@ -90,8 +90,8 @@ export struct StatCard {
       offsetY: 2
     })
     .onClick(() => {
-      if (this.onClick && !this.showLoading) {
-        this.onClick()
+      if (this.onTap && !this.showLoading) {
+        this.onTap()
       }
     })
   }
@@ -157,10 +157,12 @@ export struct StatCard {
     .backgroundColor('#F8F9FA')
     .borderRadius(6)
   }
-}
 
+  /**
+   * 构建趋势指示器
+   */
   @Builder
-  private buildTrendIndicator(): void {
+  private buildTrendIndicator() {
     Row() {
       if (this.trend === 'up') {
         Text('↑')
