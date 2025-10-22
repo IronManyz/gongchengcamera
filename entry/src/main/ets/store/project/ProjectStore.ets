@@ -206,13 +206,10 @@ export class ProjectStore extends BaseStore {
 
       this.log('开始分页加载项目')
 
-      const actualParams: ProjectQueryParams = params || { table: 'projects' }
-      const actualPagination: PaginationParams = pagination || { page: this.currentPage, pageSize: this.pageSize }
-
-      const result: PaginatedResponseImpl<Project> = await this.projectService.queryProjectsWithPagination(actualParams, actualPagination)
+      const result = await this.projectService.queryProjectsWithPagination()
 
       // 更新状态
-      if (actualPagination.page === 1) {
+      if (pagination?.page === 1) {
         this.projects.splice(0, this.projects.length, ...result.data)
       } else {
         this.projects.push(...result.data)
