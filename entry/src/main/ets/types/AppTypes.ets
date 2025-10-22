@@ -151,10 +151,18 @@ export interface WeatherInfo {
 export interface Annotation {
   id: string
   type: 'text' | 'shape' | 'doodle' | 'mosaic'
-  content: any
-  position: { x: number, y: number }
-  style: Record<string, any>
+  content: Object
+  position: Position
+  style: WatermarkStyle
   createdAt: Date
+}
+
+/**
+ * 位置接口
+ */
+export interface Position {
+  x: number
+  y: number
 }
 
 /**
@@ -165,7 +173,7 @@ export interface WatermarkField {
   label: string
   enabled: boolean
   format?: string
-  position?: { x: number, y: number }
+  position?: Position
 }
 
 /**
@@ -183,6 +191,24 @@ export interface WatermarkStyle {
 }
 
 /**
+ * 文本颜色接口
+ */
+export interface TextColors {
+  primary: string
+  secondary: string
+  disabled: string
+}
+
+/**
+ * 边框颜色接口
+ */
+export interface BorderColors {
+  default: string
+  focus: string
+  error: string
+}
+
+/**
  * 主题颜色接口
  */
 export interface ThemeColors {
@@ -196,38 +222,45 @@ export interface ThemeColors {
   onBackground: string
   onSurface: string
   onError: string
-  text: {
-    primary: string
-    secondary: string
-    disabled: string
-  }
-  border: {
-    default: string
-    focus: string
-    error: string
-  }
+  text: TextColors
+  border: BorderColors
+}
+
+/**
+ * 字体大小接口
+ */
+export interface FontSizes {
+  small: number
+  medium: number
+  large: number
+  xlarge: number
+}
+
+/**
+ * 字体粗细接口
+ */
+export interface FontWeights {
+  normal: FontWeight
+  medium: FontWeight
+  bold: FontWeight
+}
+
+/**
+ * 行高接口
+ */
+export interface LineHeights {
+  tight: number
+  normal: number
+  relaxed: number
 }
 
 /**
  * 主题字体接口
  */
 export interface ThemeTypography {
-  fontSize: {
-    small: number
-    medium: number
-    large: number
-    xlarge: number
-  }
-  fontWeight: {
-    normal: FontWeight
-    medium: FontWeight
-    bold: FontWeight
-  }
-  lineHeight: {
-    tight: number
-    normal: number
-    relaxed: number
-  }
+  fontSize: FontSizes
+  fontWeight: FontWeights
+  lineHeight: LineHeights
 }
 
 /**
@@ -278,7 +311,7 @@ export interface ColumnSchema {
   nullable: boolean
   primaryKey?: boolean
   autoIncrement?: boolean
-  defaultValue?: any
+  defaultValue?: string | number | boolean
   unique?: boolean
 }
 
@@ -294,7 +327,7 @@ export interface IndexSchema {
 /**
  * API响应接口
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean
   data?: T
   error?: string
@@ -329,7 +362,7 @@ export interface PaginatedResponse<T> {
  */
 export interface SearchParams {
   query?: string
-  filters?: Record<string, any>
+  filters?: Map<string, Object>
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
   pagination?: PaginationParams
@@ -342,7 +375,7 @@ export interface AppConfig {
   version: string
   buildNumber: string
   environment: 'development' | 'production' | 'testing'
-  features: Record<string, boolean>
+  features: Map<string, boolean>
 }
 
 /**
@@ -363,7 +396,7 @@ export interface UserPreferences {
 export interface ErrorInfo {
   code: string
   message: string
-  details?: any
+  details?: Object
   timestamp: Date
 }
 
@@ -385,5 +418,5 @@ export interface LogInfo {
   message: string
   timestamp: Date
   tag?: string
-  data?: any
+  data?: Object
 }

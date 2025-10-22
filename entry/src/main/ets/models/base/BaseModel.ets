@@ -8,7 +8,7 @@ export class BaseModel {
   @Trace id: string = ''
   @Trace createdAt: Date = new Date()
   @Trace updatedAt: Date = new Date()
-  @Local version: number = 1
+  version: number = 1
 
   /**
    * 生成唯一ID
@@ -42,7 +42,7 @@ export class BaseModel {
   /**
    * 转换为JSON对象
    */
-  toJSON(): Record<string, any> {
+  toJSON(): BaseModelJSON {
     return {
       id: this.id,
       createdAt: this.createdAt.getTime(),
@@ -54,8 +54,8 @@ export class BaseModel {
   /**
    * 从JSON对象创建实例
    */
-  static fromJSON<T extends BaseModel>(this: new () => T, data: Record<string, any>): T {
-    const instance = new this()
+  static fromJSON<T extends BaseModel>(data: BaseModelJSON): T {
+    const instance = new T() as T
     if (data.id) instance.id = data.id
     if (data.createdAt) instance.createdAt = new Date(data.createdAt)
     if (data.updatedAt) instance.updatedAt = new Date(data.updatedAt)
@@ -66,11 +66,12 @@ export class BaseModel {
   /**
    * 深度克隆对象
    */
-  clone(): this {
-    const cloned = Object.create(Object.getPrototypeOf(this))
-    Object.assign(cloned, this)
+  clone(): BaseModel {
+    const cloned = new BaseModel()
+    cloned.id = this.id
     cloned.createdAt = new Date(this.createdAt)
     cloned.updatedAt = new Date(this.updatedAt)
+    cloned.version = this.version
     return cloned
   }
 
@@ -85,6 +86,16 @@ export class BaseModel {
    * 获取对象的字符串表示
    */
   toString(): string {
-    return `${this.constructor.name}(id=${this.id})`
+    return `BaseModel(id=${this.id})`
   }
+}
+
+/**
+ * BaseModel JSON 接口
+ */
+interface BaseModelJSON {
+  id: string
+  createdAt: number
+  updatedAt: number
+  version: number
 }
