@@ -1,194 +1,316 @@
 /**
- * 应用主页面
- * 工程相机应用主界面
+ * 主界面 - 工程列表
+ * 根据原型设计实现的工程管理主界面
+ * 包含统计概览、工程列表和底部导航
  */
 
 import router from '@ohos.router'
+import { StatCard } from '../components/common/StatCard'
+import { SimpleProjectCard } from '../components/project/SimpleProjectCard'
+import { SimpleProject, ProjectStatus } from '../models/SimpleProject'
 
 @Entry
 @Component
 struct MainPage {
-  @State private clickCount: number = 0
+  @State private currentTab: string = 'projects'
+  @State private searchQuery: string = ''
+  @State private selectedProjectCount: number = 3
+  @State private selectedSiteCount: number = 12
+  @State private selectedPhotoCount: number = 156
+
+  // 模拟工程数据
+  private projects: SimpleProject[] = [
+    new SimpleProject('P2025-001', '市政道路改造工程', ProjectStatus.ACTIVE, '张三', 4, 52),
+    new SimpleProject('P2025-002', '电力线路巡检工程', ProjectStatus.COMPLETED, '李四', 6, 89),
+    new SimpleProject('P2025-003', '园林绿化项目', ProjectStatus.PAUSED, '王五', 2, 15)
+  ]
+
+  aboutToAppear(): void {
+    console.log('MainPage aboutToAppear')
+  }
+
+  /**
+   * 处理项目卡片点击
+   */
+  private handleProjectClick(project: SimpleProject): void {
+    console.log('Project clicked:', project.name)
+    // TODO: 跳转到项目详情页面
+    router.pushUrl({
+      url: 'pages/project/ProjectDetailPage',
+      params: { projectId: project.id }
+    }).catch((error: Error) => {
+      console.error('跳转到项目详情失败:', error)
+    })
+  }
+
+  /**
+   * 处理项目卡片长按
+   */
+  private handleProjectLongPress(project: SimpleProject): void {
+    console.log('Project long pressed:', project.name)
+    // TODO: 显示项目操作菜单
+  }
+
+  /**
+   * 跳转到拍照页面
+   */
+  private navigateToCamera(): void {
+    console.log('Navigate to camera')
+    // TODO: 跳转到相机页面
+    router.pushUrl({
+      url: 'pages/camera/CameraPage',
+      params: {}
+    }).catch((error: Error) => {
+      console.error('跳转到相机页面失败:', error)
+    })
+  }
+
+  /**
+   * 跳转到相册页面
+   */
+  private navigateToGallery(): void {
+    console.log('Navigate to gallery')
+    // TODO: 跳转到相册页面
+    router.pushUrl({
+      url: 'pages/gallery/GalleryPage',
+      params: {}
+    }).catch((error: Error) => {
+      console.error('跳转到相册页面失败:', error)
+    })
+  }
+
+  /**
+   * 跳转到设置页面
+   */
+  private navigateToSettings(): void {
+    console.log('Navigate to settings')
+    // TODO: 跳转到设置页面
+    router.pushUrl({
+      url: 'pages/settings/SettingsPage',
+      params: {}
+    }).catch((error: Error) => {
+      console.error('跳转到设置页面失败:', error)
+    })
+  }
+
+  /**
+   * 创建新工程
+   */
+  private createNewProject(): void {
+    console.log('Create new project')
+    // TODO: 显示创建工程对话框
+  }
+
+  /**
+   * 搜索项目
+   */
+  private searchProjects(): void {
+    console.log('Search projects:', this.searchQuery)
+    // TODO: 实现搜索功能
+  }
 
   build() {
     Column() {
-      // 标题
-      Text('工程相机')
-        .fontSize(28)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#2C3E50')
-        .margin({ top: 80, bottom: 20 })
-
-      // 欢迎信息
-      Text('专业的工程拍摄管理工具')
-        .fontSize(18)
-        .fontColor('#7F8C8D')
-        .margin({ bottom: 40 })
-
-      // 功能按钮
-      Column({ space: 16 }) {
-        Button('项目管理')
-          .width('85%')
-          .height(52)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor('#3498DB')
-          .fontColor(Color.White)
-          .borderRadius(8)
+      // 顶部导航栏
+      Row() {
+        // 侧边菜单按钮
+        Text('☰')
+          .fontSize(20)
+          .fontColor('#1890FF')
           .onClick(() => {
-            this.clickCount++
-            console.log('项目管理按钮被点击')
-            // 跳转到完善版项目列表页面
-            router.replaceUrl({
-              url: 'pages/project/ProjectListPage',
-              params: {}
-            }).catch((error: Error) => {
-              console.error('跳转到项目列表失败:', error)
-              // 降级到简化版
-              router.replaceUrl({
-                url: 'pages/project/SimpleProjectListPage',
-                params: {}
-              })
-            })
+            console.log('Menu clicked')
+            // TODO: 显示侧边菜单
           })
 
-        Button('相机拍照')
-          .width('85%')
-          .height(52)
+        Blank()
+
+        // 应用标题
+        Text('工程相机')
           .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor('#27AE60')
-          .fontColor(Color.White)
-          .borderRadius(8)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#262626')
+
+        Blank()
+
+        // 搜索按钮
+        Text('🔍')
+          .fontSize(20)
+          .fontColor('#1890FF')
+          .margin({ right: 16 })
           .onClick(() => {
-            this.clickCount++
-            console.log('相机拍照按钮被点击')
-            // TODO: 跳转到相机页面
-            // router.replaceUrl({ url: 'pages/camera/CameraPage' })
+            console.log('Search clicked')
+            // TODO: 显示搜索界面
           })
 
-        Button('相册浏览')
-          .width('85%')
-          .height(52)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor('#F39C12')
-          .fontColor(Color.White)
-          .borderRadius(8)
+        // 新建按钮
+        Text('⊕')
+          .fontSize(20)
+          .fontColor('#1890FF')
           .onClick(() => {
-            this.clickCount++
-            console.log('相册浏览按钮被点击')
-            // TODO: 跳转到相册页面
-            // router.replaceUrl({ url: 'pages/gallery/GalleryPage' })
+            this.createNewProject()
           })
-
-        Button('照片编辑')
-          .width('85%')
-          .height(52)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor('#9B59B6')
-          .fontColor(Color.White)
-          .borderRadius(8)
-          .onClick(() => {
-            this.clickCount++
-            console.log('照片编辑按钮被点击')
-            // TODO: 跳转到编辑页面
-            // router.replaceUrl({ url: 'pages/editor/PhotoEditorPage' })
-          })
-
-        Button('应用设置')
-          .width('85%')
-          .height(52)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor('#34495E')
-          .fontColor(Color.White)
-          .borderRadius(8)
-          .onClick(() => {
-            this.clickCount++
-            console.log('应用设置按钮被点击')
-            // TODO: 跳转到设置页面
-            // router.replaceUrl({ url: 'pages/settings/SettingsPage' })
-          })
-
-        Row({ space: 12 }) {
-          Button('测试页面')
-            .width('42%')
-            .height(48)
-            .fontSize(16)
-            .backgroundColor('#95A5A6')
-            .fontColor(Color.White)
-            .borderRadius(8)
-            .onClick(() => {
-              this.clickCount++
-              console.log('测试页面按钮被点击')
-              router.replaceUrl({
-                url: 'pages/TestPage',
-                params: {}
-              }).catch((error: Error) => {
-                console.error('跳转到测试页面失败:', error)
-              })
-            })
-
-          Button('简化测试')
-            .width('42%')
-            .height(48)
-            .fontSize(16)
-            .backgroundColor('#3498DB')
-            .fontColor(Color.White)
-            .borderRadius(8)
-            .onClick(() => {
-              this.clickCount++
-              console.log('简化测试页面按钮被点击')
-              router.replaceUrl({
-                url: 'pages/SimpleTestPage',
-                params: {}
-              }).catch((error: Error) => {
-                console.error('跳转到简化测试页面失败:', error)
-              })
-            })
-        }
-        .width('85%')
-        .margin({ top: 8 })
-
-        Row({ space: 12 }) {
-          Button('返回启动页')
-            .width('42%')
-            .height(48)
-            .fontSize(16)
-            .backgroundColor('#E74C3C')
-            .fontColor(Color.White)
-            .borderRadius(8)
-            .onClick(() => {
-              this.clickCount++
-              console.log('返回启动页按钮被点击')
-              router.back()
-            })
-        }
-        .width('85%')
-        .margin({ top: 8 })
       }
       .width('100%')
-      .padding({ left: 20, right: 20 })
+      .height(56)
+      .padding({ left: 16, right: 16 })
+      .backgroundColor('#FFFFFF')
+      .border({ width: { bottom: 1 }, color: '#E8E8E8' })
 
-      Blank()
+      // 主内容区域
+      Scroll() {
+        Column() {
+          // 统计概览
+          Column() {
+            Text('📊 统计概览')
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#262626')
+              .alignSelf(ItemAlign.Start)
+              .margin({ bottom: 12 })
 
-      // 版本信息
-      Column() {
-        Text('Engineering Camera v1.0.0')
-          .fontSize(14)
-          .fontColor('#95A5A6')
-          .margin({ bottom: 8 })
+            // 统计卡片行
+            Row({ space: 12 }) {
+              StatCard({
+                title: '工程数',
+                value: this.selectedProjectCount.toString(),
+                icon: '📁',
+                color: '#1890FF'
+              })
 
-        Text('专业的工程拍摄与管理解决方案')
-          .fontSize(12)
-          .fontColor('#BDC3C7')
+              StatCard({
+                title: '工点数',
+                value: this.selectedSiteCount.toString(),
+                icon: '📍',
+                color: '#52C41A'
+              })
+
+              StatCard({
+                title: '照片数',
+                value: this.selectedPhotoCount.toString(),
+                icon: '📷',
+                color: '#FAAD14'
+              })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.SpaceAround)
+          }
+          .width('100%')
+          .padding(16)
+          .backgroundColor('#FFFFFF')
+          .margin({ bottom: 12 })
+          .borderRadius(8)
+
+          // 工程列表标题
+          Row() {
+            Text('🏗️ 我的工程')
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#262626')
+
+            Blank()
+
+            Text(`${this.projects.length}个工程`)
+              .fontSize(14)
+              .fontColor('#8C8C8C')
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, bottom: 12 })
+          .alignItems(VerticalAlign.Center)
+
+          // 工程列表
+          Column({ space: 12 }) {
+            ForEach(this.projects, (project: SimpleProject, index?: number) => {
+              SimpleProjectCard({
+                project: project,
+                showStats: true,
+                onTap: (p: SimpleProject) => this.handleProjectClick(p),
+                onLongPress: (p: SimpleProject) => this.handleProjectLongPress(p)
+              })
+            })
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, bottom: 80 }) // 底部留出导航栏空间
+        }
+        .width('100%')
       }
-      .margin({ bottom: 40 })
+      .layoutWeight(1)
+      .backgroundColor('#F5F5F5')
+
+      // 底部导航栏
+      Row() {
+        // 工程导航
+        Column() {
+          Text('🏗️')
+            .fontSize(24)
+            .fontColor(this.currentTab === 'projects' ? '#1890FF' : '#8C8C8C')
+          Text('工程')
+            .fontSize(12)
+            .fontColor(this.currentTab === 'projects' ? '#1890FF' : '#8C8C8C')
+            .margin({ top: 4 })
+        }
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.currentTab = 'projects'
+        })
+
+        // 拍照导航 - 突出显示
+        Column() {
+          Text('📸')
+            .fontSize(24)
+            .fontColor(this.currentTab === 'camera' ? '#1890FF' : '#8C8C8C')
+          Text('拍照')
+            .fontSize(12)
+            .fontColor(this.currentTab === 'camera' ? '#1890FF' : '#8C8C8C')
+            .margin({ top: 4 })
+        }
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.navigateToCamera()
+        })
+
+        // 相册导航
+        Column() {
+          Text('📱')
+            .fontSize(24)
+            .fontColor(this.currentTab === 'gallery' ? '#1890FF' : '#8C8C8C')
+          Text('相册')
+            .fontSize(12)
+            .fontColor(this.currentTab === 'gallery' ? '#1890FF' : '#8C8C8C')
+            .margin({ top: 4 })
+        }
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.navigateToGallery()
+        })
+
+        // 设置导航
+        Column() {
+          Text('⚙️')
+            .fontSize(24)
+            .fontColor(this.currentTab === 'settings' ? '#1890FF' : '#8C8C8C')
+          Text('设置')
+            .fontSize(12)
+            .fontColor(this.currentTab === 'settings' ? '#1890FF' : '#8C8C8C')
+            .margin({ top: 4 })
+        }
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.navigateToSettings()
+        })
+      }
+      .width('100%')
+      .height(60)
+      .backgroundColor('#FFFFFF')
+      .border({ width: { top: 1 }, color: '#E8E8E8' })
+      .justifyContent(FlexAlign.SpaceAround)
+      .padding({ bottom: 8 }) // 为安全区域留出空间
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#ECF0F1')
+    .backgroundColor('#F5F5F5')
   }
 }

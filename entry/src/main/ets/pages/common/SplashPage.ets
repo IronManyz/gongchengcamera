@@ -3,15 +3,16 @@ import router from '@ohos.router'
 /**
  * 启动页面
  * EngineeringCamera 应用启动时的欢迎页面
- * 提供专业的工程应用启动体验
+ * 根据原型设��提供专业的工程应用启动体验
  */
 @Entry
 @Component
 struct SplashPage {
   @State private loadingProgress: number = 0
-  @State private appVersion: string = 'v1.0.1'
+  @State private appVersion: string = 'v1.0.0'
   @State private appDescription: string = '工程专业相机'
   @State private navigateToMain: boolean = false
+  @State private loadingText: string = '正在初始化...'
 
   aboutToAppear(): void {
     // 设置应用版本信息
@@ -26,7 +27,7 @@ struct SplashPage {
    */
   private setAppInfo(): void {
     // 从配置文件读取版本信息
-    this.appVersion = 'v1.0.1'
+    this.appVersion = 'v1.0.0'
     this.appDescription = '工程专业相机'
   }
 
@@ -54,15 +55,21 @@ struct SplashPage {
    * 执行应用初始化
    */
   private async performInitialization(): Promise<void> {
-    // 模拟各个模块的初始化
-    const delays: number[] = [300, 500, 400, 200, 100]
+    const loadingSteps: string[] = [
+      '正在初始化数据库...',
+      '正在加载配置文件...',
+      '正在检查权限...',
+      '正在启动服务...',
+      '正在准备界面...'
+    ]
 
-    for (let i = 0; i < delays.length; i++) {
+    for (let i = 0; i < loadingSteps.length; i++) {
       await new Promise<void>((resolve: () => void) => {
         setTimeout(() => {
-          this.loadingProgress = Math.round(((i + 1) / delays.length) * 100)
+          this.loadingProgress = Math.round(((i + 1) / loadingSteps.length) * 100)
+          this.loadingText = loadingSteps[i]
           resolve()
-        }, delays[i])
+        }, 400)
       })
     }
   }
@@ -89,78 +96,117 @@ struct SplashPage {
         params: {
           fromSplash: true
         }
+      }).catch((error: Error) => {
+        console.error('Navigation failed:', error)
+        // 如果导航失败，尝试其他页面
+        router.replaceUrl({
+          url: 'pages/Index',
+          params: {}
+        })
       })
     }, 300)
   }
 
   build() {
     Stack() {
-      // 背景层
+      // 背景层 - 使用渐变背景
       Column() {
         // 应用Logo区域
         Column() {
-          // Logo图标
-          Image($r('app.media.layered_image'))
-            .width(120)
-            .height(120)
+          // Logo图标 - 使用emoji代替不存在的资源
+          Text('📸')
+            .fontSize(80)
             .margin({ bottom: 24 })
 
           // 应用名称
           Text('工程相机')
-            .fontSize(28)
+            .fontSize(32)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#333333')
-            .margin({ bottom: 12 })
+            .fontColor('#1890FF')
+            .margin({ bottom: 8 })
+
+          // 英文名称
+          Text('Engineering Camera')
+            .fontSize(18)
+            .fontColor('#52C41A')
+            .margin({ bottom: 16 })
 
           // 应用描述
-          Text('专业的工程拍摄管理工具')
+          Text('专业 · 安全 · 高效')
             .fontSize(16)
             .fontColor('#666666')
         }
         .margin({ bottom: 80 })
 
-        // 加载进度条
+        // 加载进度区域
         Column() {
+          // 进度条
           Progress({
             value: this.loadingProgress,
             total: 100,
             type: ProgressType.Linear
           })
-            .width(200)
-            .height(4)
-            .color('#007DFF')
+            .width(240)
+            .height(6)
+            .color('#1890FF')
             .backgroundColor('#E5E5E5')
+            .borderRadius(3)
 
-          Text(`${this.loadingProgress}%`)
+          // 加载文本
+          Text(this.loadingText)
             .fontSize(14)
             .fontColor('#666666')
+            .margin({ top: 12 })
+
+          // 进度百分比
+          Text(`${this.loadingProgress}%`)
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#1890FF')
             .margin({ top: 8 })
         }
 
+        Blank()
+
         // 版本信息
-        Text('v1.0.0')
-          .fontSize(12)
-          .fontColor('#999999')
-          .margin({ top: 40, bottom: 40 })
+        Column() {
+          Text(this.appVersion)
+            .fontSize(12)
+            .fontColor('#999999')
+            .margin({ bottom: 8 })
+
+          Text('专业的工程拍摄管理工具')
+            .fontSize(12)
+            .fontColor('#BFBFBF')
+        }
+        .margin({ bottom: 60 })
       }
       .width('100%')
       .height('100%')
       .justifyContent(FlexAlign.Center)
       .alignItems(HorizontalAlign.Center)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor('#F5F5F5')
 
       // 跳转提示 - 始终显示
-      Text(this.navigateToMain ? '点击进入应用' : '加载中，请稍候...')
-        .fontSize(14)
-        .fontColor('#007DFF')
-        .margin({ bottom: 80 })
-        .opacity(this.navigateToMain ? 1.0 : 0.6)
-        .onClick(() => {
-          if (this.navigateToMain) {
-            console.log('Manual navigation triggered')
-            this.navigateToMainPage()
-          }
-        })
+      if (this.navigateToMain) {
+        Column() {
+          Text('点击进入应用')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#1890FF')
+            .backgroundColor('#FFFFFF')
+            .padding({ left: 24, right: 24, top: 12, bottom: 12 })
+            .borderRadius(20)
+            .border({ width: 1, color: '#1890FF' })
+            .margin({ bottom: 80 })
+            .onClick(() => {
+              console.log('Manual navigation triggered')
+              this.navigateToMainPage()
+            })
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Center)
+      }
     }
     .width('100%')
     .height('100%')

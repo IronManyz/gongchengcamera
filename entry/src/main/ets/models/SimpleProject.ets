@@ -5,6 +5,9 @@
 
 import { ProjectStatus } from '../types/SimpleTypes'
 
+// 导出ProjectStatus供其他模块使用
+export { ProjectStatus }
+
 @ObservedV2
 export class SimpleProject {
   @Trace id: string = ''
@@ -18,10 +21,14 @@ export class SimpleProject {
   @Trace createdAt: Date = new Date()
   @Trace updatedAt: Date = new Date()
 
-  constructor(name?: string, code?: string) {
+  constructor(id?: string, name?: string, status?: ProjectStatus, manager?: string, siteCount?: number, photoCount?: number) {
+    if (id) this.id = id
     if (name) this.name = name
-    if (code) this.code = code
-    this.id = Date.now().toString()
+    if (status) this.status = status
+    if (manager) this.manager = manager
+    if (siteCount) this.siteCount = siteCount
+    if (photoCount) this.photoCount = photoCount
+    if (!this.id) this.id = Date.now().toString()
   }
 
   /**
