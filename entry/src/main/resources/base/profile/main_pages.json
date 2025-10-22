@@ -1,5 +1,7 @@
 {
   "src": [
-    "pages/Index"
+    "pages/common/SplashPage",
+    "pages/Index",
+    "pages/project/SimpleProjectListPage"
   ]
 }

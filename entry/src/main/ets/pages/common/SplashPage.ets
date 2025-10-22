@@ -1,3 +1,5 @@
+import router from '@ohos.router'
+
 /**
  * 启动页面
  * 应用启动时的欢迎页面
@@ -49,8 +51,14 @@ struct SplashPage {
    */
   private navigateToMainPage() {
     this.navigateToMain = true
-    // 这里后续会跳转到项目主页面
-    // router.pushUrl({ url: 'pages/project/ProjectListPage' })
+    // 跳转到简化版项目列表页面
+    router.pushNamedRoute({
+      name: 'pages/project/SimpleProjectListPage'
+    }).catch((error: Error) => {
+      console.error('Navigation failed:', error)
+      // 如果跳转失败，跳转到默认页面
+      router.pushNamedRoute({ name: 'pages/Index' })
+    })
   }
 
   build() {
@@ -111,14 +119,14 @@ struct SplashPage {
       .alignItems(HorizontalAlign.Center)
       .backgroundColor('#FFFFFF')
 
-      // 跳转提示 (可选)
+      // 跳转提示
       if (this.navigateToMain) {
         Text('点击进入应用')
           .fontSize(14)
           .fontColor('#007DFF')
           .margin({ bottom: 80 })
           .onClick(() => {
-            // 跳转逻辑
+            this.navigateToMainPage()
           })
       }
     }
