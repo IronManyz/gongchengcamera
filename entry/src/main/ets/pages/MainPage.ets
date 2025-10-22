@@ -56,9 +56,8 @@ struct MainPage {
    */
   private navigateToCamera(): void {
     console.log('Navigate to camera')
-    // TODO: 跳转到相机页面
     router.pushUrl({
-      url: 'pages/camera/CameraPage',
+      url: 'pages/camera/cameraPage',
       params: {}
     }).catch((error: Error) => {
       console.error('跳转到相机页面失败:', error)
@@ -70,9 +69,8 @@ struct MainPage {
    */
   private navigateToGallery(): void {
     console.log('Navigate to gallery')
-    // TODO: 跳转到相册页面
     router.pushUrl({
-      url: 'pages/gallery/GalleryPage',
+      url: 'pages/gallery/galleryPage',
       params: {}
     }).catch((error: Error) => {
       console.error('跳转到相册页面失败:', error)
@@ -84,9 +82,8 @@ struct MainPage {
    */
   private navigateToSettings(): void {
     console.log('Navigate to settings')
-    // TODO: 跳转到设置页面
     router.pushUrl({
-      url: 'pages/settings/SettingsPage',
+      url: 'pages/settings/settingsPage',
       params: {}
     }).catch((error: Error) => {
       console.error('跳转到设置页面失败:', error)
