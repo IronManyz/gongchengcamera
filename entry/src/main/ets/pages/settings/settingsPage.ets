@@ -4,11 +4,16 @@
  */
 
 import router from '@ohos.router'
+import { bundleManager } from '@kit.AbilityKit'
 import { Logger } from '../../utils/Logger'
-import { ThemeStore } from '../../store/theme/ThemeStore'
-import { UserStore } from '../../store/user/UserStore'
+import { themeStore as themeStoreInstance } from '../../store/theme/ThemeStore'
+import { userStore as userStoreInstance } from '../../store/user/UserStore'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
 import { ConfirmDialog } from '../../components/common/ConfirmDialog'
+import { ThemeType } from '../../store/theme/ThemeConstants'
+import { projectStore } from '../../store/project/ProjectStore'
+import { ProjectStats } from '../../services/database/ProjectService'
+import { StatCard } from '../../components/common/StatCard'
 
 /**
  * 设置项接口
@@ -32,18 +37,34 @@ interface SettingsGroup {
   items: SettingsItem[]
 }
 
+interface UsageOverview {
+  totalProjects: number
+  activeProjects: number
+  totalPhotos: number
+  totalSites: number
+}
+
 @Entry
 @Component
 struct SettingsPage {
   private logger = new Logger('SettingsPage')
-  private themeStore = ThemeStore.getInstance()
-  private userStore = UserStore.getInstance()
+  private themeStore = themeStoreInstance
+  private userStore = userStoreInstance
 
   // 状态管理
   @State private isLoading: boolean = false
   @State private settingsGroups: SettingsGroup[] = []
   @State private showAboutDialog: boolean = false
   @State private showResetDialog: boolean = false
+  @State private showThemeDialog: boolean = false
+  @State private showCameraQualityDialog: boolean = false
+  @State private showHelpDialog: boolean = false
+  @State private usageStats: UsageOverview = this.createDefaultUsageStats()
+  @State private isUsageLoading: boolean = false
+  @State private appVersion: string = '1.0.0'
+  @State private buildNumber: string = ''
+  @State private pendingTheme: ThemeType = ThemeType.SYSTEM
+  @State private pendingPhotoQuality: 'high' | 'medium' | 'low' = 'high'
 
   aboutToAppear() {
     this.logger.info('SettingsPage appeared')
@@ -54,13 +75,34 @@ struct SettingsPage {
     this.logger.info('SettingsPage disappeared')
   }
 
+  private createDefaultUsageStats(): UsageOverview {
+    return {
+      totalProjects: 0,
+      activeProjects: 0,
+      totalPhotos: 0,
+      totalSites: 0
+    }
+  }
+
   /**
    * 初始化设置项
    */
   private async initializeSettings() {
     this.isLoading = true
     try {
+      if (!this.themeStore.isInitialized) {
+        await this.themeStore.initialize()
+      }
+      if (!this.userStore.isInitialized) {
+        await this.userStore.initialize()
+      }
+      if (!projectStore.isInitialized) {
+        await projectStore.initialize()
+      }
+
       await this.loadSettingsData()
+      await this.loadUsageStats()
+      await this.loadAppInfo()
     } catch (error) {
       this.logger.error('初始化设置失败', error)
     } finally {
@@ -72,6 +114,12 @@ struct SettingsPage {
    * 加载设置数据
    */
   private async loadSettingsData() {
+    const preferences = this.userStore.userState.preferences
+    const themeState = this.themeStore.themeState
+
+    this.pendingTheme = themeState.currentTheme
+    this.pendingPhotoQuality = preferences.photoQuality
+
     this.settingsGroups = [
       {
         title: '通用设置',
@@ -79,10 +127,10 @@ struct SettingsPage {
           {
             id: 'theme',
             title: '主题设置',
-            subtitle: this.getThemeText(this.themeStore.currentTheme),
+            subtitle: this.getThemeText(themeState.currentTheme),
             icon: $r('app.media.ic_theme'),
-            type: 'navigation',
-            page: 'pages/settings/ThemePage'
+            type: 'action',
+            action: () => this.showThemeDialog = true
           },
           {
             id: 'language',
@@ -108,10 +156,10 @@ struct SettingsPage {
           {
             id: 'camera_quality',
             title: '照片质量',
-            subtitle: '高质量',
+            subtitle: this.getPhotoQualityText(preferences.photoQuality),
             icon: $r('app.media.ic_camera'),
-            type: 'navigation',
-            page: 'pages/settings/CameraSettingsPage'
+            type: 'action',
+            action: () => this.showCameraQualityDialog = true
           },
           {
             id: 'watermark',
@@ -124,10 +172,10 @@ struct SettingsPage {
           {
             id: 'location',
             title: '位置服务',
-            subtitle: '自动记录位置信息',
+            subtitle: preferences.enableLocationService ? '自动记录位置信息' : '位置服务已关闭',
             icon: $r('app.media.ic_location'),
             type: 'switch',
-            value: true,
+            value: preferences.enableLocationService,
             action: () => this.toggleLocationService()
           }
         ]
@@ -197,7 +245,7 @@ struct SettingsPage {
           {
             id: 'about',
             title: '关于应用',
-            subtitle: '版本信息和帮助',
+            subtitle: `版本 ${this.appVersion}${this.buildNumber ? ` (${this.buildNumber})` : ''}`,
             icon: $r('app.media.ic_about'),
             type: 'action',
             action: () => this.showAboutDialog = true
@@ -215,8 +263,8 @@ struct SettingsPage {
             title: '帮助中心',
             subtitle: '使用指南和常见问题',
             icon: $r('app.media.ic_help'),
-            type: 'navigation',
-            page: 'pages/settings/HelpPage'
+            type: 'action',
+            action: () => this.showHelpDialog = true
           }
         ]
       },
@@ -244,19 +292,68 @@ struct SettingsPage {
     ]
   }
 
+  private async loadUsageStats() {
+    this.isUsageLoading = true
+    try {
+      if (!projectStore.isInitialized) {
+        await projectStore.initialize()
+      }
+
+      const stats: ProjectStats | null = projectStore.projectStats
+      if (stats) {
+        this.usageStats = {
+          totalProjects: stats.totalProjects,
+          activeProjects: stats.activeProjects,
+          totalPhotos: stats.totalPhotos,
+          totalSites: stats.totalSites
+        }
+      } else {
+        this.usageStats = this.createDefaultUsageStats()
+      }
+    } catch (error) {
+      this.logger.error('加载使用统计失败', error)
+      this.usageStats = this.createDefaultUsageStats()
+    } finally {
+      this.isUsageLoading = false
+    }
+  }
+
+  private async loadAppInfo() {
+    try {
+      const bundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION)
+      this.appVersion = bundleInfo?.versionName || this.appVersion
+      this.buildNumber = bundleInfo?.versionCode ? bundleInfo.versionCode.toString() : this.buildNumber
+    } catch (error) {
+      this.logger.error('获取应用信息失败', error)
+    }
+  }
+
   /**
-   * 获取���题文本
+   * 获取主题文本
    */
-  private getThemeText(theme: any): string {
+  private getThemeText(theme: ThemeType): string {
     switch (theme) {
-      case 'light':
+      case ThemeType.LIGHT:
         return '浅色主题'
-      case 'dark':
+      case ThemeType.DARK:
         return '深色主题'
-      case 'system':
+      case ThemeType.SYSTEM:
         return '跟随系统'
       default:
         return '跟随系统'
+    }
+  }
+
+  private getPhotoQualityText(quality: 'high' | 'medium' | 'low'): string {
+    switch (quality) {
+      case 'high':
+        return '高质量'
+      case 'medium':
+        return '标准质量'
+      case 'low':
+        return '节省存储'
+      default:
+        return '标准质量'
     }
   }
 
@@ -265,8 +362,14 @@ struct SettingsPage {
    */
   private async toggleLocationService() {
     try {
-      // 实现位置服务切换逻辑
-      this.logger.info('切换位置服务')
+      if (!this.userStore.isInitialized) {
+        await this.userStore.initialize()
+      }
+      const preferences = this.userStore.userState.preferences
+      const targetValue = !preferences.enableLocationService
+      await this.userStore.updatePreferences({ enableLocationService: targetValue })
+      await this.loadSettingsData()
+      this.logger.info(`位置服务已${targetValue ? '开启' : '关闭'}`)
     } catch (error) {
       this.logger.error('切换位置服务失败', error)
     }
@@ -284,6 +387,21 @@ struct SettingsPage {
     }
   }
 
+  private async updatePhotoQuality(quality: 'high' | 'medium' | 'low') {
+    try {
+      if (!this.userStore.isInitialized) {
+        await this.userStore.initialize()
+      }
+      await this.userStore.updatePreferences({ photoQuality: quality })
+      this.pendingPhotoQuality = quality
+      await this.loadSettingsData()
+      this.showCameraQualityDialog = false
+      this.logger.info(`照片质量已设置为: ${quality}`)
+    } catch (error) {
+      this.logger.error('更新照片质量失败', error)
+    }
+  }
+
   /**
    * 重置设置
    */
@@ -294,6 +412,21 @@ struct SettingsPage {
       this.showResetDialog = false
     } catch (error) {
       this.logger.error('重置设置失败', error)
+    }
+  }
+
+  private async applyTheme(theme: ThemeType) {
+    try {
+      if (!this.themeStore.isInitialized) {
+        await this.themeStore.initialize()
+      }
+      await this.themeStore.setTheme(theme)
+      this.pendingTheme = theme
+      await this.loadSettingsData()
+      this.showThemeDialog = false
+      this.logger.info(`主题已设置为: ${theme}`)
+    } catch (error) {
+      this.logger.error('设置主题失败', error)
     }
   }
 
@@ -348,6 +481,18 @@ struct SettingsPage {
       // 关于对话框
       if (this.showAboutDialog) {
         this.buildAboutDialog()
+      }
+
+      if (this.showThemeDialog) {
+        this.buildThemeDialog()
+      }
+
+      if (this.showCameraQualityDialog) {
+        this.buildCameraQualityDialog()
+      }
+
+      if (this.showHelpDialog) {
+        this.buildHelpDialog()
       }
 
       // 重置确认对话框
@@ -419,6 +564,8 @@ struct SettingsPage {
   private buildSettingsList() {
     Scroll() {
       Column({ space: 16 }) {
+        this.buildUsageOverview()
+
         ForEach(
           this.settingsGroups,
           (group: SettingsGroup) => {
@@ -433,6 +580,73 @@ struct SettingsPage {
     .layoutWeight(1)
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
+  }
+
+  /**
+   * 构建使用统计概览
+   */
+  @Builder
+  private buildUsageOverview() {
+    Column({ space: 12 }) {
+      Row() {
+        Text('使用统计')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+
+        Blank()
+
+        if (!this.isUsageLoading) {
+          Text('实时')
+            .fontSize(12)
+            .fontColor('#8C8C8C')
+        }
+      }
+      .width('100%')
+
+      Column({ space: 12 }) {
+        Row({ space: 12 }) {
+          StatCard({
+            title: '工程总数',
+            value: this.usageStats.totalProjects,
+            icon: '🏗️',
+            color: '#1890FF',
+            showLoading: this.isUsageLoading
+          })
+          .layoutWeight(1)
+
+          StatCard({
+            title: '进行中',
+            value: this.usageStats.activeProjects,
+            icon: '⚙️',
+            color: '#52C41A',
+            showLoading: this.isUsageLoading
+          })
+          .layoutWeight(1)
+        }
+
+        Row({ space: 12 }) {
+          StatCard({
+            title: '照片总数',
+            value: this.usageStats.totalPhotos,
+            icon: '📸',
+            color: '#FAAD14',
+            showLoading: this.isUsageLoading
+          })
+          .layoutWeight(1)
+
+          StatCard({
+            title: '工点覆盖',
+            value: this.usageStats.totalSites,
+            icon: '📍',
+            color: '#722ED1',
+            showLoading: this.isUsageLoading
+          })
+          .layoutWeight(1)
+        }
+      }
+    }
+    .width('100%')
   }
 
   /**
@@ -548,84 +762,357 @@ struct SettingsPage {
   }
 
   /**
-   * 构建关于对话框
+   * 构建主题选择对话框
    */
   @Builder
-  private buildAboutDialog() {
-    Column({ space: 20 }) {
-      // 应用图标
-      Image($r('app.media.app_icon'))
-        .width(80)
-        .height(80)
-        .borderRadius(16)
+  private buildThemeDialog() {
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.35)')
+        .onClick(() => this.showThemeDialog = false)
 
-      // 应用信息
-      Column({ space: 8 }) {
-        Text('工程相机')
-          .fontSize(24)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#333333')
-
-        Text('版本 1.0.0')
-          .fontSize(16)
-          .fontColor('#666666')
-
-        Text('专业的工程照片管理应用')
-          .fontSize(14)
-          .fontColor('#999999')
-          .textAlign(TextAlign.Center)
-      }
-
-      // 功能介绍
-      Column({ space: 12 }) {
-        Text('主要功能')
-          .fontSize(16)
+      Column({ space: 16 }) {
+        Text('选择主题')
+          .fontSize(18)
           .fontWeight(FontWeight.Medium)
           .fontColor('#333333')
-          .alignSelf(ItemAlign.Start)
 
-        Column({ space: 8 }) {
+        Column({ space: 12 }) {
+          const options: { label: string; value: ThemeType; description: string }[] = [
+            { label: '浅色模式', value: ThemeType.LIGHT, description: '适合明亮环境，提升可读性' },
+            { label: '深色模式', value: ThemeType.DARK, description: '适合夜间与弱光环境，保护视力' },
+            { label: '跟随系统', value: ThemeType.SYSTEM, description: '自动适配系统主题' }
+          ]
+
+          ForEach(
+            options,
+            (option) => {
+              Column({ space: 6 }) {
+                Row() {
+                  Text(option.label)
+                    .fontSize(16)
+                    .fontColor('#262626')
+                    .layoutWeight(1)
+
+                  if (this.pendingTheme === option.value) {
+                    Text('✓')
+                      .fontSize(18)
+                      .fontColor('#1890FF')
+                  }
+                }
+                .width('100%')
+                .onClick(() => this.applyTheme(option.value))
+
+                Text(option.description)
+                  .fontSize(12)
+                  .fontColor('#8C8C8C')
+                  .width('100%')
+              }
+              .width('100%')
+              .padding({ vertical: 12, horizontal: 12 })
+              .backgroundColor(this.pendingTheme === option.value ? '#EDF4FF' : '#F7F9FC')
+              .borderRadius(12)
+              .onClick(() => this.applyTheme(option.value))
+            },
+            (option) => option.value
+          )
+        }
+
+        Button('取消')
+          .fontSize(16)
+          .fontColor('#1890FF')
+          .backgroundColor(Color.Transparent)
+          .height(44)
+          .border({ width: 1, color: '#1890FF' })
+          .borderRadius(22)
+          .onClick(() => this.showThemeDialog = false)
+      }
+      .width('86%')
+      .padding({ top: 24, bottom: 20, left: 20, right: 20 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius(18)
+      .shadow({
+        radius: 18,
+        color: 'rgba(0,0,0,0.2)',
+        offsetX: 0,
+        offsetY: 6
+      })
+    }
+    .width('100%')
+    .height('100%')
+    .position({ x: 0, y: 0 })
+    .zIndex(200)
+  }
+
+  /**
+   * 构建照片质量选择对话框
+   */
+  @Builder
+  private buildCameraQualityDialog() {
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.35)')
+        .onClick(() => this.showCameraQualityDialog = false)
+
+      Column({ space: 16 }) {
+        Text('照片质量')
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+
+        Column({ space: 12 }) {
+          const options: Array<{ label: string; value: 'high' | 'medium' | 'low'; description: string }> = [
+            { label: '高质量', value: 'high', description: '最高画质，适合精细工程记录，文件较大' },
+            { label: '标准质量', value: 'medium', description: '画质与体积平衡，推荐日常使用' },
+            { label: '节省存储', value: 'low', description: '降低画质换取最小体积，节省存储空间' }
+          ]
+
+          ForEach(
+            options,
+            (option) => {
+              Column({ space: 6 }) {
+                Row() {
+                  Text(option.label)
+                    .fontSize(16)
+                    .fontColor('#262626')
+                    .layoutWeight(1)
+
+                  if (this.pendingPhotoQuality === option.value) {
+                    Text('✓')
+                      .fontSize(18)
+                      .fontColor('#1890FF')
+                  }
+                }
+                .width('100%')
+                .onClick(() => this.updatePhotoQuality(option.value))
+
+                Text(option.description)
+                  .fontSize(12)
+                  .fontColor('#8C8C8C')
+                  .width('100%')
+              }
+              .width('100%')
+              .padding({ vertical: 12, horizontal: 12 })
+              .backgroundColor(this.pendingPhotoQuality === option.value ? '#EDF4FF' : '#F7F9FC')
+              .borderRadius(12)
+              .onClick(() => this.updatePhotoQuality(option.value))
+            },
+            (option) => option.value
+          )
+        }
+
+        Button('取消')
+          .fontSize(16)
+          .fontColor('#1890FF')
+          .backgroundColor(Color.Transparent)
+          .height(44)
+          .border({ width: 1, color: '#1890FF' })
+          .borderRadius(22)
+          .onClick(() => this.showCameraQualityDialog = false)
+      }
+      .width('86%')
+      .padding({ top: 24, bottom: 20, left: 20, right: 20 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius(18)
+      .shadow({
+        radius: 18,
+        color: 'rgba(0,0,0,0.2)',
+        offsetX: 0,
+        offsetY: 6
+      })
+    }
+    .width('100%')
+    .height('100%')
+    .position({ x: 0, y: 0 })
+    .zIndex(210)
+  }
+
+  /**
+   * 帮助中心对话框
+   */
+  @Builder
+  private buildHelpDialog() {
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.35)')
+        .onClick(() => this.showHelpDialog = false)
+
+      Column({ space: 16 }) {
+        Text('使用帮助')
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#333333')
+
+        Column({ space: 10 }) {
+          Text('快速上手')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#262626')
+            .alignSelf(ItemAlign.Start)
+
           ForEach(
             [
-              '• 项目和工点管理',
-              '• 专业拍照和水印',
-              '• 照片编辑和标注',
-              '• 数据备份和导出'
+              '1. 在“工程”页创建项目与工点，完成项目基础信息。',
+              '2. 进入“拍照”快速记录现场，并自动写入水印和定位。', 
+              '3. 在“相册”中筛选、编辑、导出工程照片。',
+              '4. 设置页可调整主题、拍照质量、备份策略等。'
             ],
-            (feature: string) => {
-              Text(feature)
+            (tip) => {
+              Text(tip)
                 .fontSize(14)
                 .fontColor('#666666')
                 .width('100%')
                 .textAlign(TextAlign.Start)
             },
-            (feature: string) => feature
+            (tip) => tip
           )
         }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-      }
 
-      // 版权信息
-      Text('© 2025 Engineering Camera. All rights reserved.')
-        .fontSize(12)
-        .fontColor('#999999')
-        .textAlign(TextAlign.Center)
+        Column({ space: 8 }) {
+          Text('更多资源')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#262626')
+            .alignSelf(ItemAlign.Start)
+
+          ForEach(
+            [
+              '• 用户手册：详解主要功能与操作流程',
+              '• 常见问题：快速定位并解决常见疑问',
+              '• 联系支持：通过意见反馈与我们取得联系'
+            ],
+            (item) => {
+              Text(item)
+                .fontSize(14)
+                .fontColor('#666666')
+                .width('100%')
+                .textAlign(TextAlign.Start)
+            },
+            (item) => item
+          )
+        }
+
+        Button('知道了')
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#1890FF')
+          .height(44)
+          .borderRadius(22)
+          .onClick(() => this.showHelpDialog = false)
+      }
+      .width('88%')
+      .padding({ top: 24, bottom: 20, left: 20, right: 20 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius(18)
+      .shadow({
+        radius: 18,
+        color: 'rgba(0,0,0,0.2)',
+        offsetX: 0,
+        offsetY: 6
+      })
     }
-    .width('90%')
-    .padding(24)
-    .backgroundColor('#FFFFFF')
-    .borderRadius(16)
-    .shadow({
-      radius: 16,
-      color: 'rgba(0, 0, 0, 0.2)',
-      offsetX: 0,
-      offsetY: 4
-    })
-    .zIndex(10)
-    .position({ x: '5%', y: '30%' })
-    .onClick(() => {
-      this.showAboutDialog = false
-    })
+    .width('100%')
+    .height('100%')
+    .position({ x: 0, y: 0 })
+    .zIndex(200)
+  }
+
+  /**
+   * 构建关于对话框
+   */
+  @Builder
+  private buildAboutDialog() {
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.35)')
+        .onClick(() => this.showAboutDialog = false)
+
+      Column({ space: 20 }) {
+        Image($r('app.media.app_icon'))
+          .width(80)
+          .height(80)
+          .borderRadius(16)
+
+        Column({ space: 8 }) {
+          Text('工程相机')
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#333333')
+
+          Text(`版本 ${this.appVersion}${this.buildNumber ? ` (${this.buildNumber})` : ''}`)
+            .fontSize(16)
+            .fontColor('#666666')
+
+          Text('专业的工程拍摄与管理工具')
+            .fontSize(14)
+            .fontColor('#999999')
+            .textAlign(TextAlign.Center)
+        }
+
+        Column({ space: 12 }) {
+          Text('主要功能')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#333333')
+            .alignSelf(ItemAlign.Start)
+
+          Column({ space: 8 }) {
+            ForEach(
+              [
+                '• 项目与工点全流程管理',
+                '• 专业拍照与水印模板',
+                '• 照片标注、批处理与导出',
+                '• 数据备份与团队协作'
+              ],
+              (feature: string) => {
+                Text(feature)
+                  .fontSize(14)
+                  .fontColor('#666666')
+                  .width('100%')
+                  .textAlign(TextAlign.Start)
+              },
+              (feature: string) => feature
+            )
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+        }
+
+        Text('© 2025 工程相机团队保留所有权利')
+          .fontSize(12)
+          .fontColor('#999999')
+          .textAlign(TextAlign.Center)
+
+        Button('关闭')
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#1890FF')
+          .height(44)
+          .borderRadius(22)
+          .onClick(() => this.showAboutDialog = false)
+      }
+      .width('88%')
+      .padding({ top: 24, bottom: 20, left: 24, right: 24 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius(18)
+      .shadow({
+        radius: 18,
+        color: 'rgba(0,0,0,0.2)',
+        offsetX: 0,
+        offsetY: 6
+      })
+    }
+    .width('100%')
+    .height('100%')
+    .position({ x: 0, y: 0 })
+    .zIndex(220)
   }
 }
