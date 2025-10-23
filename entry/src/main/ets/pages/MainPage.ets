@@ -490,6 +490,9 @@ struct MainPage {
   build() {
     Stack() {
       Column() {
+        Blank()
+          .height(24)
+
         this.buildTopBar()
 
         if (this.showSearchPanel) {

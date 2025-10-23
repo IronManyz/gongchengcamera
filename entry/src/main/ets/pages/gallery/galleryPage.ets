@@ -233,6 +233,9 @@ struct GalleryPage {
 
   build() {
     Column() {
+      Blank()
+        .height(24)
+
       // 顶部导航栏
       this.buildTopBar()
 

@@ -79,6 +79,9 @@ struct GalleryPage {
 
   build() {
     Column() {
+      Blank()
+        .height(24)
+
       // 头部导航
       Row() {
         Text('相册')
