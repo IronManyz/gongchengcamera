@@ -378,25 +378,13 @@ struct SettingsPage {
   @Builder
   private buildTopBar() {
     Row() {
-      // 返回按钮
-      Button() {
-        Image($r('app.media.ic_back'))
-          .width(24)
-          .height(24)
-          .fillColor('#333333')
-      }
-      .width(40)
-      .height(40)
-      .backgroundColor(Color.Transparent)
-      .onClick(() => router.back())
-
       // 标题
       Text('设置')
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .fontColor('#333333')
         .layoutWeight(1)
-        .textAlign(TextAlign.Center)
+        .textAlign(TextAlign.Start)
 
       // 搜索按钮（可选）
       Button() {
