@@ -12,6 +12,19 @@ import { DeleteConfirmDialog } from '../components/common/ConfirmDialog'
 import { SimpleProjectCard } from '../components/project/SimpleProjectCard'
 import { SimpleProject, ProjectStatus } from '../models/SimpleProject'
 
+interface StatusFilterOption {
+  key: 'all' | ProjectStatus
+  label: string
+}
+
+const PROJECT_STATUS_FILTERS: StatusFilterOption[] = [
+  { key: 'all', label: '全部' },
+  { key: ProjectStatus.ACTIVE, label: '进行中' },
+  { key: ProjectStatus.COMPLETED, label: '已完成' },
+  { key: ProjectStatus.PAUSED, label: '已暂停' },
+  { key: ProjectStatus.CANCELLED, label: '已取消' }
+]
+
 @Entry
 @Component
 struct MainPage {
@@ -21,6 +34,7 @@ struct MainPage {
   @State private totalSiteCount: number = 0
   @State private totalPhotoCount: number = 0
   @State private projectRevision: number = 0
+  @State private statusFilter: 'all' | ProjectStatus = 'all'
   private projects: SimpleProject[] = []
   private filteredProjects: SimpleProject[] = []
   private activeProjectCache: SimpleProject | null = null
@@ -110,7 +124,13 @@ struct MainPage {
     if (!this.activeProjectId) {
       return null
     }
-    return this.projects.find((project: SimpleProject) => project.id === this.activeProjectId) || null
+    if (this.activeProjectCache && this.activeProjectCache.id === this.activeProjectId) {
+      return this.activeProjectCache
+    }
+
+    const project = this.projects.find((item: SimpleProject) => item.id === this.activeProjectId) || null
+    this.activeProjectCache = project
+    return project
   }
 
   /**
@@ -139,6 +159,7 @@ struct MainPage {
    */
   private handleProjectLongPress(project: SimpleProject): void {
     console.log('Project long pressed:', project.name)
+    this.closeQuickActions()
     this.activeProjectId = project.id
     this.activeProjectCache = project
     this.showProjectActions = true
@@ -270,13 +291,17 @@ struct MainPage {
   private searchProjects(): void {
     const keyword = this.searchQuery.trim().toLowerCase()
 
-    if (!keyword) {
-      this.filteredProjects = [...this.projects]
-      this.refreshProjectView()
-      return
-    }
-
     this.filteredProjects = this.projects.filter((project: SimpleProject) => {
+      const matchStatus = this.statusFilter === 'all' || project.status === this.statusFilter
+
+      if (!matchStatus) {
+        return false
+      }
+
+      if (!keyword) {
+        return true
+      }
+
       const fields = [
         project.name,
         project.code,
@@ -284,10 +309,10 @@ struct MainPage {
         project.client,
         project.description
       ]
-      return fields.some(field =>
-        (field || '').toLowerCase().includes(keyword)
-      )
+
+      return fields.some(field => (field || '').toLowerCase().includes(keyword))
     })
+
     this.refreshProjectView()
   }
 
@@ -308,10 +333,25 @@ struct MainPage {
   }
 
   /**
+   * 状态筛选变更
+   */
+  private onStatusFilterChange(filter: 'all' | ProjectStatus): void {
+    if (this.statusFilter === filter) {
+      return
+    }
+    this.statusFilter = filter
+    this.searchProjects()
+  }
+
+  /**
    * 切换搜索面板显示
    */
   private toggleSearchPanel(): void {
+    const willOpen = !this.showSearchPanel
     this.showSearchPanel = !this.showSearchPanel
+    if (willOpen) {
+      this.closeQuickActions()
+    }
     if (!this.showSearchPanel) {
       this.clearSearch()
     }
@@ -326,6 +366,20 @@ struct MainPage {
   }
 
   /**
+   * 重置筛选条件
+   */
+  private resetFilters(): void {
+    this.searchQuery = ''
+    this.statusFilter = 'all'
+    this.showSearchPanel = false
+    this.searchProjects()
+  }
+
+  private hasActiveFilter(): boolean {
+    return this.statusFilter !== 'all' || this.searchQuery.trim().length > 0
+  }
+
+  /**
    * 关闭搜索面板
    */
   private closeSearchPanel(): void {
@@ -337,6 +391,7 @@ struct MainPage {
    * 打开快捷操作面板
    */
   private openQuickActions(): void {
+    this.closeProjectActions()
     this.showQuickActions = true
   }
 
@@ -441,6 +496,8 @@ struct MainPage {
           this.buildSearchPanel()
         }
 
+        this.buildFilterBar()
+
         this.buildProjectContent()
 
         this.buildBottomNavigation()
@@ -484,13 +541,23 @@ struct MainPage {
   private buildTopBar() {
     Row() {
       // 侧边菜单按钮
-      Text('☰')
-        .fontSize(20)
-        .fontColor('#1890FF')
-        .onClick(() => {
-          console.log('Menu clicked')
+      Button() {
+        Text('☰')
+          .fontSize(18)
+          .fontColor(this.showQuickActions ? '#FFFFFF' : '#1890FF')
+      }
+      .width(36)
+      .height(36)
+      .backgroundColor(this.showQuickActions ? '#1890FF' : '#E6F7FF')
+      .borderRadius(12)
+      .onClick(() => {
+        console.log('Menu clicked')
+        if (this.showQuickActions) {
+          this.closeQuickActions()
+        } else {
           this.openQuickActions()
-        })
+        }
+      })
 
       Blank()
 
@@ -503,35 +570,53 @@ struct MainPage {
       Blank()
 
       // 搜索按钮
-      Text('🔍')
-        .fontSize(20)
-        .fontColor('#1890FF')
-        .backgroundColor('#E6F7FF')
-        .borderRadius(12)
-        .width(32)
-        .height(32)
-        .textAlign(TextAlign.Center)
-        .margin({ right: 16 })
-        .animation({ duration: 150, curve: Curve.EaseInOut })
-        .onClick(() => {
-          console.log('Search clicked')
-          this.toggleSearchPanel()
-        })
+      Button() {
+        Text(this.showSearchPanel ? '✕' : '🔍')
+          .fontSize(18)
+          .fontColor(this.showSearchPanel ? '#FFFFFF' : '#1890FF')
+      }
+      .width(36)
+      .height(36)
+      .backgroundColor(this.showSearchPanel ? '#1890FF' : '#E6F7FF')
+      .borderRadius(12)
+      .margin({ right: 8 })
+      .animation({ duration: 150, curve: Curve.EaseInOut })
+      .onClick(() => {
+        console.log('Search clicked')
+        this.toggleSearchPanel()
+      })
+
+      // 拍照快捷入口
+      Button() {
+        Text('📷')
+          .fontSize(18)
+          .fontColor('#1890FF')
+      }
+      .width(36)
+      .height(36)
+      .backgroundColor('#E6F7FF')
+      .borderRadius(12)
+      .margin({ right: 8 })
+      .onClick(() => {
+        console.log('Camera quick action clicked')
+        this.navigateToCamera()
+      })
 
       // 新建按钮
-      Text('⊕')
-        .fontSize(20)
-        .fontColor('#1890FF')
-        .backgroundColor('#E6F7FF')
-        .borderRadius(12)
-        .width(32)
-        .height(32)
-        .textAlign(TextAlign.Center)
-        .animation({ duration: 150, curve: Curve.EaseInOut })
-        .onClick(() => {
-          console.log('Create project button clicked')
-          this.createNewProject()
-        })
+      Button() {
+        Text('⊕')
+          .fontSize(18)
+          .fontColor(this.showCreateDialog ? '#FFFFFF' : '#1890FF')
+      }
+      .width(36)
+      .height(36)
+      .backgroundColor(this.showCreateDialog ? '#1890FF' : '#E6F7FF')
+      .borderRadius(12)
+      .animation({ duration: 150, curve: Curve.EaseInOut })
+      .onClick(() => {
+        console.log('Create project button clicked')
+        this.createNewProject()
+      })
     }
     .width('100%')
     .height(56)
@@ -567,6 +652,27 @@ struct MainPage {
     .width('100%')
     .backgroundColor('#FFFFFF')
     .border({ width: { bottom: 1 }, color: '#E8E8E8' })
+  }
+
+  /**
+   * 工程状态筛选
+   */
+  @Builder
+  private buildFilterBar() {
+    Row({ space: 8 }) {
+      ForEach(PROJECT_STATUS_FILTERS, (option: StatusFilterOption) => {
+        Button(option.label)
+          .fontSize(14)
+          .fontColor(this.statusFilter === option.key ? '#FFFFFF' : '#1890FF')
+          .backgroundColor(this.statusFilter === option.key ? '#1890FF' : '#EDF4FF')
+          .padding({ left: 16, right: 16 })
+          .height(36)
+          .borderRadius(18)
+          .onClick(() => this.onStatusFilterChange(option.key))
+      }, (option: StatusFilterOption) => option.key)
+    }
+    .padding({ left: 16, right: 16, top: 10, bottom: 8 })
+    .backgroundColor('#FFFFFF')
   }
 
   /**
@@ -636,20 +742,20 @@ struct MainPage {
 
         if (this.filteredProjects.length === 0) {
           Column({ space: 12 }) {
-            Text('未找到匹配的工程')
+            Text(this.hasActiveFilter() ? '未找到匹配的工程' : '还没有工程项目')
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
               .fontColor('#262626')
               .textAlign(TextAlign.Center)
 
-            Text('尝试调整关键词，或创建一个新的工程开始管理。')
+            Text(this.hasActiveFilter() ? '尝试调整筛选条件或清空搜索关键字。' : '创建一个新的工程，开始管理项目与现场数据。')
               .fontSize(14)
               .fontColor('#8C8C8C')
               .textAlign(TextAlign.Center)
               .lineHeight(20)
               .padding({ left: 24, right: 24 })
 
-            Button('清空搜索')
+            Button(this.hasActiveFilter() ? '重置筛选' : '新建工程')
               .height(44)
               .fontSize(16)
               .fontColor('#FFFFFF')
@@ -657,8 +763,11 @@ struct MainPage {
               .borderRadius(22)
               .padding({ left: 32, right: 32 })
               .onClick(() => {
-                this.clearSearch()
-                this.showSearchPanel = false
+                if (this.hasActiveFilter()) {
+                  this.resetFilters()
+                } else {
+                  this.createNewProject()
+                }
               })
           }
           .width('100%')
@@ -676,7 +785,7 @@ struct MainPage {
                 onTap: (p: SimpleProject) => this.handleProjectClick(p),
                 onLongPress: (p: SimpleProject) => this.handleProjectLongPress(p)
               })
-            }, (project: SimpleProject) => project.id)
+            }, (project: SimpleProject) => `${project.id}_${this.projectRevision}`)
           }
           .width('100%')
           .padding({ left: 16, right: 16, bottom: 80 }) // 底部留出导航栏空间
