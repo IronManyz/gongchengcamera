@@ -76,7 +76,7 @@ struct MainPage {
   private navigateToGallery(): void {
     console.log('Navigate to gallery - Starting navigation')
     try {
-      router.pushUrl({
+      router.replaceUrl({
         url: 'pages/gallery/GalleryPlaceholderPage',
         params: {}
       }).then(() => {
@@ -95,7 +95,7 @@ struct MainPage {
   private navigateToSettings(): void {
     console.log('Navigate to settings - Starting navigation')
     try {
-      router.pushUrl({
+      router.replaceUrl({
         url: 'pages/settings/SettingsPlaceholderPage',
         params: {}
       }).then(() => {
