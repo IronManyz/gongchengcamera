@@ -3,7 +3,6 @@
  * 提供照片浏览、搜索、筛选和管理功能
  */
 
-import router from '@ohos.router'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 interface PhotoItem {
@@ -82,23 +81,12 @@ struct GalleryPage {
     Column() {
       // 头部导航
       Row() {
-        Button('← 返回')
-          .fontSize(16)
-          .fontColor('#1890FF')
-          .backgroundColor(Color.Transparent)
-          .onClick(() => {
-            router.replaceUrl({
-              url: 'pages/MainPage',
-              params: {}
-            })
-          })
-
         Text('相册')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .fontColor('#262626')
           .layoutWeight(1)
-          .textAlign(TextAlign.Center)
+          .textAlign(TextAlign.Start)
 
         // 视图切换
         Row({ space: 12 }) {

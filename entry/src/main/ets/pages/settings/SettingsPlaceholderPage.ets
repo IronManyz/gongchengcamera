@@ -3,7 +3,6 @@
  * 提供应用的各种设置选项，包括主题、存储、关于等功能
  */
 
-import router from '@ohos.router'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 interface SettingItem {
@@ -60,23 +59,12 @@ struct SettingsPage {
     Column() {
       // 头部
       Row() {
-        Button('← 返回')
-          .fontSize(16)
-          .fontColor('#1890FF')
-          .backgroundColor(Color.Transparent)
-          .onClick(() => {
-            router.replaceUrl({
-              url: 'pages/MainPage',
-              params: {}
-            })
-          })
-
         Text('设置')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .fontColor('#262626')
           .layoutWeight(1)
-          .textAlign(TextAlign.Center)
+          .textAlign(TextAlign.Start)
 
         Blank()
       }
