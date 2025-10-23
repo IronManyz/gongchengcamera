@@ -187,10 +187,10 @@ struct SplashPage {
       .alignItems(HorizontalAlign.Center)
       .backgroundColor('#F5F5F5')
 
-      // 跳转提示 - 始终显示
+      // 跳转提示 - 显示加载状态
       if (this.navigateToMain) {
         Column() {
-          Text('点击进入应用')
+          Text('正在进入应用...')
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .fontColor('#1890FF')
@@ -199,10 +199,6 @@ struct SplashPage {
             .borderRadius(20)
             .border({ width: 1, color: '#1890FF' })
             .margin({ bottom: 80 })
-            .onClick(() => {
-              console.log('Manual navigation triggered')
-              this.navigateToMainPage()
-            })
         }
         .width('100%')
         .alignItems(HorizontalAlign.Center)
