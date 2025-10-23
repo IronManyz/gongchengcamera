@@ -187,22 +187,7 @@ struct SplashPage {
       .alignItems(HorizontalAlign.Center)
       .backgroundColor('#F5F5F5')
 
-      // 跳转提示 - 显示加载状态
-      if (this.navigateToMain) {
-        Column() {
-          Text('正在进入应用...')
-            .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor('#1890FF')
-            .backgroundColor('#FFFFFF')
-            .padding({ left: 24, right: 24, top: 12, bottom: 12 })
-            .borderRadius(20)
-            .border({ width: 1, color: '#1890FF' })
-            .margin({ bottom: 80 })
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Center)
-      }
+      // 跳转提示已取消，保持界面简洁
     }
     .width('100%')
     .height('100%')
