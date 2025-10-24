@@ -23,23 +23,36 @@ export struct ThemeToggle {
   @Param style: 'button' | 'switch' = 'button'
 
   @Local private themeState: ThemeState = ThemeState.getInstance()
+  @Local private refreshTrigger: number = 0
 
   private get currentThemeType(): ThemeType {
     return this.themeState.currentTheme.type
+  }
+
+  aboutToAppear() {
+    this.themeState = ThemeState.getInstance()
+  }
+
+  private refreshTheme(): void {
+    this.refreshTrigger++
   }
 
   /**
    * 切换到浅色主题
    */
   private setLightTheme(): void {
+    console.log('ThemeToggle: setLightTheme called')
     const currentTheme = this.themeState.currentTheme
     const newTheme: ThemeConfig = {
       type: ThemeType.LIGHT,
       name: currentTheme.name,
       isDark: false
     }
+    console.log('ThemeToggle: Setting theme to', newTheme)
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
+    this.refreshTheme()
+    console.log('ThemeToggle: Light theme set completed')
   }
 
   /**
@@ -54,6 +67,7 @@ export struct ThemeToggle {
     }
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
+    this.refreshTheme()
   }
 
   /**
@@ -68,6 +82,7 @@ export struct ThemeToggle {
     }
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
+    this.refreshTheme()
   }
 
   /**

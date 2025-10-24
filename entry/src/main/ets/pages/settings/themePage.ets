@@ -14,6 +14,7 @@ import { BottomNavigation } from '../../components/common/BottomNavigation'
 @ComponentV2
 struct ThemePage {
   @Local private themeState: ThemeState = ThemeState.getInstance()
+  @Local private refreshTrigger: number = 0
 
   private get currentThemeType(): ThemeType {
     return this.themeState.currentTheme.type
@@ -23,7 +24,14 @@ struct ThemePage {
     return this.themeState.currentTheme.name
   }
 
-  
+  aboutToAppear() {
+    this.themeState = ThemeState.getInstance()
+  }
+
+  private refreshTheme(): void {
+    this.refreshTrigger++
+  }
+
   /**
    * 获取主题类型文本
    */
@@ -107,6 +115,7 @@ struct ThemePage {
 
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
+    this.refreshTheme()
   }
 
   /**
@@ -122,6 +131,7 @@ struct ThemePage {
 
     ThemeManager.setThemeName(name)
     this.themeState.setTheme(newTheme)
+    this.refreshTheme()
   }
 
   build() {
