@@ -13,6 +13,7 @@
     "pages/site/SitePhotoPage",
     "pages/gallery/GalleryPlaceholderPage",
     "pages/settings/SettingsPlaceholderPage",
+    "pages/settings/themePage",
     "pages/about/AboutPage"
   ]
 }

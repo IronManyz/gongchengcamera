@@ -7,6 +7,7 @@ import router from '@ohos.router'
 import { ThemeManager, ThemeType, ThemeName } from '../../theme/ThemeManager'
 import { ThemeToggle } from '../../components/theme/ThemeToggle'
 import { AppColors } from '../../theme/AppColors'
+import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 @Entry
 @Component
@@ -90,10 +91,9 @@ struct ThemePage {
       // 顶部导航栏
       Row() {
         Button() {
-          Image($r('app.media.ic_back'))
-            .width(24)
-            .height(24)
-            .fillColor('#333333')
+          Text('‹')
+            .fontSize(24)
+            .fontColor('#333333')
         }
         .width(48)
         .height(48)
@@ -112,7 +112,7 @@ struct ThemePage {
       }
       .width('100%')
       .height(56)
-      .padding({ horizontal: 16 })
+      .padding({ left: 16, right: 16 })
       .backgroundColor('#FFFFFF')
       .border({ width: { bottom: 1 }, color: '#F0F0F0' })
 
@@ -129,8 +129,8 @@ struct ThemePage {
 
             // 主题类型选择器
             ThemeToggle({
-              size: 'large',
               showText: true,
+              toggleSize: 'large',
               style: 'button'
             })
               .margin({ top: 12 })
@@ -164,7 +164,7 @@ struct ThemePage {
             })
           }
           .width('100%')
-          .padding({ horizontal: 16, top: 24 })
+          .padding({ left: 16, right: 16, top: 24 })
 
           // 主题名称选择
           Column({ space: 16 }) {
@@ -212,16 +212,21 @@ struct ThemePage {
             })
           }
           .width('100%')
-          .padding({ horizontal: 16, bottom: 24 })
+          .padding({ left: 16, right: 16, bottom: 24 })
 
           // 主题预览
           this.buildThemePreview()
         }
         .width('100%')
-        .padding({ vertical: 16 })
+        .padding({ top: 16, bottom: 16 })
       }
       .layoutWeight(1)
       .backgroundColor('#F5F5F5')
+
+      // 底部导航栏
+      BottomNavigation({
+        currentPage: 'pages/settings/SettingsPlaceholderPage'
+      })
     }
     .width('100%')
     .height('100%')
@@ -254,10 +259,9 @@ struct ThemePage {
 
           // 选中指示器
           if (isSelected) {
-            Image($r('app.media.ic_check'))
-              .width(16)
-              .height(16)
-              .fillColor(ThemeManager.getCurrentPrimaryColor())
+            Text('✓')
+              .fontSize(16)
+              .fontColor(ThemeManager.getCurrentPrimaryColor())
           }
         }
       }
@@ -270,7 +274,7 @@ struct ThemePage {
           .fontColor(isSelected ? '#FFFFFF' : ThemeManager.getCurrentPrimaryColor())
       }
       .height(36)
-      .padding({ horizontal: 16 })
+      .padding({ left: 16, right: 16 })
       .backgroundColor(isSelected ? ThemeManager.getCurrentPrimaryColor() : Color.Transparent)
       .borderRadius(18)
       .border({
@@ -310,7 +314,7 @@ struct ThemePage {
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor('#333333')
-            .padding({ horizontal: 8, vertical: 4 })
+            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
             .backgroundColor(ThemeManager.getCurrentPrimaryColor() + '20')
             .borderRadius(4)
             .layoutWeight(1)
@@ -330,7 +334,7 @@ struct ThemePage {
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor('#333333')
-              .padding({ horizontal: 8, vertical: 4 })
+              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentSuccessColor() + '20')
               .borderRadius(4)
               .layoutWeight(1)
@@ -347,7 +351,7 @@ struct ThemePage {
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor('#333333')
-              .padding({ horizontal: 8, vertical: 4 })
+              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentWarningColor() + '20')
               .borderRadius(4)
               .layoutWeight(1)
@@ -364,7 +368,7 @@ struct ThemePage {
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor('#333333')
-              .padding({ horizontal: 8, vertical: 4 })
+              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentErrorColor() + '20')
               .borderRadius(4)
               .layoutWeight(1)
@@ -384,7 +388,7 @@ struct ThemePage {
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor('#333333')
-            .padding({ horizontal: 8, vertical: 4 })
+            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
             .backgroundColor(ThemeManager.getCurrentBgColor())
             .borderRadius(4)
             .layoutWeight(1)

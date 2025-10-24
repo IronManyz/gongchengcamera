@@ -15,15 +15,13 @@ export interface ThemeToggleProps {
   style?: 'button' | 'switch' // 切换样式
 }
 
-@Component
+@ComponentV2
 export struct ThemeToggle {
-  private props: ThemeToggleProps = {
-    showText: true,
-    size: 'medium',
-    style: 'button'
-  }
+  @Param showText: boolean = true
+  @Param toggleSize: 'small' | 'medium' | 'large' = 'medium'
+  @Param style: 'button' | 'switch' = 'button'
 
-  @State private currentThemeType: ThemeType = ThemeType.LIGHT
+  @Local private currentThemeType: ThemeType = ThemeType.LIGHT
 
   aboutToAppear() {
     this.currentThemeType = ThemeManager.getCurrentTheme().type
@@ -62,22 +60,23 @@ export struct ThemeToggle {
       // 浅色主题按钮
       Button() {
         Row({ space: 6 }) {
-          Image($r('app.media.ic_sun'))
-            .width(16)
-            .height(16)
-            .fillColor(this.currentThemeType === ThemeType.LIGHT ? '#FFFFFF' : '#666666')
+          Text('☀️')
+            .fontSize(16)
+            .fontColor(this.currentThemeType === ThemeType.LIGHT ? '#FFFFFF' : '#666666')
 
-          if (this.props.showText) {
+          if (this.showText) {
             Text('浅色')
               .fontSize(14)
               .fontColor(this.currentThemeType === ThemeType.LIGHT ? '#FFFFFF' : '#666666')
           }
         }
       }
-      .height(this.props.size === 'small' ? 32 : this.props.size === 'large' ? 48 : 40)
+      .height(this.toggleSize === 'small' ? 32 : this.toggleSize === 'large' ? 48 : 40)
       .padding({
-        horizontal: this.props.size === 'small' ? 8 : this.props.size === 'large' ? 20 : 12,
-        vertical: this.props.size === 'small' ? 4 : this.props.size === 'large' ? 12 : 8
+        left: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+        right: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+        top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
+        bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
       })
       .backgroundColor(this.currentThemeType === ThemeType.LIGHT ? AppColors.primary : Color.Transparent)
       .border({
@@ -90,22 +89,23 @@ export struct ThemeToggle {
       // 深色主题按钮
       Button() {
         Row({ space: 6 }) {
-          Image($r('app.media.ic_moon'))
-            .width(16)
-            .height(16)
-            .fillColor(this.currentThemeType === ThemeType.DARK ? '#FFFFFF' : '#666666')
+          Text('🌙')
+            .fontSize(16)
+            .fontColor(this.currentThemeType === ThemeType.DARK ? '#FFFFFF' : '#666666')
 
-          if (this.props.showText) {
+          if (this.showText) {
             Text('深色')
               .fontSize(14)
               .fontColor(this.currentThemeType === ThemeType.DARK ? '#FFFFFF' : '#666666')
           }
         }
       }
-      .height(this.props.size === 'small' ? 32 : this.props.size === 'large' ? 48 : 40)
+      .height(this.toggleSize === 'small' ? 32 : this.toggleSize === 'large' ? 48 : 40)
       .padding({
-        horizontal: this.props.size === 'small' ? 8 : this.props.size === 'large' ? 20 : 12,
-        vertical: this.props.size === 'small' ? 4 : this.props.size === 'large' ? 12 : 8
+        left: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+        right: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+        top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
+        bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
       })
       .backgroundColor(this.currentThemeType === ThemeType.DARK ? AppColors.primary : Color.Transparent)
       .border({
@@ -116,25 +116,26 @@ export struct ThemeToggle {
       .onClick(() => this.setDarkTheme())
 
       // 自动主题按钮
-      if (this.props.style === 'button') {
+      if (this.style === 'button') {
         Button() {
           Row({ space: 6 }) {
-            Image($r('app.media.ic_auto'))
-              .width(16)
-              .height(16)
-              .fillColor(this.currentThemeType === ThemeType.AUTO ? '#FFFFFF' : '#666666')
+            Text('🔄')
+              .fontSize(16)
+              .fontColor(this.currentThemeType === ThemeType.AUTO ? '#FFFFFF' : '#666666')
 
-            if (this.props.showText) {
+            if (this.showText) {
               Text('自动')
                 .fontSize(14)
                 .fontColor(this.currentThemeType === ThemeType.AUTO ? '#FFFFFF' : '#666666')
             }
           }
         }
-        .height(this.props.size === 'small' ? 32 : this.props.size === 'large' ? 48 : 40)
+        .height(this.toggleSize === 'small' ? 32 : this.toggleSize === 'large' ? 48 : 40)
         .padding({
-          horizontal: this.props.size === 'small' ? 8 : this.props.size === 'large' ? 20 : 12,
-          vertical: this.props.size === 'small' ? 4 : this.props.size === 'large' ? 12 : 8
+          left: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+          right: this.toggleSize === 'small' ? 8 : this.toggleSize === 'large' ? 20 : 12,
+          top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
+          bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
         })
         .backgroundColor(this.currentThemeType === ThemeType.AUTO ? AppColors.primary : Color.Transparent)
         .border({
@@ -175,10 +176,9 @@ export struct ThemeToggle {
       Row() {
         // 浅色主题选项
         Row({ space: 8 }) {
-          Image($r('app.media.ic_sun'))
-            .width(20)
-            .height(20)
-            .fillColor(this.currentThemeType === ThemeType.LIGHT ? AppColors.primary : '#999999')
+          Text('☀️')
+            .fontSize(20)
+            .fontColor(this.currentThemeType === ThemeType.LIGHT ? AppColors.primary : '#999999')
 
           Text('浅色')
             .fontSize(16)
@@ -189,10 +189,9 @@ export struct ThemeToggle {
 
         // 深色主题选项
         Row({ space: 8 }) {
-          Image($r('app.media.ic_moon'))
-            .width(20)
-            .height(20)
-            .fillColor(this.currentThemeType === ThemeType.DARK ? AppColors.primary : '#999999')
+          Text('🌙')
+            .fontSize(20)
+            .fontColor(this.currentThemeType === ThemeType.DARK ? AppColors.primary : '#999999')
 
           Text('深色')
             .fontSize(16)
@@ -215,7 +214,7 @@ export struct ThemeToggle {
   }
 
   build() {
-    if (this.props.style === 'switch') {
+    if (this.style === 'switch') {
       this.buildSwitchStyle()
     } else {
       this.buildButtonStyle()

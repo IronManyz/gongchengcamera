@@ -27,7 +27,7 @@ struct SettingsPage {
       subtitle: '切换浅色/深色主题',
       icon: '🎨',
       onPress: () => {
-        console.log('Theme settings clicked')
+        this.navigateToTheme()
       }
     },
     {
@@ -55,6 +55,19 @@ struct SettingsPage {
       }
     }
   ]
+
+  private navigateToTheme(): void {
+    try {
+      router.replaceUrl({
+        url: 'pages/settings/themePage',
+        params: {}
+      }).catch((error: Error) => {
+        console.error('Navigate to theme page failed:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to theme page failed with exception:', error)
+    }
+  }
 
   private navigateToAbout(): void {
     try {
