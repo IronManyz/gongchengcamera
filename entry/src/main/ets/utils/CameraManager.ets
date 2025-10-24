@@ -74,83 +74,82 @@ export class CameraManager {
       }
 
       this.surfaceId = surfaceId
-      console.log('Starting camera initialization...')
+      console.log('Starting HarmonyOS Next camera initialization...')
 
-      // 第一步：尝试创建相机管理器
-      try {
-        console.log('Step 1: Creating camera manager...')
-        this.cameraManager = camera.getCameraManager(context)
-        console.log('Camera manager created:', !!this.cameraManager)
+      // 权限已在页面级别验证，这里跳过重复验证
 
-        if (!this.cameraManager) {
-          throw new Error('相机管理器创建失败：返回null')
-        }
-      } catch (error) {
-        console.error('Step 1 failed - Camera manager creation:', error)
-        throw new Error(`相机管理器创建失败: ${error}`)
+      // 创建相机管理器
+      console.log('Creating camera manager...')
+      this.cameraManager = camera.getCameraManager(context)
+      if (!this.cameraManager) {
+        throw new Error('无法创建相机管理器')
+      }
+      console.log('Camera manager created successfully')
+
+      // 获取相机设备
+      console.log('Getting camera devices...')
+      const cameras = await this.cameraManager.getSupportedCameras()
+      console.log('Available cameras:', cameras.length)
+
+      if (cameras.length === 0) {
+        throw new Error('未找到可用的相机设备')
       }
 
-      // 第二步：获取相机设备列表
-      try {
-        console.log('Step 2: Getting available cameras...')
-        const cameras = await this.cameraManager.getSupportedCameras()
-        console.log('Available cameras:', cameras.length)
+      // 选择后置摄像头（使用数值比较）
+      const selectedCamera = cameras.find(camera => camera.cameraPosition === 0) || cameras[0]
+      console.log('Selected camera:', selectedCamera.cameraId, 'Position:', selectedCamera.cameraPosition)
 
-        if (cameras.length === 0) {
-          throw new Error('没有可用的相机设备')
-        }
+      // 创建相机输入
+      console.log('Creating camera input...')
+      this.cameraInput = this.cameraManager.createCameraInput(selectedCamera)
+      if (!this.cameraInput) {
+        throw new Error('相机输入创建失败')
+      }
+      console.log('Camera input created successfully')
 
-        // 选择第一个相机
-        const selectedCamera = cameras[0]
-        console.log('Selected camera:', selectedCamera.cameraId, selectedCamera.cameraPosition)
+      // 创建预览输出
+      console.log('Creating preview output...')
+      this.previewOutput = this.cameraManager.createPreviewOutput(surfaceId)
+      if (!this.previewOutput) {
+        throw new Error('预览输出创建失败')
+      }
+      console.log('Preview output created successfully')
 
-        // 保存相机信息
-        this.cameraInput = this.cameraManager.createCameraInput(selectedCamera)
-        console.log('Camera input created:', !!this.cameraInput)
-
-        if (!this.cameraInput) {
-          throw new Error('相机输入创建失败')
-        }
-
-      } catch (error) {
-        console.error('Step 2 failed - Camera device access:', error)
-        throw new Error(`相机设备访问失败: ${error}`)
+      // 创建拍照输出
+      console.log('Creating photo output...')
+      this.photoOutput = this.cameraManager.createPhotoOutput()
+      if (!this.photoOutput) {
+        console.warn('Photo output creation failed, but continuing...')
       }
 
-      // 第三步：创建基本的拍照输出（可选）
-      try {
-        console.log('Step 3: Creating photo output...')
-        this.photoOutput = this.cameraManager.createPhotoOutput()
-        console.log('Photo output created:', !!this.photoOutput)
-      } catch (error) {
-        console.warn('Step 3 warning - Photo output creation failed (continuing anyway):', error)
-        // 拍照输出失败不是致命错误，继续执行
+      // 创建并配置会话
+      console.log('Creating capture session...')
+      this.captureSession = this.cameraManager.createCaptureSession()
+      if (!this.captureSession) {
+        throw new Error('捕获会话创建失败')
       }
 
-      // 第四步：创建预览输出
-      try {
-        console.log('Step 4: Creating preview output...')
-        this.previewOutput = this.cameraManager.createPreviewOutput(surfaceId)
-        console.log('Preview output created:', !!this.previewOutput)
-
-        if (!this.previewOutput) {
-          throw new Error('预览输出创建失败')
-        }
-      } catch (error) {
-        console.error('Step 4 failed - Preview output creation:', error)
-        throw new Error(`预览输出创建失败: ${error}`)
+      // 配置会话
+      console.log('Configuring capture session...')
+      await this.captureSession.beginConfig()
+      await this.captureSession.addInput(this.cameraInput)
+      await this.captureSession.addOutput(this.previewOutput)
+      if (this.photoOutput) {
+        await this.captureSession.addOutput(this.photoOutput)
       }
+      await this.captureSession.commitConfig()
 
-      // 标记为已初始化
+      // 启动会话
+      console.log('Starting capture session...')
+      await this.captureSession.start()
+
       this.isInitialized = true
-      console.log('Camera initialized successfully!')
+      console.log('=== Camera initialized successfully! ===')
 
       // 调用初始化回调
       if (this.onInitializedCallback) {
-        console.log('Calling initialization callback...')
+        console.log('Triggering initialization callback...')
         this.onInitializedCallback()
-      } else {
-        console.log('Warning: No initialization callback set')
       }
 
       return { success: true, message: '相机初始化成功' }
@@ -158,24 +157,21 @@ export class CameraManager {
     } catch (error) {
       const err = error as BusinessError
       console.error('=== CAMERA INITIALIZATION FAILED ===')
-      console.error('Error:', err)
-      console.error('Message:', err.message)
-      console.error('Code:', err.code)
+      console.error('Error details:', err)
+      console.error('Error code:', err.code)
+      console.error('Error message:', err.message)
 
       const errorMessage = `相机初始化失败: ${err.message || String(error)}`
-      console.error('Final error message:', errorMessage)
 
       if (this.onErrorCallback) {
-        console.log('Calling error callback with:', errorMessage)
         this.onErrorCallback(errorMessage)
-      } else {
-        console.log('Warning: No error callback set')
       }
 
       return { success: false, message: errorMessage }
     }
   }
 
+  
   /**
    * 拍照
    */
