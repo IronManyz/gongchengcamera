@@ -95,9 +95,15 @@ struct CameraPage_Simple {
     console.log('=== CameraPage.checkAndRequestPermission() ===')
 
     try {
+      console.log('Getting UIAbility context for permission check...')
       // 获取UIAbilityContext
       const context = getContext(this) as common.UIAbilityContext
+      if (!context) {
+        console.error('Failed to get UIAbility context for permission check')
+        throw new Error('Failed to get application context')
+      }
 
+      console.log('Checking camera permission...')
       // 检查权限状态
       const permissionManager = PermissionManager.getInstance()
       const result = await permissionManager.ensureCameraPermission(context)
@@ -106,9 +112,11 @@ struct CameraPage_Simple {
       this.permissionMessage = result.message || ''
 
       console.log('Permission result:', result)
+      console.log('Permission status:', result.status)
+      console.log('Permission message:', result.message)
 
       if (result.status === PermissionStatus.GRANTED) {
-        console.log('Camera permission granted, initializing camera')
+        console.log('Camera permission granted, initializing camera manager...')
         this.initCameraManager()
       } else {
         console.log('Camera permission not granted:', result.message)
@@ -117,7 +125,7 @@ struct CameraPage_Simple {
       }
     } catch (error) {
       console.error('Permission check failed:', error)
-      this.permissionMessage = '权限检查失败'
+      this.permissionMessage = `权限检查失败: ${error instanceof Error ? error.message : String(error)}`
       this.permissionStatus = PermissionStatus.DENIED
       this.isLoading = false
       this.showPermissionDialog = true
@@ -163,10 +171,22 @@ struct CameraPage_Simple {
     try {
       // 获取相机管理器实例
       this.cameraManager = CameraManager.getInstance()
+      console.log('Camera manager instance created')
+
+      // 设置初始化超时 - 30秒后自动停止加载
+      const timeoutId = setTimeout(() => {
+        if (this.isLoading) {
+          console.error('Camera initialization timeout (30 seconds)')
+          this.cameraErrorMessage = '相机初始化超时，请重试'
+          this.showCameraError = true
+          this.isLoading = false
+        }
+      }, 30000)
 
       // 设置回调
       this.cameraManager.onInitialized(() => {
         console.log('Camera manager initialization callback triggered')
+        clearTimeout(timeoutId) // 清除超时定时器
         this.isCameraReady = true
         this.isLoading = false
         console.log('Camera ready for use')
@@ -174,6 +194,7 @@ struct CameraPage_Simple {
 
       this.cameraManager.onError((error: string) => {
         console.error('Camera manager error:', error)
+        clearTimeout(timeoutId) // 清除超时定时器
         this.cameraErrorMessage = error
         this.showCameraError = true
         this.isLoading = false
@@ -183,7 +204,7 @@ struct CameraPage_Simple {
 
     } catch (error) {
       console.error('Init camera manager failed:', error)
-      this.cameraErrorMessage = '相机管理器初始化失败'
+      this.cameraErrorMessage = `相机管理器初始化失败: ${error instanceof Error ? error.message : String(error)}`
       this.showCameraError = true
       this.isLoading = false
     }
@@ -195,18 +216,30 @@ struct CameraPage_Simple {
   async initializeCameraWithSurface(surfaceId: string): Promise<void> {
     console.log('=== CameraPage.initializeCameraWithSurface() ===')
     console.log('Surface ID:', surfaceId)
+    console.log('Camera manager exists:', !!this.cameraManager)
+    console.log('Current loading state:', this.isLoading)
 
     try {
       if (!this.cameraManager) {
+        console.error('Camera manager is null or undefined')
         throw new Error('Camera manager not initialized')
       }
 
+      console.log('Getting UIAbility context...')
       const context = getContext(this) as common.UIAbilityContext
+      if (!context) {
+        console.error('Failed to get UIAbility context')
+        throw new Error('Failed to get application context')
+      }
+
+      console.log('Starting camera initialization with surface...')
       const result = await this.cameraManager.initializeCamera(context, surfaceId)
+      console.log('Camera initialization result:', result)
 
       if (result.success) {
         console.log('Camera initialized with surface successfully')
         this.surfaceId = surfaceId
+        // 注意：不要在这里设置isLoading = false，因为这会在onInitialized回调中处理
       } else {
         console.error('Camera initialization failed:', result.message)
         this.cameraErrorMessage = result.message || '相机初始化失败'
@@ -216,7 +249,7 @@ struct CameraPage_Simple {
 
     } catch (error) {
       console.error('Initialize camera with surface failed:', error)
-      this.cameraErrorMessage = '相机预览初始化失败'
+      this.cameraErrorMessage = `相机预览初始化失败: ${error instanceof Error ? error.message : String(error)}`
       this.showCameraError = true
       this.isLoading = false
     }
@@ -418,8 +451,16 @@ struct CameraPage_Simple {
               const surfaceId: string = xComponent.getXComponentSurfaceId()
               console.log('Surface ID:', surfaceId)
 
-              // 使用Surface ID初始化相机
-              this.initializeCameraWithSurface(surfaceId)
+              if (surfaceId && surfaceId.length > 0) {
+                // 使用Surface ID初始化相机
+                console.log('Surface ID is valid, initializing camera...')
+                this.initializeCameraWithSurface(surfaceId)
+              } else {
+                console.error('Surface ID is empty or invalid')
+                this.cameraErrorMessage = '相机预览区域初始化失败：Surface ID无效'
+                this.showCameraError = true
+                this.isLoading = false
+              }
             } catch (error) {
               console.error('Get surface size failed:', error)
               this.cameraErrorMessage = '获取相机预览区域失败'
