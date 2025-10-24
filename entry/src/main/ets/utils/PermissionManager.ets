@@ -47,26 +47,40 @@ export class PermissionManager {
     try {
       console.log('=== PermissionManager.checkCameraPermission() ===')
 
-      const atManager = abilityAccessCtrl.createAtManager()
-      const bundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION)
-      const tokenId = bundleInfo.appInfo.accessTokenId
+      try {
+        const atManager = abilityAccessCtrl.createAtManager()
+        console.log('Access control manager created:', !!atManager)
 
-      const permissionStatus = await atManager.checkAccessToken(tokenId, 'ohos.permission.CAMERA')
-      console.log('Camera permission status:', permissionStatus)
+        const bundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION)
+        console.log('Bundle info retrieved:', !!bundleInfo)
+        console.log('Bundle info:', bundleInfo.appInfo)
 
-      if (permissionStatus === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
-        console.log('Camera permission is GRANTED')
-        return {
-          status: PermissionStatus.GRANTED,
-          message: '相机权限已授权'
+        const tokenId = bundleInfo.appInfo.accessTokenId
+        console.log('Token ID:', tokenId)
+
+        const permissionStatus = await atManager.checkAccessToken(tokenId, 'ohos.permission.CAMERA')
+        console.log('Camera permission status:', permissionStatus)
+        console.log('Permission granted status:', abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED)
+
+        if (permissionStatus === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
+          console.log('Camera permission is GRANTED')
+          return {
+            status: PermissionStatus.GRANTED,
+            message: '相机权限已授权'
+          }
+        } else {
+          console.log('Camera permission is DENIED or NOT_DETERMINED')
+          console.log('Actual status value:', permissionStatus)
+          return {
+            status: PermissionStatus.NOT_DETERMINED,
+            message: '相机权限未授权'
+          }
         }
-      } else {
-        console.log('Camera permission is DENIED or NOT_DETERMINED')
-        return {
-          status: PermissionStatus.NOT_DETERMINED,
-          message: '相机权限未授权'
-        }
+      } catch (checkError) {
+        console.error('Permission check operation failed:', checkError)
+        throw new Error(`权限检查操作失败: ${checkError}`)
       }
+
     } catch (error) {
       const err = error as BusinessError
       console.error('Check camera permission failed:', err.code, err.message)
@@ -86,31 +100,47 @@ export class PermissionManager {
 
       // 先检查权限状态
       const checkResult = await this.checkCameraPermission(context)
+      console.log('Current permission status:', checkResult.status)
+
       if (checkResult.status === PermissionStatus.GRANTED) {
+        console.log('Camera permission already granted')
         return checkResult
       }
 
+      console.log('Camera permission not granted, requesting from user...')
+
       const atManager = abilityAccessCtrl.createAtManager()
+      console.log('Permission manager created:', !!atManager)
+
       const permissions: Array<Permissions> = ['ohos.permission.CAMERA']
+      console.log('Requesting permissions:', permissions)
 
-      console.log('Requesting camera permission...')
+      try {
+        const result = await atManager.requestPermissionsFromUser(context, permissions)
+        console.log('Permission request completed')
+        console.log('Request result:', result)
+        console.log('Permissions requested:', result.permissions)
+        console.log('Auth results:', result.authResults)
 
-      const result = await atManager.requestPermissionsFromUser(context, permissions)
-      console.log('Permission request result:', result)
-
-      if (result.permissions.length > 0 && result.authResults[0] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
-        console.log('Camera permission granted successfully')
-        return {
-          status: PermissionStatus.GRANTED,
-          message: '相机权限授权成功'
+        if (result.permissions.length > 0 && result.authResults[0] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
+          console.log('Camera permission granted successfully')
+          return {
+            status: PermissionStatus.GRANTED,
+            message: '相机权限授权成功'
+          }
+        } else {
+          console.log('Camera permission denied')
+          console.log('Grant status:', result.authResults[0])
+          return {
+            status: PermissionStatus.DENIED,
+            message: '相机权限被拒绝'
+          }
         }
-      } else {
-        console.log('Camera permission denied')
-        return {
-          status: PermissionStatus.DENIED,
-          message: '相机权限被拒绝'
-        }
+      } catch (requestError) {
+        console.error('Permission request failed:', requestError)
+        throw new Error(`权限请求失败: ${requestError}`)
       }
+
     } catch (error) {
       const err = error as BusinessError
       console.error('Request camera permission failed:', err.code, err.message)
