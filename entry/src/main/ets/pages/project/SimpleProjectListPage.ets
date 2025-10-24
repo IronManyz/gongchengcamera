@@ -93,7 +93,7 @@ struct SimpleProjectListPage {
 
       // 底部导航提示
       Row() {
-        Text('工程相机 v1.0.0')
+        Text('工程拍记 v1.0.0')
           .fontSize(12)
           .fontColor('#999999')
       }

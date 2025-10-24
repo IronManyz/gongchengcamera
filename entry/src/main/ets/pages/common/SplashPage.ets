@@ -119,14 +119,14 @@ struct SplashPage {
             .margin({ bottom: 24 })
 
           // 应用名称
-          Text('工程相机')
+          Text('工程拍记')
             .fontSize(32)
             .fontWeight(FontWeight.Bold)
             .fontColor('#1890FF')
             .margin({ bottom: 8 })
 
           // 英文名称
-          Text('Engineering Camera')
+          Text('Engineering Photo Record')
             .fontSize(18)
             .fontColor('#52C41A')
             .margin({ bottom: 16 })

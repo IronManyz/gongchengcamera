@@ -184,7 +184,7 @@ export struct PageEmptyView {
       case PageEmptyType.FIRST_USE:
         return {
           icon: $r('app.media.ic_welcome'),
-          title: '欢迎使用工程相机',
+          title: '欢迎使用工程拍记',
           description: '开始管理您的工程项目和照片',
           buttonText: '开始使用',
           showButton: true,

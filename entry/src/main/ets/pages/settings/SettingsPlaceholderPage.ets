@@ -229,7 +229,7 @@ struct SettingsPage {
               .fontSize(14)
               .fontColor('#8C8C8C')
               .textAlign(TextAlign.Center)
-            Text('© 2024 工程相机团队')
+            Text('© 2024 工程拍记团队')
               .fontSize(12)
               .fontColor('#C0C0C0')
               .textAlign(TextAlign.Center)

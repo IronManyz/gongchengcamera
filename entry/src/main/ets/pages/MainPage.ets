@@ -565,7 +565,7 @@ struct MainPage {
       Blank()
 
       // 应用标题
-      Text('工程相机')
+      Text('工程拍记')
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
         .fontColor('#262626')

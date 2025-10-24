@@ -21,9 +21,9 @@ struct AboutPage {
   @State private appVersion: string = '1.0.0'
   @State private buildNumber: string = '2024.01.01'
   @State private appInfo: AppInfo = {
-    name: 'Engineering Camera',
-    description: '专业的工程拍照管理应用',
-    company: '工程相机团队',
+    name: '工程拍记',
+    description: '专业的工程拍照记录管理应用',
+    company: '工程拍记团队',
     website: 'https://engineering-camera.example.com',
     email: 'support@engineering-camera.example.com',
     github: 'https://github.com/engineering-camera'
@@ -241,7 +241,7 @@ struct AboutPage {
 
           // 版权信息
           Column() {
-            Text('© 2024 Engineering Camera Team')
+            Text('© 2024 工程拍记团队')
               .fontSize(14)
               .fontColor('#8C8C8C')
               .textAlign(TextAlign.Center)
