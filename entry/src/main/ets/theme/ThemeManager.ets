@@ -45,6 +45,13 @@ export interface ThemeConfig {
 }
 
 /**
+ * 主题变化监听器接口
+ */
+export interface ThemeChangeListener {
+  onThemeChanged(theme: ThemeConfig): void
+}
+
+/**
  * 主题管理器类
  */
 export class ThemeManager {
@@ -53,6 +60,7 @@ export class ThemeManager {
     name: ThemeName.ENGINEERING,
     isDark: false
   }
+  private static listeners: ThemeChangeListener[] = []
 
   /**
    * 获取当前主题配置
@@ -62,12 +70,39 @@ export class ThemeManager {
   }
 
   /**
+   * 添加主题变化监听器
+   */
+  static addThemeChangeListener(listener: ThemeChangeListener): void {
+    if (!ThemeManager.listeners.includes(listener)) {
+      ThemeManager.listeners.push(listener)
+    }
+  }
+
+  /**
+   * 移除主题变化监听器
+   */
+  static removeThemeChangeListener(listener: ThemeChangeListener): void {
+    const index = ThemeManager.listeners.indexOf(listener)
+    if (index > -1) {
+      ThemeManager.listeners.splice(index, 1)
+    }
+  }
+
+  /**
    * 设置主题
    */
   static setTheme(theme: ThemeConfig): void {
     ThemeManager.currentTheme = theme
     // TODO: 保存到本地存储
     console.log('设置主题:', theme)
+    // 通知所有监听器
+    ThemeManager.listeners.forEach(listener => {
+      try {
+        listener.onThemeChanged(theme)
+      } catch (error) {
+        console.error('主题监听器错误:', error)
+      }
+    })
   }
 
   /**

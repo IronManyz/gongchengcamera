@@ -4,6 +4,7 @@
  */
 
 import { ThemeManager, ThemeType, ThemeName } from '../../theme/ThemeManager'
+import { ThemeState, ThemeConfig } from '../../theme/ThemeObservable'
 import { AppColors } from '../../theme/AppColors'
 
 /**
@@ -21,38 +22,52 @@ export struct ThemeToggle {
   @Param toggleSize: 'small' | 'medium' | 'large' = 'medium'
   @Param style: 'button' | 'switch' = 'button'
 
-  @Local private currentThemeType: ThemeType = ThemeType.LIGHT
+  @Local private themeState: ThemeState = ThemeState.getInstance()
 
-  aboutToAppear() {
-    this.updateThemeType()
-  }
-
-  private updateThemeType(): void {
-    this.currentThemeType = ThemeManager.getCurrentTheme().type
+  private get currentThemeType(): ThemeType {
+    return this.themeState.currentTheme.type
   }
 
   /**
    * 切换到浅色主题
    */
   private setLightTheme(): void {
-    ThemeManager.setLightTheme()
-    this.updateThemeType()
+    const currentTheme = this.themeState.currentTheme
+    const newTheme: ThemeConfig = {
+      type: ThemeType.LIGHT,
+      name: currentTheme.name,
+      isDark: false
+    }
+    ThemeManager.setTheme(newTheme)
+    this.themeState.setTheme(newTheme)
   }
 
   /**
    * 切换到深色主题
    */
   private setDarkTheme(): void {
-    ThemeManager.setDarkTheme()
-    this.updateThemeType()
+    const currentTheme = this.themeState.currentTheme
+    const newTheme: ThemeConfig = {
+      type: ThemeType.DARK,
+      name: currentTheme.name,
+      isDark: true
+    }
+    ThemeManager.setTheme(newTheme)
+    this.themeState.setTheme(newTheme)
   }
 
   /**
    * 切换到自动主题
    */
   private setAutoTheme(): void {
-    ThemeManager.setAutoTheme()
-    this.updateThemeType()
+    const currentTheme = this.themeState.currentTheme
+    const newTheme: ThemeConfig = {
+      type: ThemeType.AUTO,
+      name: currentTheme.name,
+      isDark: false
+    }
+    ThemeManager.setTheme(newTheme)
+    this.themeState.setTheme(newTheme)
   }
 
   /**

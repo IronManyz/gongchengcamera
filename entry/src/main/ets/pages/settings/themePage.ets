@@ -5,6 +5,7 @@
 
 import router from '@ohos.router'
 import { ThemeManager, ThemeType, ThemeName } from '../../theme/ThemeManager'
+import { ThemeState, ThemeConfig } from '../../theme/ThemeObservable'
 import { ThemeToggle } from '../../components/theme/ThemeToggle'
 import { AppColors } from '../../theme/AppColors'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
@@ -12,19 +13,17 @@ import { BottomNavigation } from '../../components/common/BottomNavigation'
 @Entry
 @ComponentV2
 struct ThemePage {
-  @Local private currentThemeType: ThemeType = ThemeType.LIGHT
-  @Local private currentThemeName: ThemeName = ThemeName.ENGINEERING
+  @Local private themeState: ThemeState = ThemeState.getInstance()
 
-  aboutToAppear() {
-    this.updateThemeState()
+  private get currentThemeType(): ThemeType {
+    return this.themeState.currentTheme.type
   }
 
-  private updateThemeState(): void {
-    const theme = ThemeManager.getCurrentTheme()
-    this.currentThemeType = theme.type
-    this.currentThemeName = theme.name
+  private get currentThemeName(): ThemeName {
+    return this.themeState.currentTheme.name
   }
 
+  
   /**
    * 获取主题类型文本
    */
@@ -77,26 +76,52 @@ struct ThemePage {
    * 设置主题类型
    */
   private setThemeType(type: ThemeType): void {
+    const currentTheme = this.themeState.currentTheme
+    let newTheme: ThemeConfig
+
     switch (type) {
       case ThemeType.LIGHT:
-        ThemeManager.setLightTheme()
+        newTheme = {
+          type: ThemeType.LIGHT,
+          name: currentTheme.name,
+          isDark: false
+        }
         break
       case ThemeType.DARK:
-        ThemeManager.setDarkTheme()
+        newTheme = {
+          type: ThemeType.DARK,
+          name: currentTheme.name,
+          isDark: true
+        }
         break
       case ThemeType.AUTO:
-        ThemeManager.setAutoTheme()
+        newTheme = {
+          type: ThemeType.AUTO,
+          name: currentTheme.name,
+          isDark: false
+        }
         break
+      default:
+        newTheme = currentTheme
     }
-    this.updateThemeState()
+
+    ThemeManager.setTheme(newTheme)
+    this.themeState.setTheme(newTheme)
   }
 
   /**
    * 设置主题名称
    */
   private setThemeName(name: ThemeName): void {
+    const currentTheme = this.themeState.currentTheme
+    const newTheme: ThemeConfig = {
+      type: currentTheme.type,
+      name: name,
+      isDark: currentTheme.isDark
+    }
+
     ThemeManager.setThemeName(name)
-    this.updateThemeState()
+    this.themeState.setTheme(newTheme)
   }
 
   build() {
