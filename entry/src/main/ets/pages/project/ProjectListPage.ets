@@ -297,14 +297,6 @@ struct ProjectListPage {
         .fontColor('#333333')
         .layoutWeight(1)
         .textAlign(TextAlign.Center)
-
-      // 统计信息
-      if (this.projectStore.projectStats) {
-        Text(`${this.projectStore.projectStats.totalProjects}`)
-          .fontSize(14)
-          .fontColor('#666666')
-          .margin({ right: 12 })
-      }
     }
     .width('100%')
     .height(56)
