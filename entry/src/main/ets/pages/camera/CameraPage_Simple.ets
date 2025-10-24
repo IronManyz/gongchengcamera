@@ -173,13 +173,16 @@ struct CameraPage_Simple {
       this.cameraManager = CameraManager.getInstance()
       console.log('Camera manager instance created')
 
+      // 重要：设置isLoading为false，让XComponent可以渲染
+      this.isLoading = false
+      console.log('Loading state set to false, XComponent should now render')
+
       // 设置初始化超时 - 30秒后自动停止加载
       const timeoutId = setTimeout(() => {
-        if (this.isLoading) {
+        if (!this.isCameraReady && !this.showCameraError) {
           console.error('Camera initialization timeout (30 seconds)')
           this.cameraErrorMessage = '相机初始化超时，请重试'
           this.showCameraError = true
-          this.isLoading = false
         }
       }, 30000)
 
@@ -188,7 +191,6 @@ struct CameraPage_Simple {
         console.log('Camera manager initialization callback triggered')
         clearTimeout(timeoutId) // 清除超时定时器
         this.isCameraReady = true
-        this.isLoading = false
         console.log('Camera ready for use')
       })
 
@@ -197,7 +199,6 @@ struct CameraPage_Simple {
         clearTimeout(timeoutId) // 清除超时定时器
         this.cameraErrorMessage = error
         this.showCameraError = true
-        this.isLoading = false
       })
 
       console.log('Camera manager initialized, waiting for surface ID')
@@ -353,21 +354,8 @@ struct CameraPage_Simple {
         this.buildCameraView()
 
       } else {
-        // 默认状态
-        Column() {
-          Text('📸')
-            .fontSize(48)
-            .fontColor('#C0C0C0')
-            .margin({ bottom: 16 })
-
-          Text('相机准备中...')
-            .fontSize(16)
-            .fontColor('#8C8C8C')
-        }
-        .width('100%')
-        .height('100%')
-        .justifyContent(FlexAlign.Center)
-        .backgroundColor('#000000')
+        // 默认状态 - 等待相机管理器设置完成
+        this.buildCameraView()
       }
     }
     .width('100%')
