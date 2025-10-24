@@ -10,18 +10,8 @@ import { ProjectFilter, ProjectSortOrder, ProjectStatus } from '../../types/AppT
 import { SearchBar } from '../../components/common/SearchBar'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
 import { ConfirmDialog } from '../../components/common/ConfirmDialog'
-import { StatCard } from '../../components/common/StatCard'
 import { ProjectCard } from '../../components/project/ProjectCard'
 
-/**
- * 统计数据接口
- */
-interface StatisticsData {
-  totalProjects: number
-  activeProjects: number
-  totalSites: number
-  totalPhotos: number
-}
 
 /**
  * 过滤选项接口
@@ -230,32 +220,11 @@ struct ProjectListPage {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
-  /**
-   * 获取项目统计信息
-   */
-  private getProjectStats(): StatisticsData {
-    const projects = this.projectStore.projects
-    const totalProjects = projects.length
-    const activeProjects = projects.filter(p => p.status === ProjectStatus.ACTIVE).length
-    const totalSites = projects.reduce((sum, p) => sum + (p.siteCount || 0), 0)
-    const totalPhotos = projects.reduce((sum, p) => sum + (p.photoCount || 0), 0)
-
-    const result: StatisticsData = {
-      totalProjects: totalProjects,
-      activeProjects: activeProjects,
-      totalSites: totalSites,
-      totalPhotos: totalPhotos
-    }
-    return result
-  }
-
+  
   build() {
     Column() {
       // 顶部导航栏
       this.buildTopBar()
-
-      // 统计概览卡片
-      this.buildStatsOverview()
 
       // 搜索和筛选栏
       this.buildSearchAndFilterBar()
@@ -300,77 +269,7 @@ struct ProjectListPage {
     .backgroundColor('#F5F5F5')
   }
 
-  /**
-   * 构建统计概览卡片
-   */
-  @Builder
-  private buildStatsOverview() {
-    Column() {
-      // 标题
-      Text('📊 统计概览')
-        .fontSize(16)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#262626')
-        .alignSelf(ItemAlign.Start)
-        .margin({ bottom: 12 })
-
-      // 统计卡片网格
-      Row() {
-        StatCard({
-          title: '工程总数',
-          value: this.getProjectStats().totalProjects,
-          icon: '📁',
-          color: '#1890FF',
-          trend: 'stable'
-        })
-        .layoutWeight(1)
-
-        StatCard({
-          title: '进行中',
-          value: this.getProjectStats().activeProjects,
-          icon: '📁',
-          color: '#52C41A',
-          trend: 'up'
-        })
-        .layoutWeight(1)
-      }
-      .width('100%')
-      .margin({ bottom: 12 })
-
-      Row() {
-        StatCard({
-          title: '工点总计',
-          value: this.getProjectStats().totalSites,
-          icon: '📁',
-          color: '#FAAD14',
-          trend: 'stable'
-        })
-        .layoutWeight(1)
-
-        StatCard({
-          title: '照片总计',
-          value: this.getProjectStats().totalPhotos,
-          icon: '📁',
-          color: '#722ED1',
-          trend: 'up'
-        })
-        .layoutWeight(1)
-      }
-      .width('100%')
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor('#FFFFFF')
-    .borderRadius(8)
-    .margin({ left: 16, right: 16, top: 12, bottom: 12 })
-    .shadow({
-      radius: 6,
-      color: '#00000008',
-      offsetX: 0,
-      offsetY: 3
-    })
-  }
-
+  
   /**
    * 构建顶部导航栏
    */

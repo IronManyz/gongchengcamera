@@ -13,7 +13,6 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { ThemeType } from '../../store/theme/ThemeConstants'
 import { projectStore } from '../../store/project/ProjectStore'
 import { ProjectStats } from '../../services/database/ProjectService'
-import { StatCard } from '../../components/common/StatCard'
 
 /**
  * 设置项接口
@@ -564,7 +563,7 @@ struct SettingsPage {
   private buildSettingsList() {
     Scroll() {
       Column({ space: 16 }) {
-        this.buildUsageOverview()
+        this.buildPersonalCenter()
 
         ForEach(
           this.settingsGroups,
@@ -583,68 +582,313 @@ struct SettingsPage {
   }
 
   /**
-   * 构建使用统计概览
+   * 构建个人中心
    */
   @Builder
-  private buildUsageOverview() {
-    Column({ space: 12 }) {
-      Row() {
-        Text('使用统计')
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#333333')
-
-        Blank()
-
-        if (!this.isUsageLoading) {
-          Text('实时')
-            .fontSize(12)
-            .fontColor('#8C8C8C')
+  private buildPersonalCenter() {
+    Column({ space: 16 }) {
+      // 用户信息卡片
+      Row({ space: 16 }) {
+        // 用户头像
+        Column() {
+          Text('👷‍♂️')
+            .fontSize(32)
+            .width(64)
+            .height(64)
+            .justifyContent(FlexAlign.Center)
+            .alignItems(HorizontalAlign.Center)
+            .backgroundColor('#E6F4FF')
+            .borderRadius(32)
         }
+        .width(64)
+        .height(64)
+
+        // 用户信息
+        Column({ space: 4 }) {
+          Text('工程师')
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#333333')
+            .alignSelf(ItemAlign.Start)
+
+          Text('专业工程拍摄与管理')
+            .fontSize(14)
+            .fontColor('#666666')
+            .alignSelf(ItemAlign.Start)
+
+          Row({ space: 8 }) {
+            Text('高级用户')
+              .fontSize(12)
+              .fontColor('#1890FF')
+              .backgroundColor('#E6F4FF')
+              .padding({ left: 8, right: 8, top: 2, bottom: 2 })
+              .borderRadius(8)
+
+            Text('已认证')
+              .fontSize(12)
+              .fontColor('#52C41A')
+              .backgroundColor('#F6FFED')
+              .padding({ left: 8, right: 8, top: 2, bottom: 2 })
+              .borderRadius(8)
+          }
+          .alignSelf(ItemAlign.Start)
+        }
+        .layoutWeight(1)
+        .alignItems(HorizontalAlign.Start)
       }
       .width('100%')
+      .padding(20)
+      .backgroundColor('#FFFFFF')
+      .borderRadius(12)
+      .shadow({
+        radius: 8,
+        color: 'rgba(0, 0, 0, 0.08)',
+        offsetX: 0,
+        offsetY: 2
+      })
 
-      Column({ space: 12 }) {
-        Row({ space: 12 }) {
-          StatCard({
-            title: '工程总数',
-            value: this.usageStats.totalProjects,
-            icon: '🏗️',
-            color: '#1890FF',
-            showLoading: this.isUsageLoading
-          })
-          .layoutWeight(1)
+      // 个人统计信息
+      Row({ space: 12 }) {
+        Column({ space: 8 }) {
+          Text(this.usageStats.totalProjects.toString())
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1890FF')
 
-          StatCard({
-            title: '进行中',
-            value: this.usageStats.activeProjects,
-            icon: '⚙️',
-            color: '#52C41A',
-            showLoading: this.isUsageLoading
-          })
-          .layoutWeight(1)
+          Text('项目数')
+            .fontSize(12)
+            .fontColor('#666666')
         }
+        .width(64)
+        .height(64)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#F0F8FF')
+        .borderRadius(8)
 
-        Row({ space: 12 }) {
-          StatCard({
-            title: '照片总数',
-            value: this.usageStats.totalPhotos,
-            icon: '📸',
-            color: '#FAAD14',
-            showLoading: this.isUsageLoading
-          })
-          .layoutWeight(1)
+        Column({ space: 8 }) {
+          Text(this.usageStats.totalPhotos.toString())
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#52C41A')
 
-          StatCard({
-            title: '工点覆盖',
-            value: this.usageStats.totalSites,
-            icon: '📍',
-            color: '#722ED1',
-            showLoading: this.isUsageLoading
-          })
-          .layoutWeight(1)
+          Text('照片数')
+            .fontSize(12)
+            .fontColor('#666666')
         }
+        .width(64)
+        .height(64)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#F0FFF0')
+        .borderRadius(8)
+
+        Column({ space: 8 }) {
+          Text(this.usageStats.totalSites.toString())
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#FAAD14')
+
+          Text('工点数')
+            .fontSize(12)
+            .fontColor('#666666')
+        }
+        .width(64)
+        .height(64)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#FFFAF0')
+        .borderRadius(8)
+
+        Column({ space: 8 }) {
+          Text('100%')
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#722ED1')
+
+          Text('完成率')
+            .fontSize(12)
+            .fontColor('#666666')
+        }
+        .width(64)
+        .height(64)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#F8F0FF')
+        .borderRadius(8)
       }
+      .width('100%')
+      .justifyContent(FlexAlign.SpaceAround)
+
+      // 快捷操作
+      Row({ space: 12 }) {
+        Button() {
+          Column({ space: 4 }) {
+            Text('📊')
+              .fontSize(20)
+            Text('数据分析')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+        }
+        .width(80)
+        .height(60)
+        .backgroundColor('#1890FF')
+        .borderRadius(8)
+        .onClick(() => {
+          // TODO: 导航到数据分析页面
+        })
+
+        Button() {
+          Column({ space: 4 }) {
+            Text('⭐')
+              .fontSize(20)
+            Text('我的收藏')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+        }
+        .width(80)
+        .height(60)
+        .backgroundColor('#52C41A')
+        .borderRadius(8)
+        .onClick(() => {
+          // TODO: 导航到收藏页面
+        })
+
+        Button() {
+          Column({ space: 4 }) {
+            Text('📝')
+              .fontSize(20)
+            Text('使用日志')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+        }
+        .width(80)
+        .height(60)
+        .backgroundColor('#FAAD14')
+        .borderRadius(8)
+        .onClick(() => {
+          // TODO: 导航到使用日志页面
+        })
+
+        Button() {
+          Column({ space: 4 }) {
+            Text('🏆')
+              .fontSize(20)
+            Text('成就勋章')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+        }
+        .width(80)
+        .height(60)
+        .backgroundColor('#722ED1')
+        .borderRadius(8)
+        .onClick(() => {
+          // TODO: 导航到成就页面
+        })
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.SpaceAround)
+
+      // 个性设置
+      Column({ space: 12 }) {
+        Row() {
+          Text('个性设置')
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#666666')
+          Blank()
+          Text('编辑资料')
+            .fontSize(12)
+            .fontColor('#1890FF')
+            .onClick(() => {
+              // TODO: 导航到编辑资料页面
+            })
+        }
+        .width('100%')
+
+        Row({ space: 12 }) {
+          Column() {
+            Text('🎨')
+              .fontSize(16)
+            Text('主题')
+              .fontSize(12)
+              .fontColor('#666666')
+          }
+          .width(60)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor('#F8F8F8')
+          .borderRadius(8)
+
+          Column() {
+            Text('📱')
+              .fontSize(16)
+            Text('布局')
+              .fontSize(12)
+              .fontColor('#666666')
+          }
+          .width(60)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor('#F8F8F8')
+          .borderRadius(8)
+
+          Column() {
+            Text('🔔')
+              .fontSize(16)
+            Text('通知')
+              .fontSize(12)
+              .fontColor('#666666')
+          }
+          .width(60)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor('#F8F8F8')
+          .borderRadius(8)
+
+          Column() {
+            Text('☁️')
+              .fontSize(16)
+            Text('云端')
+              .fontSize(12)
+              .fontColor('#666666')
+          }
+          .width(60)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor('#F8F8F8')
+          .borderRadius(8)
+
+          Column() {
+            Text('🛡️')
+              .fontSize(16)
+            Text('隐私')
+              .fontSize(12)
+              .fontColor('#666666')
+          }
+          .width(60)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor('#F8F8F8')
+          .borderRadius(8)
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceAround)
+      }
+      .width('100%')
+      .padding(16)
+      .backgroundColor('#FFFFFF')
+      .borderRadius(12)
+      .shadow({
+        radius: 8,
+        color: 'rgba(0, 0, 0, 0.08)',
+        offsetX: 0,
+        offsetY: 2
+      })
     }
     .width('100%')
   }
