@@ -169,15 +169,21 @@ export class ThemeManager {
    * 获取当前背景色
    */
   static getCurrentBgColor(): string {
-    console.log('ThemeManager: getCurrentBgColor called, currentTheme.isDark:', ThemeManager.currentTheme.isDark)
-    console.log('ThemeManager: currentTheme:', ThemeManager.currentTheme)
-    if (ThemeManager.currentTheme.isDark) {
-      console.log('ThemeManager: Returning dark background:', ColorPalettes.dark.background)
-      return ColorPalettes.dark.background // 使用真正的深色主题
+    const isDark = ThemeManager.currentTheme.isDark
+    const themeName = ThemeManager.currentTheme.name
+    console.log('=== ThemeManager.getCurrentBgColor() ===')
+    console.log('ThemeManager: isDark:', isDark, 'themeName:', themeName)
+    console.log('ThemeManager: Full currentTheme:', JSON.stringify(ThemeManager.currentTheme))
+
+    if (isDark) {
+      const darkBg = ColorPalettes.dark.background
+      console.log('ThemeManager: Returning DARK background:', darkBg)
+      return darkBg
     } else {
-      const bgColor = ThemeManager.getCurrentPalette().background
-      console.log('ThemeManager: Returning light background:', bgColor)
-      return bgColor
+      const palette = ThemeManager.getCurrentPalette()
+      const lightBg = palette.background
+      console.log('ThemeManager: Returning LIGHT background from palette:', themeName, 'color:', lightBg)
+      return lightBg
     }
   }
 
@@ -185,10 +191,20 @@ export class ThemeManager {
    * 获取当前文本色
    */
   static getCurrentTextColor(): string {
-    if (ThemeManager.currentTheme.isDark) {
-      return ColorPalettes.dark.text // 使用深色主题文本色
+    const isDark = ThemeManager.currentTheme.isDark
+    const themeName = ThemeManager.currentTheme.name
+    console.log('=== ThemeManager.getCurrentTextColor() ===')
+    console.log('ThemeManager: isDark:', isDark, 'themeName:', themeName)
+
+    if (isDark) {
+      const darkText = ColorPalettes.dark.text
+      console.log('ThemeManager: Returning DARK text color:', darkText)
+      return darkText
     } else {
-      return ThemeManager.getCurrentPalette().text
+      const palette = ThemeManager.getCurrentPalette()
+      const lightText = palette.text
+      console.log('ThemeManager: Returning LIGHT text color from palette:', themeName, 'color:', lightText)
+      return lightText
     }
   }
 
@@ -344,5 +360,12 @@ export class ThemeManager {
   static initialize(): void {
     ThemeManager.loadFromStorage()
     console.log('主题管理器初始化完成:', ThemeManager.currentTheme)
+
+    // Test dark theme palette availability
+    console.log('=== Dark Theme Palette Test ===')
+    console.log('ColorPalettes.dark exists:', !!ColorPalettes.dark)
+    console.log('ColorPalettes.dark.background:', ColorPalettes.dark.background)
+    console.log('ColorPalettes.dark.text:', ColorPalettes.dark.text)
+    console.log('ColorPalettes.dark.surface:', ColorPalettes.dark.surface)
   }
 }

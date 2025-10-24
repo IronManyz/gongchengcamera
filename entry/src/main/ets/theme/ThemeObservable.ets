@@ -11,6 +11,7 @@ export { ThemeConfig } from './ThemeManager'
 /**
  * 简单的主题状态管理器
  */
+@Observed
 export class ThemeState {
   private static instance: ThemeState | null = null
   private _currentTheme: ThemeConfig = {

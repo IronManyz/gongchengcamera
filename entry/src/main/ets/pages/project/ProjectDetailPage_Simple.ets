@@ -26,24 +26,64 @@ struct ProjectDetailPage_Simple {
    * 加载项目数据
    */
   private loadProjectData(): void {
+    console.log('=== ProjectDetailPage_Simple.loadProjectData() ===')
+
     // 从路由参数获取项目ID
     const params = router.getParams() as Record<string, Object>
     const projectId = params?.projectId as string
+    console.log('Received projectId:', projectId)
+
     if (projectId) {
-      // TODO: 从数据库加载项目数据
-      // 临时使用模拟数据
-      this.project = new SimpleProject(
-        projectId,
-        '市政道路改造工程',
-        ProjectStatus.ACTIVE,
-        '张三',
-        4,
-        52
-      )
-      this.project.code = 'P2025-001'
-      this.project.client = '市建集团'
-      this.project.description = '城市主干道改造工程，包括路面翻新、排水系统升级等'
+      // 模拟数据库查询 - 根据ID查找项目
+      const mockProjects = this.createMockProjects()
+      const foundProject = mockProjects.find(p => p.id === projectId)
+
+      if (foundProject) {
+        this.project = foundProject
+        console.log('Project found:', this.project.name)
+      } else {
+        // 如果没找到，使用默认数据
+        console.log('Project not found, using default data')
+        this.project = new SimpleProject(
+          projectId,
+          '市政道路改造工程',
+          ProjectStatus.ACTIVE,
+          '张三',
+          4,
+          52
+        )
+        this.project.code = 'P2025-001'
+        this.project.client = '市建集团'
+        this.project.description = '城市主干道改造工程，包括路面翻新、排水系统升级等'
+      }
+    } else {
+      console.error('No projectId provided in navigation parameters')
     }
+
+    console.log('Project data loaded - Name:', this.project.name, 'Status:', this.project.status)
+    console.log('=== End loadProjectData ===')
+  }
+
+  /**
+   * 创建模拟项目数据
+   */
+  private createMockProjects(): SimpleProject[] {
+    const projectA = new SimpleProject('P2025-001', '市政道路改造工程', ProjectStatus.ACTIVE, '张三', 4, 52)
+    projectA.code = 'P2025-001'
+    projectA.client = '市政建设局'
+    projectA.description = '市区��干道改造，一期覆盖 4 个工点，持续优化排水系统与道路铺装。'
+
+    const projectB = new SimpleProject('P2025-002', '电力线路巡检工程', ProjectStatus.COMPLETED, '李四', 6, 89)
+    projectB.code = 'P2025-002'
+    projectB.client = '国家电网'
+    projectB.description = '城区高压线路巡检与隐患排查，输出巡检照片与整改单。'
+
+    const projectC = new SimpleProject('P2025-003', '园林绿化项目', ProjectStatus.PAUSED, '王五', 2, 15)
+    projectC.code = 'P2025-003'
+    projectC.client = '城市园林管理处'
+    projectC.description = '城区绿化提升工程，当前因设计调整暂缓施工。'
+
+    return [projectA, projectB, projectC]
   }
 
   /**
@@ -136,6 +176,7 @@ struct ProjectDetailPage_Simple {
 
   /**
    * 导出数据
+   * 注意: 此方法不再被快捷操作调用，但保留供其他功能使用
    */
   private exportData(): void {
     console.log('Export project data')
@@ -144,6 +185,7 @@ struct ProjectDetailPage_Simple {
 
   /**
    * 生成报告
+   * 注意: 此方法不再被快捷操作调用，但保留供其他功能使用
    */
   private generateReport(): void {
     console.log('Generate report')
@@ -284,75 +326,6 @@ struct ProjectDetailPage_Simple {
       .padding(16)
       .backgroundColor('#FFFFFF')
       .margin({ bottom: 12 })
-
-      // 快速操作区域
-      Row() {
-        Text('🎯 快速操作')
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#262626')
-          .margin({ bottom: 12 })
-
-        Blank()
-      }
-      .width('100%')
-      .padding({ left: 16, right: 16 })
-
-      // 快速操作按钮
-      Row({ space: 12 }) {
-        Button() {
-          Column() {
-            Text('📸')
-              .fontSize(24)
-              .margin({ bottom: 4 })
-            Text('拍照')
-              .fontSize(12)
-          }
-        }
-        .backgroundColor('#FFFFFF')
-        .border({ width: 1, color: '#E8E8E8' })
-        .borderRadius(8)
-        .padding(16)
-        .onClick(() => {
-          this.handleSiteCamera(this.sites[0] || new SimpleSite())
-        })
-
-        Button() {
-          Column() {
-            Text('📊')
-              .fontSize(24)
-              .margin({ bottom: 4 })
-            Text('报告')
-              .fontSize(12)
-          }
-        }
-        .backgroundColor('#FFFFFF')
-        .border({ width: 1, color: '#E8E8E8' })
-        .borderRadius(8)
-        .padding(16)
-        .onClick(() => {
-          this.generateReport()
-        })
-
-        Button() {
-          Column() {
-            Text('📤')
-              .fontSize(24)
-              .margin({ bottom: 4 })
-            Text('导出')
-              .fontSize(12)
-          }
-        }
-        .backgroundColor('#FFFFFF')
-        .border({ width: 1, color: '#E8E8E8' })
-        .borderRadius(8)
-        .padding(16)
-        .onClick(() => {
-          this.exportData()
-        })
-      }
-      .width('100%')
-      .padding({ left: 16, right: 16, bottom: 12 })
 
       // Tab导航
       Row() {

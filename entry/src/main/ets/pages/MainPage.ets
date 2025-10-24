@@ -11,6 +11,7 @@ import { SearchBar } from '../components/common/SearchBar'
 import { DeleteConfirmDialog } from '../components/common/ConfirmDialog'
 import { SimpleProjectCard } from '../components/project/SimpleProjectCard'
 import { SimpleProject, ProjectStatus } from '../models/SimpleProject'
+import { ThemeManager } from '../theme/ThemeManager'
 
 interface StatusFilterOption {
   key: 'all' | ProjectStatus
@@ -48,9 +49,35 @@ struct MainPage {
   @State private showProjectActions: boolean = false
   @State private showDeleteDialog: boolean = false
 
+  // 主题相关状态
+  @State private themeRefreshTrigger: number = 0
+  @State private currentBgColor: string = '#FFFFFF'
+  @State private currentTextColor: string = '#262626'
+  @State private currentSurfaceColor: string = '#FFFFFF'
+  @State private currentPrimaryColor: string = '#1890FF'
+
   aboutToAppear(): void {
     console.log('MainPage aboutToAppear')
     this.initializeProjects()
+    this.refreshThemeColors()
+  }
+
+  /**
+   * 刷新主题颜色
+   */
+  private refreshThemeColors(): void {
+    console.log('MainPage: Refreshing theme colors...')
+    this.currentBgColor = ThemeManager.getCurrentBgColor()
+    this.currentTextColor = ThemeManager.getCurrentTextColor()
+    this.currentSurfaceColor = ThemeManager.getCurrentSurfaceColor()
+    this.currentPrimaryColor = ThemeManager.getCurrentPrimaryColor()
+    this.themeRefreshTrigger++
+    console.log('MainPage: Theme colors updated - Bg:', this.currentBgColor, 'Text:', this.currentTextColor)
+  }
+
+  onPageShow(): void {
+    console.log('MainPage onPageShow - checking theme updates')
+    this.refreshThemeColors()
   }
 
   /**
@@ -144,10 +171,10 @@ struct MainPage {
    * 处理项目卡片点击
    */
   private handleProjectClick(project: SimpleProject): void {
-    console.log('Project clicked:', project.name)
+    console.log('Project clicked:', project.name, 'ID:', project.id)
     this.closeProjectActions()
     router.pushUrl({
-      url: 'pages/project/ProjectDetailPage',
+      url: 'pages/project/ProjectDetailPage_Simple',
       params: { projectId: project.id }
     }).catch((error: Error) => {
       console.error('跳转到项目详情失败:', error)
@@ -490,8 +517,14 @@ struct MainPage {
   build() {
     Stack() {
       Column() {
-        Blank()
-          .height(24)
+        // 使用 if 语句强制依赖主题触发器以确保重新渲染
+        if (this.themeRefreshTrigger >= 0) {
+          Blank()
+            .height(24)
+        } else {
+          Blank()
+            .height(24)
+        }
 
         this.buildTopBar()
 
@@ -505,6 +538,9 @@ struct MainPage {
 
         this.buildBottomNavigation()
       }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(this.currentBgColor)
 
       if (this.showQuickActions) {
         this.buildQuickActionsPanel()
@@ -547,11 +583,11 @@ struct MainPage {
       Button() {
         Text('☰')
           .fontSize(18)
-          .fontColor(this.showQuickActions ? '#FFFFFF' : '#1890FF')
+          .fontColor(this.showQuickActions ? '#FFFFFF' : this.currentPrimaryColor)
       }
       .width(36)
       .height(36)
-      .backgroundColor(this.showQuickActions ? '#1890FF' : '#E6F7FF')
+      .backgroundColor(this.showQuickActions ? this.currentPrimaryColor : (this.currentPrimaryColor + '20'))
       .borderRadius(12)
       .onClick(() => {
         console.log('Menu clicked')
@@ -568,7 +604,7 @@ struct MainPage {
       Text('工程拍记')
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#262626')
+        .fontColor(this.currentTextColor)
 
       Blank()
 
@@ -576,11 +612,11 @@ struct MainPage {
       Button() {
         Text(this.showSearchPanel ? '✕' : '🔍')
           .fontSize(18)
-          .fontColor(this.showSearchPanel ? '#FFFFFF' : '#1890FF')
+          .fontColor(this.showSearchPanel ? '#FFFFFF' : this.currentPrimaryColor)
       }
       .width(36)
       .height(36)
-      .backgroundColor(this.showSearchPanel ? '#1890FF' : '#E6F7FF')
+      .backgroundColor(this.showSearchPanel ? this.currentPrimaryColor : (this.currentPrimaryColor + '20'))
       .borderRadius(12)
       .margin({ right: 8 })
       .animation({ duration: 150, curve: Curve.EaseInOut })
@@ -593,11 +629,11 @@ struct MainPage {
       Button() {
         Text('📷')
           .fontSize(18)
-          .fontColor('#1890FF')
+          .fontColor(this.currentPrimaryColor)
       }
       .width(36)
       .height(36)
-      .backgroundColor('#E6F7FF')
+      .backgroundColor(this.currentPrimaryColor + '20')
       .borderRadius(12)
       .margin({ right: 8 })
       .onClick(() => {
@@ -609,11 +645,11 @@ struct MainPage {
       Button() {
         Text('⊕')
           .fontSize(18)
-          .fontColor(this.showCreateDialog ? '#FFFFFF' : '#1890FF')
+          .fontColor(this.showCreateDialog ? '#FFFFFF' : this.currentPrimaryColor)
       }
       .width(36)
       .height(36)
-      .backgroundColor(this.showCreateDialog ? '#1890FF' : '#E6F7FF')
+      .backgroundColor(this.showCreateDialog ? this.currentPrimaryColor : (this.currentPrimaryColor + '20'))
       .borderRadius(12)
       .animation({ duration: 150, curve: Curve.EaseInOut })
       .onClick(() => {
@@ -624,7 +660,7 @@ struct MainPage {
     .width('100%')
     .height(56)
     .padding({ left: 16, right: 16 })
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.currentSurfaceColor)
     .border({ width: { bottom: 1 }, color: '#E8E8E8' })
   }
 
@@ -662,20 +698,31 @@ struct MainPage {
    */
   @Builder
   private buildFilterBar() {
-    Row({ space: 8 }) {
-      ForEach(PROJECT_STATUS_FILTERS, (option: StatusFilterOption) => {
-        Button(option.label)
-          .fontSize(14)
-          .fontColor(this.statusFilter === option.key ? '#FFFFFF' : '#1890FF')
-          .backgroundColor(this.statusFilter === option.key ? '#1890FF' : '#EDF4FF')
-          .padding({ left: 16, right: 16 })
-          .height(36)
-          .borderRadius(18)
-          .onClick(() => this.onStatusFilterChange(option.key))
-      }, (option: StatusFilterOption) => option.key)
+    Scroll() {
+      Row({ space: 8 }) {
+        ForEach(PROJECT_STATUS_FILTERS, (option: StatusFilterOption) => {
+          Button(option.label)
+            .fontSize(14)
+            .fontColor(this.statusFilter === option.key ? '#FFFFFF' : this.currentPrimaryColor)
+            .backgroundColor(this.statusFilter === option.key ? this.currentPrimaryColor : (this.currentPrimaryColor + '20'))
+            .padding({ left: 16, right: 16 })
+            .height(36)
+            .borderRadius(18)
+            .onClick(() => this.onStatusFilterChange(option.key))
+        }, (option: StatusFilterOption) => option.key)
+
+        // 添加右侧空白区域，确保最后一个选项可以滚动到可见位置
+        Blank()
+          .width(16)
+      }
+      .padding({ left: 16, right: 0, top: 10, bottom: 8 })
+      .justifyContent(FlexAlign.Start)
     }
-    .padding({ left: 16, right: 16, top: 10, bottom: 8 })
-    .backgroundColor('#FFFFFF')
+    .scrollable(ScrollDirection.Horizontal)
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
+    .width('100%')
+    .backgroundColor(this.currentSurfaceColor)
   }
 
   /**
@@ -886,50 +933,76 @@ struct MainPage {
   @Builder
   private buildQuickActionsPanel() {
     Stack() {
+      // 半透明背景遮罩 - 点击可关闭
       Column()
         .width('100%')
         .height('100%')
         .backgroundColor('rgba(0, 0, 0, 0.35)')
-        .onClick(() => this.closeQuickActions())
+        .onClick(() => {
+          console.log('Quick actions: Background clicked, closing panel')
+          this.closeQuickActions()
+        })
 
-      Column({ space: 12 }) {
-        Text('快捷操作')
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#262626')
+      // 操作面板内容
+      Column({ space: 0 }) {
+        // 头部
+        Row() {
+          Text('快捷操作')
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.currentTextColor)
+            .layoutWeight(1)
 
-        Text('同步项目数据')
-          .fontSize(16)
-          .fontColor('#1890FF')
-          .padding({ top: 8, bottom: 8 })
-          .onClick(() => this.handleQuickAction('sync'))
+          // 关闭按钮
+          Button() {
+            Text('✕')
+              .fontSize(16)
+              .fontColor('#8C8C8C')
+          }
+          .width(32)
+          .height(32)
+          .backgroundColor(Color.Transparent)
+          .borderRadius(16)
+          .onClick(() => {
+            console.log('Quick actions: Close button clicked')
+            this.closeQuickActions()
+          })
+        }
+        .width('100%')
+        .padding({ bottom: 16 })
 
-        Text('导出项目报表')
-          .fontSize(16)
-          .fontColor('#262626')
-          .padding({ top: 8, bottom: 8 })
-          .onClick(() => this.handleQuickAction('report'))
+        // 操作选项
+        Column({ space: 4 }) {
+          this.buildQuickActionItem('同步项目数据', '🔄', '#1890FF', () => this.handleQuickAction('sync'))
+          this.buildQuickActionItem('导出项目报表', '📊', '#262626', () => this.handleQuickAction('report'))
+          this.buildQuickActionItem('查看帮助与指南', '❓', '#262626', () => this.handleQuickAction('help'))
+        }
+        .width('100%')
 
-        Text('查看帮助与指南')
-          .fontSize(16)
-          .fontColor('#262626')
-          .padding({ top: 8, bottom: 8 })
-          .onClick(() => this.handleQuickAction('help'))
+        // 底部取消按钮
+        Column({ space: 8 }) {
+          Divider()
+            .color('#F0F0F0')
+            .margin({ top: 12, bottom: 8 })
 
-        Divider()
-          .color('#F0F0F0')
-          .margin({ top: 8, bottom: 8 })
-
-        Text('关闭')
-          .fontSize(16)
-          .fontColor('#8C8C8C')
-          .padding({ top: 8, bottom: 8 })
-          .onClick(() => this.closeQuickActions())
+          Button('取消')
+            .width('100%')
+            .height(44)
+            .fontSize(16)
+            .fontColor('#8C8C8C')
+            .backgroundColor('#F5F5F5')
+            .borderRadius(8)
+            .onClick(() => {
+              console.log('Quick actions: Cancel button clicked')
+              this.closeQuickActions()
+            })
+        }
+        .width('100%')
       }
       .width('88%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.currentSurfaceColor)
       .borderRadius(16)
-      .padding({ top: 20, bottom: 12, left: 20, right: 20 })
+      .padding({ top: 20, bottom: 16, left: 20, right: 20 })
       .shadow({
         radius: 18,
         color: 'rgba(0, 0, 0, 0.15)',
@@ -937,11 +1010,48 @@ struct MainPage {
         offsetY: 8
       })
       .alignSelf(ItemAlign.Center)
+      .animation({ duration: 200, curve: Curve.EaseInOut })
     }
     .width('100%')
     .height('100%')
     .position({ x: 0, y: 0 })
     .zIndex(200)
+  }
+
+  /**
+   * 构建快捷操作项
+   */
+  @Builder
+  private buildQuickActionItem(title: string, icon: string, color: string, action: () => void) {
+    Row() {
+      Text(icon)
+        .fontSize(18)
+        .fontColor(color)
+        .margin({ right: 12 })
+
+      Text(title)
+        .fontSize(16)
+        .fontColor(color)
+        .layoutWeight(1)
+
+      Text('>')
+        .fontSize(14)
+        .fontColor('#C0C0C0')
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 12, left: 8, right: 8 })
+    .borderRadius(8)
+    .onClick(() => {
+      console.log(`Quick action: ${title} clicked`)
+      action()
+    })
+    .gesture(
+      TapGesture()
+        .onAction(() => {
+          // 添加点击反馈
+          console.log(`Quick action tapped: ${title}`)
+        })
+    )
   }
 
   /**
@@ -1041,77 +1151,156 @@ struct MainPage {
   @Builder
   private buildProjectActionSheet(project: SimpleProject) {
     Stack() {
+      // 半透明背景遮罩 - 点击可关闭
       Column()
         .width('100%')
         .height('100%')
         .backgroundColor('rgba(0, 0, 0, 0.35)')
-        .onClick(() => this.closeProjectActions())
+        .onClick(() => {
+          console.log('Project actions: Background clicked, closing panel')
+          this.closeProjectActions()
+        })
 
-      Column({ space: 12 }) {
-        Text(project.getDisplayName())
-          .fontSize(16)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#262626')
-          .textAlign(TextAlign.Center)
+      // 底部弹出面板
+      Column({ space: 0 }) {
+        // 顶部拖拽指示器
+        Row() {
+          Column()
+            .width(36)
+            .height(4)
+            .backgroundColor('#C0C0C0')
+            .borderRadius(2)
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.Center)
+        .padding({ top: 12, bottom: 8 })
 
-        Button('查看详情')
-          .height(44)
-          .fontSize(16)
-          .fontColor('#1890FF')
-          .backgroundColor('#EDF4FF')
-          .borderRadius(12)
-          .onClick(() => {
+        // 项目标题区域
+        Column({ space: 8 }) {
+          Text('🏗️ ' + project.getDisplayName())
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.currentTextColor)
+            .textAlign(TextAlign.Center)
+
+          Text(project.code)
+            .fontSize(14)
+            .fontColor('#8C8C8C')
+            .textAlign(TextAlign.Center)
+
+          Divider()
+            .color('#F0F0F0')
+            .margin({ top: 8, bottom: 16 })
+        }
+        .width('100%')
+        .padding({ left: 20, right: 20 })
+
+        // 操作按钮区域
+        Column({ space: 8 }) {
+          this.buildProjectActionItem('查看详情', '📋', '#1890FF', '#EDF4FF', () => {
+            console.log('Project action: View details clicked')
             this.handleProjectClick(project)
           })
 
-        Button(project.status === ProjectStatus.COMPLETED ? '标记为进行中' : '标记为完成')
-          .height(44)
-          .fontSize(16)
-          .fontColor('#FFFFFF')
-          .backgroundColor(project.status === ProjectStatus.COMPLETED ? '#52C41A' : '#1890FF')
-          .borderRadius(12)
-          .onClick(() => {
-            if (project.status === ProjectStatus.COMPLETED) {
-              project.status = ProjectStatus.ACTIVE
-              project.updatedAt = new Date()
-              this.projects = [...this.projects]
-              this.searchProjects()
-              this.updateProjectStatistics()
-              this.showToast('已恢复工程为进行中')
-              this.closeProjectActions()
-            } else {
-              this.markProjectAsCompleted(project)
+          this.buildProjectActionItem(
+            project.status === ProjectStatus.COMPLETED ? '标记为进行中' : '标记为完成',
+            project.status === ProjectStatus.COMPLETED ? '▶️' : '✅',
+            project.status === ProjectStatus.COMPLETED ? '#52C41A' : '#1890FF',
+            project.status === ProjectStatus.COMPLETED ? '#F6FFED' : '#EDF4FF',
+            () => {
+              console.log('Project action: Toggle status clicked')
+              if (project.status === ProjectStatus.COMPLETED) {
+                project.status = ProjectStatus.ACTIVE
+                project.updatedAt = new Date()
+                this.projects = [...this.projects]
+                this.searchProjects()
+                this.updateProjectStatistics()
+                this.showToast('已恢复工程为进行中')
+                this.closeProjectActions()
+              } else {
+                this.markProjectAsCompleted(project)
+              }
             }
-          })
+          )
 
-        Button('删除工程')
-          .height(44)
-          .fontSize(16)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#FF4D4F')
-          .borderRadius(12)
-          .onClick(() => {
+          this.buildProjectActionItem('删除工程', '🗑️', '#FF4D4F', '#FFF1F0', () => {
+            console.log('Project action: Delete project clicked')
             this.showProjectActions = false
             this.showDeleteDialog = true
           })
+        }
+        .width('100%')
+        .padding({ left: 20, right: 20 })
 
-        Button('取消')
-          .height(44)
-          .fontSize(16)
-          .fontColor('#8C8C8C')
-          .backgroundColor('#F0F0F0')
-          .borderRadius(12)
-          .onClick(() => this.closeProjectActions())
+        // 取消按钮
+        Column({ space: 8 }) {
+          Divider()
+            .color('#F0F0F0')
+            .margin({ top: 16, bottom: 8 })
+
+          Button('取消')
+            .width('100%')
+            .height(48)
+            .fontSize(16)
+            .fontColor('#8C8C8C')
+            .backgroundColor('#F5F5F5')
+            .borderRadius(12)
+            .margin({ bottom: 20 })
+            .onClick(() => {
+              console.log('Project actions: Cancel button clicked')
+              this.closeProjectActions()
+            })
+        }
+        .width('100%')
+        .padding({ left: 20, right: 20 })
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 16, bottom: 32 })
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.currentSurfaceColor)
       .borderRadius({ topLeft: 20, topRight: 20, bottomLeft: 0, bottomRight: 0 })
       .alignSelf(ItemAlign.End)
+      .shadow({
+        radius: 16,
+        color: 'rgba(0, 0, 0, 0.15)',
+        offsetX: 0,
+        offsetY: -4
+      })
+      .animation({ duration: 250, curve: Curve.EaseInOut })
     }
     .width('100%')
     .height('100%')
     .position({ x: 0, y: 0 })
     .zIndex(220)
+  }
+
+  /**
+   * 构建项目操作项
+   */
+  @Builder
+  private buildProjectActionItem(title: string, icon: string, color: string, bgColor: string, action: () => void) {
+    Row() {
+      Text(icon)
+        .fontSize(20)
+        .fontColor(color)
+        .margin({ right: 12 })
+
+      Text(title)
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(color)
+        .layoutWeight(1)
+
+      Text('>')
+        .fontSize(16)
+        .fontColor(color)
+    }
+    .width('100%')
+    .height(48)
+    .padding({ left: 16, right: 16 })
+    .backgroundColor(bgColor)
+    .borderRadius(12)
+    .onClick(() => {
+      action()
+    })
+    .animation({ duration: 150, curve: Curve.EaseInOut })
   }
 }

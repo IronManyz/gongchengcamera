@@ -4,6 +4,7 @@
  */
 
 import { BottomNavigation } from '../../components/common/BottomNavigation'
+import { ThemeManager } from '../../theme/ThemeManager'
 
 interface PhotoItem {
   id: string
@@ -23,7 +24,37 @@ struct GalleryPage {
   @State private searchQuery: string = ''
   @State private selectedFilter: string = '全部'
 
+  // 主题相关状态
+  @State private themeRefreshTrigger: number = 0
+  @State private currentBgColor: string = '#FFFFFF'
+  @State private currentTextColor: string = '#262626'
+  @State private currentSurfaceColor: string = '#FFFFFF'
+  @State private currentPrimaryColor: string = '#1890FF'
+
   private filters = ['全部', '今天', '本周', '本月', '工程A', '工程B']
+
+  /**
+   * 刷新主题颜色
+   */
+  private refreshThemeColors(): void {
+    console.log('GalleryPage: Refreshing theme colors...')
+    this.currentBgColor = ThemeManager.getCurrentBgColor()
+    this.currentTextColor = ThemeManager.getCurrentTextColor()
+    this.currentSurfaceColor = ThemeManager.getCurrentSurfaceColor()
+    this.currentPrimaryColor = ThemeManager.getCurrentPrimaryColor()
+    this.themeRefreshTrigger++
+    console.log('GalleryPage: Theme colors updated - Bg:', this.currentBgColor, 'Text:', this.currentTextColor)
+  }
+
+  aboutToAppear(): void {
+    console.log('GalleryPage aboutToAppear')
+    this.refreshThemeColors()
+  }
+
+  onPageShow(): void {
+    console.log('GalleryPage onPageShow - checking theme updates')
+    this.refreshThemeColors()
+  }
 
   // 模拟照片数据
   private photos: PhotoItem[] = [
@@ -79,15 +110,21 @@ struct GalleryPage {
 
   build() {
     Column() {
-      Blank()
-        .height(24)
+      // 强制依赖主题触发器以确保重新渲染
+      if (this.themeRefreshTrigger >= 0) {
+        Blank()
+          .height(24)
+      } else {
+        Blank()
+          .height(24)
+      }
 
       // 头部导航
       Row() {
         Text('相册')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#262626')
+          .fontColor(this.currentTextColor)
           .layoutWeight(1)
           .textAlign(TextAlign.Start)
 
@@ -95,7 +132,7 @@ struct GalleryPage {
         Row({ space: 12 }) {
           Text(this.viewMode === 'grid' ? '📱' : '📋')
             .fontSize(20)
-            .fontColor('#1890FF')
+            .fontColor(this.currentPrimaryColor)
             .onClick(() => {
               this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid'
             })
@@ -103,7 +140,7 @@ struct GalleryPage {
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 12 })
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.currentSurfaceColor)
 
       // 搜索和筛选栏
       Column() {
@@ -111,14 +148,14 @@ struct GalleryPage {
         Row() {
           Text('🔍')
             .fontSize(16)
-            .fontColor('#8C8C8C')
+            .fontColor(this.currentTextColor + '80') // 80% 透明度
             .margin({ right: 8 })
 
           TextInput({ placeholder: '搜索照片、工程或工点...' })
             .fontSize(14)
-            .fontColor('#262626')
-            .placeholderColor('#C0C0C0')
-            .backgroundColor('#F5F5F5')
+            .fontColor(this.currentTextColor)
+            .placeholderColor(this.currentTextColor + '60') // 60% 透明度
+            .backgroundColor(this.currentBgColor)
             .borderRadius(8)
             .padding({ left: 8, right: 8 })
             .layoutWeight(1)
@@ -128,7 +165,7 @@ struct GalleryPage {
         }
         .width('100%')
         .padding(12)
-        .backgroundColor('#F8F9FA')
+        .backgroundColor(this.currentSurfaceColor)
         .borderRadius(8)
         .margin({ bottom: 12 })
 
@@ -340,7 +377,7 @@ struct GalleryPage {
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 12, bottom: 8 })
-        .backgroundColor('#FFFFFF')
+        .backgroundColor(this.currentSurfaceColor)
       }
 
       // 底部导航栏
@@ -350,6 +387,6 @@ struct GalleryPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F5F5F5')
+    .backgroundColor(this.currentBgColor)
   }
 }

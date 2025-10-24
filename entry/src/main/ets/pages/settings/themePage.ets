@@ -7,7 +7,7 @@ import router from '@ohos.router'
 import { ThemeManager, ThemeType, ThemeName } from '../../theme/ThemeManager'
 import { ThemeState, ThemeConfig } from '../../theme/ThemeObservable'
 import { ThemeToggle } from '../../components/theme/ThemeToggle'
-import { AppColors } from '../../theme/AppColors'
+import { AppColors, ColorPalettes } from '../../theme/AppColors'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 @Entry
@@ -15,6 +15,9 @@ import { BottomNavigation } from '../../components/common/BottomNavigation'
 struct ThemePage {
   @Local private themeState: ThemeState = ThemeState.getInstance()
   @Local private refreshTrigger: number = 0
+  @Local private currentBgColor: string = '#FFFFFF'
+  @Local private currentTextColor: string = '#262626'
+  @Local private currentSurfaceColor: string = '#FFFFFF'
 
   private get currentThemeType(): ThemeType {
     // 强制依赖refreshTrigger以确保UI重新渲染
@@ -32,10 +35,87 @@ struct ThemePage {
     this.themeState = ThemeState.getInstance()
   }
 
+  /**
+   * 主题状态变化监听器
+   */
+  onThemeStateChanged(): void {
+    console.log('=== ThemePage.onThemeStateChanged() ===')
+    console.log('ThemePage: Theme state changed, triggering UI refresh')
+    this.refreshTrigger++
+    console.log('ThemePage: refreshTrigger updated to:', this.refreshTrigger)
+  }
+
+  /**
+   * 手动测试主题系统（调试用）
+   */
+  private testThemeSystem(): void {
+    console.log('=== MANUAL THEME SYSTEM TEST ===')
+
+    // Test 1: Check ThemeState
+    console.log('1. ThemeState Test:')
+    console.log('   ThemeState.currentTheme:', JSON.stringify(this.themeState.currentTheme))
+    console.log('   ThemeState.updateCount:', this.themeState.updateCount)
+
+    // Test 2: Check ThemeManager
+    console.log('2. ThemeManager Test:')
+    console.log('   ThemeManager.currentTheme:', JSON.stringify(ThemeManager.getCurrentTheme()))
+
+    // Test 3: Check color retrieval
+    console.log('3. Color Retrieval Test:')
+    console.log('   getCurrentBgColor():', ThemeManager.getCurrentBgColor())
+    console.log('   getCurrentTextColor():', ThemeManager.getCurrentTextColor())
+    console.log('   getCurrentSurfaceColor():', ThemeManager.getCurrentSurfaceColor())
+    console.log('   getCurrentPrimaryColor():', ThemeManager.getCurrentPrimaryColor())
+
+    // Test 4: Check dark palette
+    console.log('4. Dark Palette Test:')
+    console.log('   ColorPalettes.dark.background:', ColorPalettes.dark.background)
+    console.log('   ColorPalettes.dark.text:', ColorPalettes.dark.text)
+
+    // Test 5: Check current UI state
+    console.log('5. UI State Test:')
+    console.log('   this.currentThemeType:', this.currentThemeType)
+    console.log('   this.currentThemeName:', this.currentThemeName)
+    console.log('   this.refreshTrigger:', this.refreshTrigger)
+
+    console.log('=== END MANUAL TEST ===')
+  }
+
   private refreshTheme(): void {
+    console.log('=== ThemePage.refreshTheme START ===')
     console.log('ThemePage: refreshTheme called, current trigger:', this.refreshTrigger)
     this.refreshTrigger++
+    console.log('ThemePage: refreshTrigger incremented to:', this.refreshTrigger)
+
+    // 获取最新的颜色并更新@State变量
+    this.currentBgColor = ThemeManager.getCurrentBgColor()
+    this.currentTextColor = ThemeManager.getCurrentTextColor()
+    this.currentSurfaceColor = ThemeManager.getCurrentSurfaceColor()
+
+    console.log('ThemePage: Updated @State color variables:')
+    console.log('ThemePage: currentBgColor =', this.currentBgColor)
+    console.log('ThemePage: currentTextColor =', this.currentTextColor)
+    console.log('ThemePage: currentSurfaceColor =', this.currentSurfaceColor)
+
+    // 测试颜色获取
+    console.log('ThemePage: Testing color retrieval...')
+    console.log('ThemePage: Current theme type:', this.currentThemeType)
+    console.log('ThemePage: Current theme name:', this.currentThemeName)
+    const currentTheme = ThemeManager.getCurrentTheme()
+    console.log('ThemePage: ThemeManager isDark:', currentTheme.isDark)
+    console.log('ThemePage: Background color from ThemeManager:', ThemeManager.getCurrentBgColor())
+    console.log('ThemePage: Text color from ThemeManager:', ThemeManager.getCurrentTextColor())
+    console.log('ThemePage: Surface color from ThemeManager:', ThemeManager.getCurrentSurfaceColor())
+    console.log('ThemePage: Primary color:', ThemeManager.getCurrentPrimaryColor())
+
+    // Test if ThemeState and ThemeManager are in sync
+    console.log('ThemePage: ThemeState currentTheme:', JSON.stringify(this.themeState.currentTheme))
+    console.log('ThemePage: ThemeManager currentTheme:', JSON.stringify(ThemeManager.getCurrentTheme()))
+
+    // 强制触发重新渲染
+    console.log('ThemePage: Forcing UI re-render with @State variables...')
     console.log('ThemePage: refreshTheme completed, new trigger:', this.refreshTrigger)
+    console.log('=== ThemePage.refreshTheme END ===')
   }
 
   /**
@@ -121,6 +201,10 @@ struct ThemePage {
 
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
+
+    // Debug test after theme change
+    this.testThemeSystem()
+
     this.refreshTheme()
   }
 
@@ -137,6 +221,10 @@ struct ThemePage {
 
     ThemeManager.setThemeName(name)
     this.themeState.setTheme(newTheme)
+
+    // Debug test after theme change
+    this.testThemeSystem()
+
     this.refreshTheme()
   }
 
@@ -173,6 +261,80 @@ struct ThemePage {
       // 内容区域
       Scroll() {
         Column({ space: 24 }) {
+          // 调试信息显示区域
+          Column({ space: 8 }) {
+            Text('🔍 调试信息')
+              .fontSize(16)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.currentTextColor)
+              .alignSelf(ItemAlign.Start)
+
+            Row() {
+              Text('背景色:')
+                .fontSize(12)
+                .fontColor(this.currentTextColor)
+                .width(60)
+
+              Text(this.currentBgColor)
+                .fontSize(12)
+                .fontColor(this.currentTextColor)
+                .padding(4)
+                .backgroundColor(this.currentBgColor)
+                .borderRadius(4)
+                .layoutWeight(1)
+            }
+            .width('100%')
+
+            Row() {
+              Text('文本色:')
+                .fontSize(12)
+                .fontColor(this.currentTextColor)
+                .width(60)
+
+              Text(this.currentTextColor)
+                .fontSize(12)
+                .fontColor(this.currentTextColor)
+                .padding(4)
+                .backgroundColor(this.currentBgColor)
+                .borderRadius(4)
+                .layoutWeight(1)
+            }
+            .width('100%')
+
+            Row() {
+              Text('主题类型:')
+                .fontSize(12)
+                .fontColor(ThemeManager.getCurrentTextSecondaryColor())
+                .width(60)
+
+              Text(this.currentThemeType + ' (触发器:' + this.refreshTrigger + ')')
+                .fontSize(12)
+                .fontColor(this.currentTextColor)
+                .layoutWeight(1)
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .padding(16)
+          .backgroundColor(this.currentSurfaceColor)
+          .borderRadius(12)
+          .margin({ bottom: 16 })
+
+          // 调试按钮（临时）
+          Button() {
+            Text('🔍 手动测试主题系统')
+              .fontSize(14)
+              .fontColor('#FFFFFF')
+          }
+          .width('100%')
+          .height(40)
+          .backgroundColor('#FF6B35')
+          .borderRadius(8)
+          .margin({ bottom: 16 })
+          .onClick(() => {
+            this.testThemeSystem()
+          })
+
           // 主题类型选择
           Column({ space: 16 }) {
             Text('主题模式')
@@ -185,7 +347,11 @@ struct ThemePage {
             ThemeToggle({
               showText: true,
               toggleSize: 'large',
-              style: 'button'
+              style: 'button',
+              onThemeChanged: () => {
+                console.log('=== ThemePage: ThemeToggle callback ===')
+                this.refreshTheme()
+              }
             })
               .margin({ top: 12 })
 
@@ -275,7 +441,7 @@ struct ThemePage {
         .padding({ top: 16, bottom: 16 })
       }
       .layoutWeight(1)
-      .backgroundColor(ThemeManager.getCurrentBgColor())
+      .backgroundColor(this.currentBgColor)
 
       // 底部导航栏
       BottomNavigation({

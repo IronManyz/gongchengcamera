@@ -136,8 +136,12 @@ export struct SimpleProjectCard {
     })
     .animation({ duration: 150, curve: Curve.EaseInOut })
     .onClick(() => {
-      console.log('Project card clicked:', this.project.name)
-      this.onTap?.(this.project)
+      console.log('Project card clicked:', this.project.name, 'ID:', this.project.id)
+      if (this.onTap) {
+        this.onTap(this.project)
+      } else {
+        console.warn('Project card: onTap callback is not defined')
+      }
     })
     .gesture(
       LongPressGesture({ repeat: false, duration: 500 })

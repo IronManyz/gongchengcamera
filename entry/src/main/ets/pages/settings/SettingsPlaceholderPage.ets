@@ -5,6 +5,7 @@
 
 import { BottomNavigation } from '../../components/common/BottomNavigation'
 import router from '@ohos.router'
+import { ThemeManager } from '../../theme/ThemeManager'
 
 interface SettingItem {
   title: string
@@ -20,6 +21,13 @@ struct SettingsPage {
   @State private storageUsed: string = '125.6 MB'
   @State private photoCount: number = 156
   @State private version: string = '1.0.0'
+
+  // 主题相关状态
+  @State private themeRefreshTrigger: number = 0
+  @State private currentBgColor: string = '#FFFFFF'
+  @State private currentTextColor: string = '#262626'
+  @State private currentSurfaceColor: string = '#FFFFFF'
+  @State private currentPrimaryColor: string = '#1890FF'
 
   private settingsList: SettingItem[] = [
     {
@@ -56,6 +64,29 @@ struct SettingsPage {
     }
   ]
 
+  /**
+   * 刷新主题颜色
+   */
+  private refreshThemeColors(): void {
+    console.log('SettingsPage: Refreshing theme colors...')
+    this.currentBgColor = ThemeManager.getCurrentBgColor()
+    this.currentTextColor = ThemeManager.getCurrentTextColor()
+    this.currentSurfaceColor = ThemeManager.getCurrentSurfaceColor()
+    this.currentPrimaryColor = ThemeManager.getCurrentPrimaryColor()
+    this.themeRefreshTrigger++
+    console.log('SettingsPage: Theme colors updated - Bg:', this.currentBgColor, 'Text:', this.currentTextColor)
+  }
+
+  aboutToAppear(): void {
+    console.log('SettingsPage aboutToAppear')
+    this.refreshThemeColors()
+  }
+
+  onPageShow(): void {
+    console.log('SettingsPage onPageShow - checking theme updates')
+    this.refreshThemeColors()
+  }
+
   private navigateToTheme(): void {
     try {
       router.replaceUrl({
@@ -84,20 +115,38 @@ struct SettingsPage {
 
   build() {
     Column() {
-      // 头部
-      Row() {
-        Text('设置')
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#262626')
-          .layoutWeight(1)
-          .textAlign(TextAlign.Start)
+      // 强制依赖主题触发器以确保重新渲染
+      if (this.themeRefreshTrigger >= 0) {
+        // 头部
+        Row() {
+          Text('设置')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.currentTextColor)
+            .layoutWeight(1)
+            .textAlign(TextAlign.Start)
 
-        Blank()
+          Blank()
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+        .backgroundColor(this.currentSurfaceColor)
+      } else {
+        // 头部
+        Row() {
+          Text('设置')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.currentTextColor)
+            .layoutWeight(1)
+            .textAlign(TextAlign.Start)
+
+          Blank()
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+        .backgroundColor(this.currentSurfaceColor)
       }
-      .width('100%')
-      .padding({ left: 16, right: 16, top: 12, bottom: 12 })
-      .backgroundColor('#FFFFFF')
 
       // 设置项列表
       Scroll() {

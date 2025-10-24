@@ -14,6 +14,7 @@ export interface ThemeToggleProps {
   showText?: boolean // 是否显示文字标签
   size?: 'small' | 'medium' | 'large' // 按钮尺寸
   style?: 'button' | 'switch' // 切换样式
+  onThemeChanged?: () => void // 主题变化回调
 }
 
 @ComponentV2
@@ -21,6 +22,7 @@ export struct ThemeToggle {
   @Param showText: boolean = true
   @Param toggleSize: 'small' | 'medium' | 'large' = 'medium'
   @Param style: 'button' | 'switch' = 'button'
+  @Param onThemeChanged: (() => void) | undefined = undefined
 
   @Local private themeState: ThemeState = ThemeState.getInstance()
   @Local private refreshTrigger: number = 0
@@ -36,9 +38,12 @@ export struct ThemeToggle {
   }
 
   private refreshTheme(): void {
+    console.log('=== ThemeToggle.refreshTheme() START ===')
     console.log('ThemeToggle: refreshTheme called, current trigger:', this.refreshTrigger)
     this.refreshTrigger++
     console.log('ThemeToggle: refreshTheme completed, new trigger:', this.refreshTrigger)
+    console.log('ThemeToggle: After refresh - currentThemeType:', this.currentThemeType)
+    console.log('=== ThemeToggle.refreshTheme() END ===')
   }
 
   /**
@@ -56,6 +61,13 @@ export struct ThemeToggle {
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
     this.refreshTheme()
+
+    // 调用父组件的回调
+    if (this.onThemeChanged) {
+      console.log('ThemeToggle: Calling onThemeChanged callback')
+      this.onThemeChanged()
+    }
+
     console.log('ThemeToggle: Light theme set completed')
   }
 
@@ -63,18 +75,49 @@ export struct ThemeToggle {
    * 切换到深色主题
    */
   private setDarkTheme(): void {
+    console.log('=== ThemeToggle.setDarkTheme START ===')
     console.log('ThemeToggle: setDarkTheme called')
+    console.log('ThemeToggle: Before - ThemeState currentTheme:', JSON.stringify(this.themeState.currentTheme))
+    console.log('ThemeToggle: Before - ThemeManager currentTheme:', JSON.stringify(ThemeManager.getCurrentTheme()))
+
     const currentTheme = this.themeState.currentTheme
     const newTheme: ThemeConfig = {
       type: ThemeType.DARK,
       name: currentTheme.name,
       isDark: true
     }
-    console.log('ThemeToggle: Setting theme to', newTheme)
+
+    console.log('ThemeToggle: New theme config:', JSON.stringify(newTheme))
+    console.log('ThemeToggle: Calling ThemeManager.setTheme...')
+
     ThemeManager.setTheme(newTheme)
+
+    console.log('ThemeToggle: After ThemeManager.setTheme - ThemeManager currentTheme:', JSON.stringify(ThemeManager.getCurrentTheme()))
+    console.log('ThemeToggle: Calling ThemeState.setTheme...')
+
     this.themeState.setTheme(newTheme)
+
+    console.log('ThemeToggle: After ThemeState.setTheme - ThemeState currentTheme:', JSON.stringify(this.themeState.currentTheme))
+    console.log('ThemeToggle: After ThemeState.setTheme - ThemeManager currentTheme:', JSON.stringify(ThemeManager.getCurrentTheme()))
+
+    // Test color retrieval immediately
+    console.log('ThemeToggle: Testing color retrieval...')
+    console.log('ThemeToggle: getCurrentBgColor() should return #121212, got:', ThemeManager.getCurrentBgColor())
+    console.log('ThemeToggle: getCurrentTextColor() should return #FFFFFF, got:', ThemeManager.getCurrentTextColor())
+    console.log('ThemeToggle: getCurrentSurfaceColor() should return #1E1E1E, got:', ThemeManager.getCurrentSurfaceColor())
+
     this.refreshTheme()
+
+    // 调用父组件的回调
+    if (this.onThemeChanged) {
+      console.log('ThemeToggle: Calling onThemeChanged callback')
+      this.onThemeChanged()
+    }
+
     console.log('ThemeToggle: Dark theme set completed')
+    console.log('ThemeToggle: Final check - currentThemeType:', this.currentThemeType)
+    console.log('ThemeToggle: Final check - refreshTrigger:', this.refreshTrigger)
+    console.log('=== ThemeToggle.setDarkTheme END ===')
   }
 
   /**
@@ -82,17 +125,39 @@ export struct ThemeToggle {
    */
   private setAutoTheme(): void {
     console.log('ThemeToggle: setAutoTheme called')
+    console.log('ThemeToggle: Before - ThemeState currentTheme:', this.themeState.currentTheme)
+    console.log('ThemeToggle: Before - ThemeManager currentTheme:', ThemeManager.getCurrentTheme())
+
     const currentTheme = this.themeState.currentTheme
     const newTheme: ThemeConfig = {
       type: ThemeType.AUTO,
       name: currentTheme.name,
       isDark: false
     }
-    console.log('ThemeToggle: Setting theme to', newTheme)
+
+    console.log('ThemeToggle: New theme config:', newTheme)
+    console.log('ThemeToggle: Calling ThemeManager.setTheme...')
+
     ThemeManager.setTheme(newTheme)
+
+    console.log('ThemeToggle: After ThemeManager.setTheme - ThemeManager currentTheme:', ThemeManager.getCurrentTheme())
+    console.log('ThemeToggle: Calling ThemeState.setTheme...')
+
     this.themeState.setTheme(newTheme)
+
+    console.log('ThemeToggle: After ThemeState.setTheme - ThemeState currentTheme:', this.themeState.currentTheme)
+    console.log('ThemeToggle: After ThemeState.setTheme - ThemeManager currentTheme:', ThemeManager.getCurrentTheme())
+
     this.refreshTheme()
+
+    // 调用父组件的回调
+    if (this.onThemeChanged) {
+      console.log('ThemeToggle: Calling onThemeChanged callback')
+      this.onThemeChanged()
+    }
+
     console.log('ThemeToggle: Auto theme set completed')
+    console.log('ThemeToggle: Final check - currentThemeType:', this.currentThemeType)
   }
 
   /**
