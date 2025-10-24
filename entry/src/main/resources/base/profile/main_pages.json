@@ -12,6 +12,7 @@
     "pages/photo/PhotoPreviewPage",
     "pages/site/SitePhotoPage",
     "pages/gallery/GalleryPlaceholderPage",
-    "pages/settings/SettingsPlaceholderPage"
+    "pages/settings/SettingsPlaceholderPage",
+    "pages/about/AboutPage"
   ]
 }

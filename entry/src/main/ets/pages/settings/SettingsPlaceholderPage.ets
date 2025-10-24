@@ -4,6 +4,7 @@
  */
 
 import { BottomNavigation } from '../../components/common/BottomNavigation'
+import router from '@ohos.router'
 
 interface SettingItem {
   title: string
@@ -50,10 +51,23 @@ struct SettingsPage {
       subtitle: `版本 ${this.version}`,
       icon: 'ℹ️',
       onPress: () => {
-        console.log('About clicked')
+        this.navigateToAbout()
       }
     }
   ]
+
+  private navigateToAbout(): void {
+    try {
+      router.replaceUrl({
+        url: 'pages/about/AboutPage',
+        params: {}
+      }).catch((error: Error) => {
+        console.error('Navigate to about page failed:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to about page failed with exception:', error)
+    }
+  }
 
   build() {
     Column() {
