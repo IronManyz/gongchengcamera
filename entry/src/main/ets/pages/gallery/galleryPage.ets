@@ -4,6 +4,7 @@
  */
 
 import router from '@ohos.router'
+import { vibrator } from '@kit.SensorServiceKit'
 import { Logger } from '../../utils/Logger'
 import { GalleryStore, GalleryViewMode, BatchOperationType } from '../../store/gallery/GalleryStore'
 import { PhotoGrid, TimelinePhotoGrid, WaterfallPhotoGrid } from '../../components/photo/PhotoGrid'
@@ -104,11 +105,26 @@ struct GalleryPage {
   }
 
   /**
-   * 照片长按处理
+   * 照片��按处理
    */
   private onPhotoLongPress(photo: Photo, index: number) {
     if (!this.galleryStore.isSelectionMode) {
+      // 触觉反馈
+      try {
+        vibrator.startVibration({
+          mode: vibrator.VibratorMode.PULSE,
+          duration: 100,
+          intensity: 150
+        })
+      } catch (error) {
+        // 震动不是必需功能，静默忽略错误
+      }
+
+      // 进入选择模式并选择该照片
       this.galleryStore.enterSelectionMode()
+      this.galleryStore.togglePhotoSelection(photo.id)
+    } else {
+      // 已在选择模式下，切换选择状态
       this.galleryStore.togglePhotoSelection(photo.id)
     }
   }
@@ -299,16 +315,38 @@ struct GalleryPage {
         .onClick(() => this.navigateToSearch())
 
         // 选择模式按钮
-        Button() {
-          Image($r('app.media.ic_select'))
-            .width(24)
-            .height(24)
-            .fillColor(this.galleryStore.isSelectionMode ? '#007AFF' : '#666666')
+        if (this.galleryStore.isSelectionMode) {
+          // 显示选择状态信息
+          Row({ space: 8 }) {
+            Text('已选择')
+              .fontSize(14)
+              .fontColor('#666666')
+            Text(`${this.galleryStore.selectedPhotos.size}`)
+              .fontSize(14)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#007AFF')
+            Text('项')
+              .fontSize(14)
+              .fontColor('#666666')
+          }
+          .height(40)
+          .padding({ horizontal: 12 })
+          .backgroundColor('#F0F8FF')
+          .borderRadius(20)
+          .border({ width: 1, color: '#B3D8FF' })
+          .onClick(() => this.toggleSelectionMode())
+        } else {
+          Button() {
+            Image($r('app.media.ic_select'))
+              .width(24)
+              .height(24)
+              .fillColor('#666666')
+          }
+          .width(40)
+          .height(40)
+          .backgroundColor(Color.Transparent)
+          .onClick(() => this.toggleSelectionMode())
         }
-        .width(40)
-        .height(40)
-        .backgroundColor(Color.Transparent)
-        .onClick(() => this.toggleSelectionMode())
       }
     }
     .width('100%')
@@ -481,6 +519,24 @@ struct GalleryPage {
               this.clearSelection()
             } else {
               this.selectAllPhotos()
+            }
+          })
+          .onLongPress(() => {
+            // 长按全选功能：如果已全选则清空，否则全选
+            if (this.galleryStore.selectedPhotos.size === this.galleryStore['photoStore']?.photos.length) {
+              this.clearSelection()
+            } else {
+              this.selectAllPhotos()
+            }
+            // 震动反馈
+            try {
+              vibrator.startVibration({
+                mode: vibrator.VibratorMode.SHORT,
+                duration: 80,
+                intensity: 180
+              })
+            } catch (error) {
+              // 震动不是必需功能，静默忽略错误
             }
           })
       }

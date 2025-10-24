@@ -4,6 +4,7 @@
  */
 
 import { Photo } from '../../models/Photo'
+import { vibrator } from '@kit.SensorServiceKit'
 
 @ComponentV2
 export struct PhotoGrid {
@@ -42,7 +43,18 @@ export struct PhotoGrid {
                   }
                 },
                 onLongPress: (pressedPhoto: Photo) => {
+                  // 长按触发选择模式和选择该照片
                   this.onPhotoLongPress?.(pressedPhoto, index)
+                  // 触觉反馈
+                  try {
+                    vibrator.startVibration({
+                      mode: vibrator.VibratorMode.PULSE,
+                      duration: 50,
+                      intensity: 100
+                    })
+                  } catch (error) {
+                    // 震动不是必需功能，静默忽略错误
+                  }
                 },
                 onSelectionChange: (selected: boolean) => {
                   this.onSelectionChange?.(photo.id, selected)
@@ -147,7 +159,18 @@ export struct AdaptivePhotoGrid {
                   }
                 },
                 onLongPress: (pressedPhoto: Photo) => {
+                  // 长按触发选择模式和选择该照片
                   this.onPhotoLongPress?.(pressedPhoto, index)
+                  // 触觉反馈
+                  try {
+                    vibrator.startVibration({
+                      mode: vibrator.VibratorMode.PULSE,
+                      duration: 50,
+                      intensity: 100
+                    })
+                  } catch (error) {
+                    // 震动不是必需功能，静默忽略错误
+                  }
                 },
                 onSelectionChange: (selected: boolean) => {
                   this.onSelectionChange?.(photo.id, selected)
@@ -374,7 +397,18 @@ export struct WaterfallPhotoGrid {
                   }
                 },
                 onLongPress: (pressedPhoto: Photo) => {
+                  // 长按触发选择模式和选择该照片
                   this.onPhotoLongPress?.(pressedPhoto, index)
+                  // 触觉反馈
+                  try {
+                    vibrator.startVibration({
+                      mode: vibrator.VibratorMode.PULSE,
+                      duration: 50,
+                      intensity: 100
+                    })
+                  } catch (error) {
+                    // 震动不是必需功能，静默忽略错误
+                  }
                 },
                 onSelectionChange: (selected: boolean) => {
                   this.onSelectionChange?.(photo.id, selected)
