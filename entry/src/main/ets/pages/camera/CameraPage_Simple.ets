@@ -414,6 +414,27 @@ struct CameraPage_Simple {
   }
 
   /**
+   * 跳转到相机设置页面
+   */
+  private navigateToCameraSettings(): void {
+    try {
+      router.pushUrl({
+        url: 'pages/settings/settingsPage',
+        params: {
+          tab: 'camera',
+          fromCamera: true
+        }
+      }).then(() => {
+        console.log('Successfully navigated to camera settings')
+      }).catch((error: Error) => {
+        console.error('Failed to navigate to camera settings:', error)
+      })
+    } catch (error) {
+      console.error('Navigation error:', error)
+    }
+  }
+
+  /**
    * 重新拍照
    */
   private retakePhoto(): void {
@@ -519,6 +540,16 @@ struct CameraPage_Simple {
             } else {
               console.log('Camera not ready for flash toggle')
             }
+          })
+
+        // 设置按钮
+        Button('⚙️')
+          .fontSize(20)
+          .fontColor('#FFFFFF')
+          .backgroundColor('transparent')
+          .onClick(() => {
+            console.log('Settings button clicked - navigating to camera settings')
+            this.navigateToCameraSettings()
           })
       }
       .width('100%')
