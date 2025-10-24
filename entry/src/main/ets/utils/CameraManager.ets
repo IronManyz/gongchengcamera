@@ -76,21 +76,23 @@ export class CameraManager {
       this.surfaceId = surfaceId
       console.log('Starting camera initialization...')
 
-      // 获取相机管理器
+      // 第一步：尝试创建相机管理器
       try {
+        console.log('Step 1: Creating camera manager...')
         this.cameraManager = camera.getCameraManager(context)
         console.log('Camera manager created:', !!this.cameraManager)
+
+        if (!this.cameraManager) {
+          throw new Error('相机管理器创建失败：返回null')
+        }
       } catch (error) {
-        console.error('Failed to create camera manager:', error)
-        throw new Error(`创建相机管理器失败: ${error}`)
+        console.error('Step 1 failed - Camera manager creation:', error)
+        throw new Error(`相机管理器创建失败: ${error}`)
       }
 
-      if (!this.cameraManager) {
-        throw new Error('无法获取相机管理器实例')
-      }
-
-      // 获取支持的相机设备
+      // 第二步：获取相机设备列表
       try {
+        console.log('Step 2: Getting available cameras...')
         const cameras = await this.cameraManager.getSupportedCameras()
         console.log('Available cameras:', cameras.length)
 
@@ -98,77 +100,76 @@ export class CameraManager {
           throw new Error('没有可用的相机设备')
         }
 
-        // 选择第一个可用的相机
+        // 选择第一个相机
         const selectedCamera = cameras[0]
         console.log('Selected camera:', selectedCamera.cameraId, selectedCamera.cameraPosition)
 
-        // 创建相机输入
-        try {
-          this.cameraInput = this.cameraManager.createCameraInput(selectedCamera)
-          console.log('Camera input created:', !!this.cameraInput)
-        } catch (error) {
-          console.error('Failed to create camera input:', error)
-          throw new Error(`创建相机输入失败: ${error}`)
-        }
+        // 保存相机信息
+        this.cameraInput = this.cameraManager.createCameraInput(selectedCamera)
+        console.log('Camera input created:', !!this.cameraInput)
 
         if (!this.cameraInput) {
           throw new Error('相机输入创建失败')
         }
 
       } catch (error) {
-        console.error('Failed to get cameras:', error)
-        throw new Error(`获取相机设备失败: ${error}`)
+        console.error('Step 2 failed - Camera device access:', error)
+        throw new Error(`相机设备访问失败: ${error}`)
       }
 
-      // 简化版本：只创建基本的拍照功能，不使用复杂的会话配置
+      // 第三步：创建基本的拍照输出（可选）
       try {
-        // 创建拍照输出
+        console.log('Step 3: Creating photo output...')
         this.photoOutput = this.cameraManager.createPhotoOutput()
         console.log('Photo output created:', !!this.photoOutput)
+      } catch (error) {
+        console.warn('Step 3 warning - Photo output creation failed (continuing anyway):', error)
+        // 拍照输出失败不是致命错误，继续执行
+      }
 
-        if (!this.photoOutput) {
-          throw new Error('拍照输出创建失败')
-        }
-
-        // 创建预览输出
+      // 第四步：创建预览输出
+      try {
+        console.log('Step 4: Creating preview output...')
         this.previewOutput = this.cameraManager.createPreviewOutput(surfaceId)
         console.log('Preview output created:', !!this.previewOutput)
 
         if (!this.previewOutput) {
           throw new Error('预览输出创建失败')
         }
-
       } catch (error) {
-        console.error('Failed to create outputs:', error)
-        throw new Error(`创建相机输出失败: ${error}`)
+        console.error('Step 4 failed - Preview output creation:', error)
+        throw new Error(`预览输出创建失败: ${error}`)
       }
 
       // 标记为已初始化
       this.isInitialized = true
-      console.log('Camera initialized successfully')
+      console.log('Camera initialized successfully!')
 
       // 调用初始化回调
       if (this.onInitializedCallback) {
         console.log('Calling initialization callback...')
         this.onInitializedCallback()
       } else {
-        console.log('No initialization callback set')
+        console.log('Warning: No initialization callback set')
       }
 
       return { success: true, message: '相机初始化成功' }
 
     } catch (error) {
       const err = error as BusinessError
-      console.error('Initialize camera failed:', err.code, err.message)
+      console.error('=== CAMERA INITIALIZATION FAILED ===')
+      console.error('Error:', err)
+      console.error('Message:', err.message)
+      console.error('Code:', err.code)
 
-      const errorMessage = `相机初始化失败: ${err.message}`
-      console.error('Error message:', errorMessage)
+      const errorMessage = `相机初始化失败: ${err.message || String(error)}`
+      console.error('Final error message:', errorMessage)
 
       if (this.onErrorCallback) {
-        console.log('Calling error callback...')
+        console.log('Calling error callback with:', errorMessage)
         this.onErrorCallback(errorMessage)
       } else {
-        console.log('No error callback set')
+        console.log('Warning: No error callback set')
       }
 
       return { success: false, message: errorMessage }

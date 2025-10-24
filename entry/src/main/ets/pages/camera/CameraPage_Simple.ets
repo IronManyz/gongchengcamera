@@ -805,11 +805,11 @@ struct CameraPage_Simple {
         // 错误信息
         if (this.cameraErrorMessage) {
           Text(this.cameraErrorMessage)
-            .fontSize(16)
-            .fontColor('#E0E0E0')
+            .fontSize(14)
+            .fontColor('#FF6B6B')
             .textAlign(TextAlign.Center)
             .margin({ bottom: 16 })
-            .maxLines(3)
+            .maxLines(5)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
         }
 
