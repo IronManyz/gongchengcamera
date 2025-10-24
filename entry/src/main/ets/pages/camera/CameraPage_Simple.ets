@@ -533,7 +533,7 @@ struct CameraPage_Simple {
         XComponent({
           id: 'camera_preview',
           type: 'surface',
-          libraryname: '',
+          libraryname: 'entry',
         })
           .onLoad((xComponent: XComponentController) => {
             console.log('=== XComponent onLoad triggered ===')
@@ -551,13 +551,13 @@ struct CameraPage_Simple {
 
               // 设置Surface尺寸
               try {
-                xComponent.setXComponentSurfaceSize({
+                xComponent.setXComponentSurfaceRect({
                   surfaceWidth: 1920,
                   surfaceHeight: 1080
                 })
-                console.log('Surface size set: 1920 x 1080')
+                console.log('Surface rect set: 1920 x 1080')
               } catch (sizeError) {
-                console.warn('Failed to set surface size, using default:', sizeError)
+                console.warn('Failed to set surface rect, using default:', sizeError)
               }
 
               // 获取Surface ID

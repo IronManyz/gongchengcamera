@@ -86,6 +86,22 @@ export class CameraManager {
       }
       console.log('Camera manager created successfully')
 
+      // 注册相机状态监听
+      this.cameraManager.on('cameraStatus', (err: BusinessError, cameraStatusInfo: camera.CameraStatusInfo) => {
+        if (err !== undefined && err.code !== 0) {
+          console.error('cameraStatus with errorCode = ' + err.code)
+          return
+        }
+        console.log(`camera : ${cameraStatusInfo.camera.cameraId}`)
+        console.log(`status: ${cameraStatusInfo.status}`)
+
+        if (cameraStatusInfo.status === camera.CameraStatus.CAMERA_STATUS_UNAVAILABLE) {
+          if (this.onErrorCallback) {
+            this.onErrorCallback(`相机设备不可用: ${cameraStatusInfo.camera.cameraId}`)
+          }
+        }
+      })
+
       // 获取相机设备
       console.log('Getting camera devices...')
       const cameras = await this.cameraManager.getSupportedCameras()
@@ -136,8 +152,23 @@ export class CameraManager {
           throw new Error('没有可用的预览配置')
         }
         
-        // 选择合适的预览配置（通常选择中等分辨率以平衡性能）
-        const previewProfile = previewProfiles[Math.floor(previewProfiles.length / 2)]
+        // 选择合适的预览配置：优先选择匹配Surface尺寸且格式为YUV_420_SP的配置
+        const targetRatio = 1920 / 1080 // 16:9 比例
+        let selectedProfile = previewProfiles[0] // 默认选择第一个
+        let minRatioDiff = Math.abs((selectedProfile.size.width / selectedProfile.size.height) - targetRatio)
+
+        for (let i = 1; i < previewProfiles.length; i++) {
+          const profile = previewProfiles[i]
+          const currentRatio = profile.size.width / profile.size.height
+          const ratioDiff = Math.abs(currentRatio - targetRatio)
+
+          if (ratioDiff < minRatioDiff && profile.format === camera.CameraFormat.CAMERA_FORMAT_YUV_420_SP) {
+            minRatioDiff = ratioDiff
+            selectedProfile = profile
+          }
+        }
+
+        const previewProfile = selectedProfile
         console.log('Selected preview profile:', previewProfile)
         
         this.previewOutput = this.cameraManager.createPreviewOutput(previewProfile, surfaceId)
@@ -220,6 +251,7 @@ export class CameraManager {
           }
         })
 
+  
         // 步骤7: 启动会话
         console.log('Step 7: Starting capture session...')
         await this.captureSession.start()
