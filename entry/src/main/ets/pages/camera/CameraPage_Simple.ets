@@ -427,7 +427,9 @@ struct CameraPage_Simple {
           libraryname: '',
         })
           .onLoad((xComponent: XComponentController) => {
+            console.log('=== XComponent onLoad triggered ===')
             console.log('Camera preview XComponent loaded')
+            console.log('XComponent controller:', !!xComponent)
             try {
               xComponent.setXComponentSurfaceSize({
                 surfaceWidth: 1280,
