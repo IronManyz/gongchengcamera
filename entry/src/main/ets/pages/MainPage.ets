@@ -256,6 +256,29 @@ struct MainPage {
   }
 
   /**
+   * 跳转到个人中心
+   */
+  private navigateToPersonalCenter(): void {
+    console.log('Navigate to personal center - Starting navigation')
+    this.closeQuickActions()
+    this.closeProjectActions()
+    try {
+      router.replaceUrl({
+        url: 'pages/settings/settingsPage',
+        params: {
+          tab: 'personal'
+        }
+      }).then(() => {
+        console.log('Successfully navigated to personal center')
+      }).catch((error: Error) => {
+        console.error('跳转到个人中心失败:', error)
+      })
+    } catch (error) {
+      console.error('Navigation to personal center failed with exception:', error)
+    }
+  }
+
+  /**
    * 创建新工程
    */
   private createNewProject(): void {
@@ -607,6 +630,26 @@ struct MainPage {
         .fontColor(this.currentTextColor)
 
       Blank()
+
+      // 用户信息
+      Button() {
+        Row({ space: 8 }) {
+          Text('👷‍♂️')
+            .fontSize(16)
+          Text('工程师')
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.currentTextColor)
+        }
+      }
+      .height(40)
+      .padding({ left: 12, right: 12 })
+      .backgroundColor((this.currentPrimaryColor + '15'))
+      .borderRadius(20)
+      .onClick(() => {
+        console.log('User profile clicked - navigating to personal center')
+        this.navigateToPersonalCenter()
+      })
 
       // 搜索按钮
       Button() {
