@@ -26,6 +26,8 @@ export struct ThemeToggle {
   @Local private refreshTrigger: number = 0
 
   private get currentThemeType(): ThemeType {
+    // 强制依赖refreshTrigger以确保UI重新渲染
+    void this.refreshTrigger
     return this.themeState.currentTheme.type
   }
 
@@ -34,7 +36,9 @@ export struct ThemeToggle {
   }
 
   private refreshTheme(): void {
+    console.log('ThemeToggle: refreshTheme called, current trigger:', this.refreshTrigger)
     this.refreshTrigger++
+    console.log('ThemeToggle: refreshTheme completed, new trigger:', this.refreshTrigger)
   }
 
   /**

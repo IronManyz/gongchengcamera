@@ -17,10 +17,14 @@ struct ThemePage {
   @Local private refreshTrigger: number = 0
 
   private get currentThemeType(): ThemeType {
+    // 强制依赖refreshTrigger以确保UI重新渲染
+    void this.refreshTrigger
     return this.themeState.currentTheme.type
   }
 
   private get currentThemeName(): ThemeName {
+    // 强制依赖refreshTrigger以确保UI重新渲染
+    void this.refreshTrigger
     return this.themeState.currentTheme.name
   }
 
@@ -29,7 +33,9 @@ struct ThemePage {
   }
 
   private refreshTheme(): void {
+    console.log('ThemePage: refreshTheme called, current trigger:', this.refreshTrigger)
     this.refreshTrigger++
+    console.log('ThemePage: refreshTheme completed, new trigger:', this.refreshTrigger)
   }
 
   /**
