@@ -59,30 +59,36 @@ export struct ThemeToggle {
    * 切换到深色主题
    */
   private setDarkTheme(): void {
+    console.log('ThemeToggle: setDarkTheme called')
     const currentTheme = this.themeState.currentTheme
     const newTheme: ThemeConfig = {
       type: ThemeType.DARK,
       name: currentTheme.name,
       isDark: true
     }
+    console.log('ThemeToggle: Setting theme to', newTheme)
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
     this.refreshTheme()
+    console.log('ThemeToggle: Dark theme set completed')
   }
 
   /**
    * 切换到自动主题
    */
   private setAutoTheme(): void {
+    console.log('ThemeToggle: setAutoTheme called')
     const currentTheme = this.themeState.currentTheme
     const newTheme: ThemeConfig = {
       type: ThemeType.AUTO,
       name: currentTheme.name,
       isDark: false
     }
+    console.log('ThemeToggle: Setting theme to', newTheme)
     ThemeManager.setTheme(newTheme)
     this.themeState.setTheme(newTheme)
     this.refreshTheme()
+    console.log('ThemeToggle: Auto theme set completed')
   }
 
   /**

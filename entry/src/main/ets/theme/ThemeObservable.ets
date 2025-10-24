@@ -12,7 +12,7 @@ export { ThemeConfig } from './ThemeManager'
  * 简单的主题状态管理器
  */
 export class ThemeState {
-  private static instance: ThemeState
+  private static instance: ThemeState | null = null
   private _currentTheme: ThemeConfig = {
     type: ThemeType.LIGHT,
     name: ThemeName.ENGINEERING,
@@ -25,7 +25,9 @@ export class ThemeState {
   static getInstance(): ThemeState {
     if (!ThemeState.instance) {
       ThemeState.instance = new ThemeState()
+      console.log('ThemeState: New instance created')
     }
+    console.log('ThemeState: Returning instance', ThemeState.instance)
     return ThemeState.instance
   }
 
@@ -38,7 +40,11 @@ export class ThemeState {
   }
 
   setTheme(theme: ThemeConfig): void {
+    console.log('ThemeState: setTheme called with', theme)
+    console.log('ThemeState: Before update, currentTheme:', this._currentTheme)
     this._currentTheme = theme
     this._updateCount++
+    console.log('ThemeState: After update, currentTheme:', this._currentTheme)
+    console.log('ThemeState: Update count:', this._updateCount)
   }
 }
