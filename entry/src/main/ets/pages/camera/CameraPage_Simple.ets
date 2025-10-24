@@ -4,6 +4,17 @@
  */
 
 import router from '@ohos.router'
+import { common } from '@kit.AbilityKit'
+import { PermissionManager, PermissionStatus } from '../../utils/PermissionManager'
+import { CameraManager, CameraResult } from '../../utils/CameraManager'
+
+/**
+ * Surface尺寸接口
+ */
+interface SurfaceSize {
+  width: number
+  height: number
+}
 
 @Entry
 @ComponentV2
@@ -12,6 +23,12 @@ struct CameraPage_Simple {
   @Local private isLoading: boolean = true
   @Local private showPreview: boolean = false
   @Local private capturedImagePath: string = ''
+  @Local private capturedPhotoData: ArrayBuffer | null = null
+
+  // 权限相关状态
+  @Local private permissionStatus: PermissionStatus = PermissionStatus.NOT_DETERMINED
+  @Local private showPermissionDialog: boolean = false
+  @Local private permissionMessage: string = ''
 
   // 工点信息
   @Local private projectId: string = ''
@@ -22,9 +39,37 @@ struct CameraPage_Simple {
   @Local private watermarkEnabled: boolean = true
   @Local private flashEnabled: boolean = false
 
+  // 相机管理相关
+  @Local private cameraManager: CameraManager | null = null
+  @Local private cameraErrorMessage: string = ''
+  @Local private surfaceId: string = ''
+  @Local private showCameraError: boolean = false
+
   aboutToAppear(): void {
     this.loadRouteParams()
-    this.initCamera()
+    this.checkAndRequestPermission()
+  }
+
+  aboutToDisappear(): void {
+    console.log('=== CameraPage.aboutToDisappear() ===')
+    this.releaseCamera()
+  }
+
+  /**
+   * 释放相机资源
+   */
+  private async releaseCamera(): Promise<void> {
+    console.log('=== CameraPage.releaseCamera() ===')
+
+    try {
+      if (this.cameraManager) {
+        await this.cameraManager.releaseCamera()
+        this.cameraManager = null
+        console.log('Camera resources released')
+      }
+    } catch (error) {
+      console.error('Release camera failed:', error)
+    }
   }
 
   /**
@@ -44,28 +89,175 @@ struct CameraPage_Simple {
   }
 
   /**
-   * 初始化相机
+   * 检查并申请相机权限
    */
-  private async initCamera(): Promise<void> {
-    // 模拟相机初始化
-    setTimeout(() => {
-      this.isCameraReady = true
+  private async checkAndRequestPermission(): Promise<void> {
+    console.log('=== CameraPage.checkAndRequestPermission() ===')
+
+    try {
+      // 获取UIAbilityContext
+      const context = getContext(this) as common.UIAbilityContext
+
+      // 检查权限状态
+      const permissionManager = PermissionManager.getInstance()
+      const result = await permissionManager.ensureCameraPermission(context)
+
+      this.permissionStatus = result.status
+      this.permissionMessage = result.message || ''
+
+      console.log('Permission result:', result)
+
+      if (result.status === PermissionStatus.GRANTED) {
+        console.log('Camera permission granted, initializing camera')
+        this.initCameraManager()
+      } else {
+        console.log('Camera permission not granted:', result.message)
+        this.isLoading = false
+        this.showPermissionDialog = true
+      }
+    } catch (error) {
+      console.error('Permission check failed:', error)
+      this.permissionMessage = '权限检查失败'
+      this.permissionStatus = PermissionStatus.DENIED
       this.isLoading = false
-      console.log('Camera initialized')
-    }, 1000)
+      this.showPermissionDialog = true
+    }
+  }
+
+  /**
+   * 申请相机权限
+   */
+  private async requestPermission(): Promise<void> {
+    console.log('=== CameraPage.requestPermission() ===')
+
+    try {
+      const context = getContext(this) as common.UIAbilityContext
+      const permissionManager = PermissionManager.getInstance()
+
+      const result = await permissionManager.requestCameraPermission(context)
+
+      this.permissionStatus = result.status
+      this.permissionMessage = result.message || ''
+
+      if (result.status === PermissionStatus.GRANTED) {
+        console.log('Camera permission granted after request')
+        this.showPermissionDialog = false
+        this.isLoading = true
+        this.initCameraManager()
+      } else {
+        console.log('Camera permission denied after request')
+        this.permissionMessage = '相机权限被拒绝，请在设置中手动开启'
+      }
+    } catch (error) {
+      console.error('Request permission failed:', error)
+      this.permissionMessage = '权限申请失败'
+    }
+  }
+
+  /**
+   * 初始化相机管理器
+   */
+  private async initCameraManager(): Promise<void> {
+    console.log('=== CameraPage.initCameraManager() ===')
+
+    try {
+      // 获取相机管理器实例
+      this.cameraManager = CameraManager.getInstance()
+
+      // 设置回调
+      this.cameraManager.onInitialized(() => {
+        console.log('Camera manager initialization callback triggered')
+        this.isCameraReady = true
+        this.isLoading = false
+        console.log('Camera ready for use')
+      })
+
+      this.cameraManager.onError((error: string) => {
+        console.error('Camera manager error:', error)
+        this.cameraErrorMessage = error
+        this.showCameraError = true
+        this.isLoading = false
+      })
+
+      console.log('Camera manager initialized, waiting for surface ID')
+
+    } catch (error) {
+      console.error('Init camera manager failed:', error)
+      this.cameraErrorMessage = '相机管理器初始化失败'
+      this.showCameraError = true
+      this.isLoading = false
+    }
+  }
+
+  /**
+   * 使用Surface ID初始化相机
+   */
+  async initializeCameraWithSurface(surfaceId: string): Promise<void> {
+    console.log('=== CameraPage.initializeCameraWithSurface() ===')
+    console.log('Surface ID:', surfaceId)
+
+    try {
+      if (!this.cameraManager) {
+        throw new Error('Camera manager not initialized')
+      }
+
+      const context = getContext(this) as common.UIAbilityContext
+      const result = await this.cameraManager.initializeCamera(context, surfaceId)
+
+      if (result.success) {
+        console.log('Camera initialized with surface successfully')
+        this.surfaceId = surfaceId
+      } else {
+        console.error('Camera initialization failed:', result.message)
+        this.cameraErrorMessage = result.message || '相机初始化失败'
+        this.showCameraError = true
+        this.isLoading = false
+      }
+
+    } catch (error) {
+      console.error('Initialize camera with surface failed:', error)
+      this.cameraErrorMessage = '相机预览初始化失败'
+      this.showCameraError = true
+      this.isLoading = false
+    }
   }
 
   /**
    * 拍照
    */
-  private takePhoto(): void {
-    console.log('Taking photo...')
-    // 模拟拍照过程
-    setTimeout(() => {
-      this.capturedImagePath = '/mock/path/photo_' + Date.now() + '.jpg'
-      this.showPreview = true
-      console.log('Photo captured:', this.capturedImagePath)
-    }, 500)
+  private async takePhoto(): Promise<void> {
+    console.log('=== CameraPage.takePhoto() ===')
+
+    try {
+      if (!this.cameraManager || !this.cameraManager.isCameraReady()) {
+        console.error('Camera not ready for taking photo')
+        this.cameraErrorMessage = '相机未就绪，无法拍照'
+        this.showCameraError = true
+        return
+      }
+
+      console.log('Taking photo with camera...')
+
+      // 执行真实拍照
+      const result = await this.cameraManager.takePhoto()
+
+      if (result.success) {
+        console.log('Photo captured successfully')
+        this.capturedPhotoData = result.data instanceof ArrayBuffer ? result.data : null
+        this.capturedImagePath = `/storage/camera/photo_${Date.now()}.jpg`
+        this.showPreview = true
+        console.log('Photo data size:', this.capturedPhotoData?.byteLength || 0)
+      } else {
+        console.error('Take photo failed:', result.message)
+        this.cameraErrorMessage = result.message || '拍照失败'
+        this.showCameraError = true
+      }
+
+    } catch (error) {
+      console.error('Take photo failed with exception:', error)
+      this.cameraErrorMessage = '拍照过程中发生错误'
+      this.showCameraError = true
+    }
   }
 
   /**
@@ -111,6 +303,14 @@ struct CameraPage_Simple {
         .justifyContent(FlexAlign.Center)
         .backgroundColor('#000000')
 
+      } else if (this.showCameraError) {
+        // 相机错误状态
+        this.buildCameraErrorDialog()
+
+      } else if (this.showPermissionDialog) {
+        // 权限对话框状态
+        this.buildPermissionDialog()
+
       } else if (this.showPreview) {
         // 预览状态
         this.buildPreviewView()
@@ -146,7 +346,7 @@ struct CameraPage_Simple {
    * 构建相机视图
    */
   @Builder
-  private buildCameraView() {
+  buildCameraView() {
     Column() {
       // 顶部控制栏
       Row() {
@@ -177,8 +377,18 @@ struct CameraPage_Simple {
           .fontSize(20)
           .fontColor(this.flashEnabled ? '#FFD700' : '#FFFFFF')
           .backgroundColor('transparent')
-          .onClick(() => {
-            this.flashEnabled = !this.flashEnabled
+          .onClick(async () => {
+            if (this.cameraManager && this.cameraManager.isCameraReady()) {
+              const result = await this.cameraManager.toggleFlash()
+              if (result.success) {
+                this.flashEnabled = !this.flashEnabled
+                console.log('Flash toggled successfully')
+              } else {
+                console.error('Toggle flash failed:', result.message)
+              }
+            } else {
+              console.log('Camera not ready for flash toggle')
+            }
           })
       }
       .width('100%')
@@ -187,28 +397,72 @@ struct CameraPage_Simple {
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
 
-      // 相机预览区域（模拟）
-      Column() {
-        Text('📷')
-          .fontSize(64)
-          .fontColor('#666666')
-          .margin({ bottom: 16 })
+      // 相机预览区域
+      Stack() {
+        // 相机预览Surface
+        XComponent({
+          id: 'camera_preview',
+          type: 'surface',
+          libraryname: '',
+        })
+          .onLoad((xComponent: XComponentController) => {
+            console.log('Camera preview XComponent loaded')
+            try {
+              xComponent.setXComponentSurfaceSize({
+                surfaceWidth: 1280,
+                surfaceHeight: 960
+              })
+              console.log('Surface size set: 1280 x 960')
 
-        Text('相机预览区域')
-          .fontSize(16)
-          .fontColor('#999999')
+              // 获取Surface ID
+              const surfaceId: string = xComponent.getXComponentSurfaceId()
+              console.log('Surface ID:', surfaceId)
 
+              // 使用Surface ID初始化相机
+              this.initializeCameraWithSurface(surfaceId)
+            } catch (error) {
+              console.error('Get surface size failed:', error)
+              this.cameraErrorMessage = '获取相机预览区域失败'
+              this.showCameraError = true
+              this.isLoading = false
+            }
+          })
+          .width('100%')
+          .height('100%')
+
+        // 水印覆盖层
         if (this.watermarkEnabled) {
-          Text('💧 水印已启用')
-            .fontSize(14)
-            .fontColor('#1890FF')
-            .margin({ top: 8 })
+          Column({ space: 8 }) {
+            Text('📸 工程拍记')
+              .fontSize(14)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#00000080')
+              .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+              .borderRadius(16)
+
+            if (this.siteName) {
+              Text(`📍 ${this.siteName}`)
+                .fontSize(12)
+                .fontColor('#FFFFFF')
+                .backgroundColor('#00000080')
+                .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                .borderRadius(12)
+            }
+
+            Text(new Date().toLocaleString())
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#00000080')
+              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+              .borderRadius(12)
+          }
+          .position({ x: 16, y: 16 })
+          .alignItems(HorizontalAlign.Start)
         }
       }
       .layoutWeight(1)
       .width('100%')
-      .justifyContent(FlexAlign.Center)
-      .backgroundColor('#111111')
+      .backgroundColor('#000000')
 
       // 底部控制栏
       Column() {
@@ -268,7 +522,7 @@ struct CameraPage_Simple {
    * 构建预览视图
    */
   @Builder
-  private buildPreviewView() {
+  buildPreviewView() {
     Column() {
       // 顶部控制栏
       Row() {
@@ -370,5 +624,229 @@ struct CameraPage_Simple {
       .padding({ left: 20, right: 20, top: 16, bottom: 40 })
       .backgroundColor('#00000080')
     }
+  }
+
+  /**
+   * 构建权限对话框
+   */
+  @Builder
+  buildPermissionDialog() {
+    Column() {
+      // 权限对话框内容
+      Column({ space: 20 }) {
+        // 图标
+        Text('📸')
+          .fontSize(64)
+          .fontColor('#FFFFFF')
+          .margin({ bottom: 16 })
+
+        // 标题
+        Text('需要相机权限')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#FFFFFF')
+          .margin({ bottom: 8 })
+
+        // 说明
+        Text('工程拍记需要访问相机来拍摄工程现场照片')
+          .fontSize(16)
+          .fontColor('#E0E0E0')
+          .textAlign(TextAlign.Center)
+          .margin({ bottom: 16 })
+
+        Text('用于项目记录和管理')
+          .fontSize(14)
+          .fontColor('#B0B0B0')
+          .textAlign(TextAlign.Center)
+          .margin({ bottom: 24 })
+
+        // 错误信息（如果有）
+        if (this.permissionMessage) {
+          Text(this.permissionMessage)
+            .fontSize(14)
+            .fontColor('#FF6B6B')
+            .textAlign(TextAlign.Center)
+            .margin({ bottom: 20 })
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+
+        // 按钮组
+        Column({ space: 12 }) {
+          if (this.permissionStatus === PermissionStatus.NOT_DETERMINED) {
+            // 首次申请权限
+            Button('授予相机权限')
+              .width('100%')
+              .height(48)
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#1890FF')
+              .borderRadius(8)
+              .onClick(() => {
+                console.log('User clicked grant permission')
+                this.requestPermission()
+              })
+          } else {
+            // 权限被拒绝的情况
+            Button('重新申请权限')
+              .width('100%')
+              .height(48)
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#1890FF')
+              .borderRadius(8)
+              .onClick(() => {
+                console.log('User clicked retry permission')
+                this.requestPermission()
+              })
+
+            Button('前往设置')
+              .width('100%')
+              .height(48)
+              .fontSize(16)
+              .fontColor('#1890FF')
+              .backgroundColor('#FFFFFF')
+              .borderRadius(8)
+              .border({ width: 1, color: '#1890FF' })
+              .onClick(() => {
+                console.log('User clicked open settings')
+                const permissionManager = PermissionManager.getInstance()
+                const context = getContext(this) as common.UIAbilityContext
+                permissionManager.openAppSettings(context)
+              })
+          }
+
+          Button('返回')
+            .width('100%')
+            .height(48)
+            .fontSize(16)
+            .fontColor('#8C8C8C')
+            .backgroundColor('transparent')
+            .borderRadius(8)
+            .onClick(() => {
+              console.log('User clicked back')
+              this.navigateBack()
+            })
+        }
+        .width('100%')
+      }
+      .width('88%')
+      .backgroundColor('#1E1E1E')
+      .borderRadius(16)
+      .padding({ top: 32, bottom: 24, left: 24, right: 24 })
+      .shadow({
+        radius: 20,
+        color: 'rgba(0, 0, 0, 0.3)',
+        offsetX: 0,
+        offsetY: 8
+      })
+      .alignSelf(ItemAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .backgroundColor('rgba(0, 0, 0, 0.8)')
+    .onClick(() => {
+      // 点击背景不会关闭对话框，确保用户必须做出选择
+      console.log('Permission dialog background clicked - ignoring')
+    })
+  }
+
+  /**
+   * 构建相机错误对话框
+   */
+  @Builder
+  buildCameraErrorDialog() {
+    Column() {
+      // 错误对话框内容
+      Column({ space: 20 }) {
+        // 图标
+        Text('⚠️')
+          .fontSize(64)
+          .fontColor('#FF6B6B')
+          .margin({ bottom: 16 })
+
+        // 标题
+        Text('相机错误')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#FFFFFF')
+          .margin({ bottom: 8 })
+
+        // 错误信息
+        if (this.cameraErrorMessage) {
+          Text(this.cameraErrorMessage)
+            .fontSize(16)
+            .fontColor('#E0E0E0')
+            .textAlign(TextAlign.Center)
+            .margin({ bottom: 16 })
+            .maxLines(3)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+
+        // 说明文字
+        Text('请检查相机是否被其他应用占用，或重启应用后重试')
+          .fontSize(14)
+          .fontColor('#B0B0B0')
+          .textAlign(TextAlign.Center)
+          .margin({ bottom: 24 })
+
+        // 按钮组
+        Column({ space: 12 }) {
+          Button('重试')
+            .width('100%')
+            .height(48)
+            .fontSize(16)
+            .fontColor('#FFFFFF')
+            .backgroundColor('#1890FF')
+            .borderRadius(8)
+            .onClick(() => {
+              console.log('User clicked retry camera')
+              if (this.showCameraError !== undefined) {
+                this.showCameraError = false
+              }
+              if (this.cameraErrorMessage !== undefined) {
+                this.cameraErrorMessage = ''
+              }
+              if (this.isLoading !== undefined) {
+                this.isLoading = true
+              }
+              this.initCameraManager()
+            })
+
+          Button('返回')
+            .width('100%')
+            .height(48)
+            .fontSize(16)
+            .fontColor('#8C8C8C')
+            .backgroundColor('transparent')
+            .borderRadius(8)
+            .onClick(() => {
+              console.log('User clicked back from camera error')
+              this.navigateBack()
+            })
+        }
+        .width('100%')
+      }
+      .width('88%')
+      .backgroundColor('#1E1E1E')
+      .borderRadius(16)
+      .padding({ top: 32, bottom: 24, left: 24, right: 24 })
+      .shadow({
+        radius: 20,
+        color: 'rgba(0, 0, 0, 0.3)',
+        offsetX: 0,
+        offsetY: 8
+      })
+      .alignSelf(ItemAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .backgroundColor('rgba(0, 0, 0, 0.8)')
+    .onClick(() => {
+      // 点击背景不会关闭对话框
+      console.log('Camera error dialog background clicked - ignoring')
+    })
   }
 }
