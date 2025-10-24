@@ -356,29 +356,31 @@ export class CameraPermissionManager {
   ): Promise<boolean[]> {
     this.logger.info('Performing permission request...', { permissions })
 
-    return new Promise((resolve) => {
-      try {
-        context.startAbilityForResult({
-          bundleName: 'com.huawei.hmos.settings',
-          abilityName: 'com.huawei.hmos.settings.MainAbility',
-          parameters: {
-            // 这里可能需要根据具体的权限请求方式调整
-            permissions: permissions
-          }
-        }).then((result) => {
-          // 解析权限请求结果
-          // 这里需要根据实际的权限请求API来实现
-          const granted = permissions.map(() => true) // 临时实现
-          resolve(granted)
-        }).catch((error) => {
-          this.logger.error('Permission request failed', error)
-          resolve(permissions.map(() => false))
-        })
-      } catch (error) {
-        this.logger.error('Failed to start permission request', error)
-        resolve(permissions.map(() => false))
-      }
-    })
+    try {
+      // 使用 requestPermissionsFromUser API 请求权限
+      const atManager = abilityAccessCtrl.createAtManager()
+      const permissionsToRequest = permissions as Permissions[]
+      
+      const result = await atManager.requestPermissionsFromUser(
+        context,
+        permissionsToRequest
+      )
+
+      this.logger.info('Permission request result:', {
+        permissions: result.permissions,
+        authResults: result.authResults
+      })
+
+      // 解析结果：0 表示授权，-1 表示拒绝
+      const grantedResults = result.authResults.map(
+        (authResult) => authResult === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED
+      )
+
+      return grantedResults
+    } catch (error) {
+      this.logger.error('Failed to request permissions', error)
+      return permissions.map(() => false)
+    }
   }
 
   /**

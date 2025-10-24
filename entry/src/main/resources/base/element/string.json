@@ -15,6 +15,18 @@
     {
       "name": "camera_permission_reason",
       "value": "工程拍记需要访问相机来拍摄工程现场照片，用于项目记录和管理"
+    },
+    {
+      "name": "microphone_permission_reason",
+      "value": "工程拍记需要访问麦克风来录制现场视频和语音记录"
+    },
+    {
+      "name": "location_permission_reason",
+      "value": "工程拍记需要获取位置信息来标记照片的拍摄地点，便于后续查看和管理"
+    },
+    {
+      "name": "storage_permission_reason",
+      "value": "工程拍记需要访问存储来保存和读取工程照片、视频等文件"
     }
   ]
 }

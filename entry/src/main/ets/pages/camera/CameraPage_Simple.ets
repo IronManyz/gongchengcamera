@@ -44,6 +44,10 @@ struct CameraPage_Simple {
   @Local private cameraErrorMessage: string = ''
   @Local private surfaceId: string = ''
   @Local private showCameraError: boolean = false
+  @Local private cameraRetryCount: number = 0
+  @Local private maxRetryCount: number = 3
+  @Local private initializationSteps: string[] = []
+  @Local private currentInitStep: string = ''
 
   aboutToAppear(): void {
     this.loadRouteParams()
@@ -188,17 +192,22 @@ struct CameraPage_Simple {
 
       // 设置回调
       this.cameraManager.onInitialized(() => {
-        console.log('Camera manager initialization callback triggered')
+        console.log('=== Camera initialization callback triggered ===')
+        console.log('Previous isCameraReady state:', this.isCameraReady)
         clearTimeout(timeoutId) // 清除超时定时器
         this.isCameraReady = true
-        console.log('Camera ready for use')
+        console.log('New isCameraReady state:', this.isCameraReady)
+        console.log('Camera is ready for use!')
+        console.log('===========================================')
       })
 
       this.cameraManager.onError((error: string) => {
-        console.error('Camera manager error:', error)
+        console.error('=== Camera manager error callback ===')
+        console.error('Error:', error)
         clearTimeout(timeoutId) // 清除超时定时器
         this.cameraErrorMessage = error
         this.showCameraError = true
+        console.error('===================================')
       })
 
       console.log('Camera manager initialized, waiting for surface ID')
@@ -212,18 +221,25 @@ struct CameraPage_Simple {
   }
 
   /**
-   * 使用Surface ID初始化相机
+   * 使用Surface ID初始化相机（优化版本，支持重试）
    */
   async initializeCameraWithSurface(surfaceId: string): Promise<void> {
     console.log('=== CameraPage.initializeCameraWithSurface() ===')
     console.log('Surface ID:', surfaceId)
     console.log('Camera manager exists:', !!this.cameraManager)
     console.log('Current loading state:', this.isLoading)
+    console.log('Current retry count:', this.cameraRetryCount)
+    console.log('Current isCameraReady state:', this.isCameraReady)
 
     try {
       if (!this.cameraManager) {
         console.error('Camera manager is null or undefined')
         throw new Error('Camera manager not initialized')
+      }
+
+      if (!surfaceId || surfaceId.length === 0) {
+        console.error('Surface ID is invalid')
+        throw new Error('Surface ID无效')
       }
 
       console.log('Getting UIAbility context...')
@@ -233,27 +249,111 @@ struct CameraPage_Simple {
         throw new Error('Failed to get application context')
       }
 
+      this.currentInitStep = '开始初始化相机...'
+      this.initializationSteps.push('开始初始化')
+      
       console.log('Starting camera initialization with surface...')
+      console.log('Calling cameraManager.initializeCamera()...')
+      
       const result = await this.cameraManager.initializeCamera(context, surfaceId)
-      console.log('Camera initialization result:', result)
+      
+      this.initializationSteps.push('初始化调用完成')
+      console.log('Camera initialization returned')
+      console.log('Result:', result)
+      console.log('Result success:', result.success)
+      console.log('Result message:', result.message)
 
       if (result.success) {
         console.log('Camera initialized with surface successfully')
+        this.initializationSteps.push('✓ 初始化成功')
         this.surfaceId = surfaceId
+        this.cameraRetryCount = 0 // 重置重试计数器
+        this.currentInitStep = '初始化成功'
         // 注意：不要在这里设置isLoading = false，因为这会在onInitialized回调中处理
       } else {
         console.error('Camera initialization failed:', result.message)
-        this.cameraErrorMessage = result.message || '相机初始化失败'
-        this.showCameraError = true
-        this.isLoading = false
+        this.initializationSteps.push(`✗ 失败: ${result.message}`)
+
+        // 检查是否需要重试
+        if (this.shouldRetryCameraInitialization(result.message)) {
+          await this.retryCameraInitialization(surfaceId)
+        } else {
+          this.cameraErrorMessage = result.message || '相机初始化失败'
+          this.showCameraError = true
+          this.isLoading = false
+        }
       }
 
     } catch (error) {
       console.error('Initialize camera with surface failed:', error)
-      this.cameraErrorMessage = `相机预览初始化失败: ${error instanceof Error ? error.message : String(error)}`
-      this.showCameraError = true
-      this.isLoading = false
+
+      // 检查是否需要重试
+      if (this.shouldRetryCameraInitialization(error instanceof Error ? error.message : String(error))) {
+        await this.retryCameraInitialization(surfaceId)
+      } else {
+        this.cameraErrorMessage = `相机预览初始化失败: ${error instanceof Error ? error.message : String(error)}`
+        this.showCameraError = true
+        this.isLoading = false
+      }
     }
+  }
+
+  /**
+   * 判断是否应该重试相机初始化
+   */
+  private shouldRetryCameraInitialization(errorMessage?: string): boolean {
+    if (this.cameraRetryCount >= this.maxRetryCount) {
+      console.log('Max retry count reached, no more retries')
+      return false
+    }
+
+    if (!errorMessage) {
+      return true
+    }
+
+    // 定义可重试的错误类型
+    const retryableErrors = [
+      '相机被占用',
+      '相机设备异常',
+      '初始化超时',
+      'failed to connect',
+      'timeout',
+      'device busy'
+    ]
+
+    const isRetryable = retryableErrors.some(error =>
+      errorMessage.toLowerCase().includes(error.toLowerCase())
+    )
+
+    console.log(`Error "${errorMessage}" is ${isRetryable ? '' : 'not '}retryable`)
+    return isRetryable
+  }
+
+  /**
+   * 重试相机初始化
+   */
+  private async retryCameraInitialization(surfaceId: string): Promise<void> {
+    this.cameraRetryCount++
+    console.log(`Retrying camera initialization (${this.cameraRetryCount}/${this.maxRetryCount})...`)
+
+    // 显示重试提示
+    this.cameraErrorMessage = `相机初始化失败，正在重试... (${this.cameraRetryCount}/${this.maxRetryCount})`
+    this.showCameraError = true
+    this.isLoading = true
+
+    // 等待一段时间再重试
+    const retryDelay = Math.min(1000 * Math.pow(2, this.cameraRetryCount), 5000) // 指数退避，最大5秒
+    console.log(`Waiting ${retryDelay}ms before retry...`)
+
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, retryDelay)
+    })
+
+    // 隐藏错误提示，重试初始化
+    this.showCameraError = false
+    this.initializeCameraWithSurface(surfaceId)
   }
 
   /**
@@ -261,11 +361,23 @@ struct CameraPage_Simple {
    */
   private async takePhoto(): Promise<void> {
     console.log('=== CameraPage.takePhoto() ===')
+    console.log('Camera manager exists:', !!this.cameraManager)
+    console.log('Page isCameraReady state:', this.isCameraReady)
+    console.log('Camera manager isReady:', this.cameraManager?.isCameraReady())
 
     try {
-      if (!this.cameraManager || !this.cameraManager.isCameraReady()) {
+      if (!this.cameraManager) {
+        console.error('Camera manager is null')
+        this.cameraErrorMessage = '相机管理器未初始化'
+        this.showCameraError = true
+        return
+      }
+
+      if (!this.cameraManager.isCameraReady()) {
         console.error('Camera not ready for taking photo')
-        this.cameraErrorMessage = '相机未就绪，无法拍照'
+        console.error('Page isCameraReady:', this.isCameraReady)
+        console.error('Manager isInitialized:', this.cameraManager.isCameraReady())
+        this.cameraErrorMessage = '相机未就绪，无法拍照。请等待相机初始化完成。'
         this.showCameraError = true
         return
       }
@@ -320,8 +432,15 @@ struct CameraPage_Simple {
 
   build() {
     Stack() {
+      // 始终渲染相机视图作为底层，避免XComponent被销毁
+      if (!this.showPreview) {
+        this.buildCameraView()
+      } else {
+        this.buildPreviewView()
+      }
+
+      // 覆盖层：加载指示器
       if (this.isLoading) {
-        // 加载状态
         Column() {
           Text('📸')
             .fontSize(48)
@@ -336,26 +455,16 @@ struct CameraPage_Simple {
         .height('100%')
         .justifyContent(FlexAlign.Center)
         .backgroundColor('#000000')
+      }
 
-      } else if (this.showCameraError) {
-        // 相机错误状态
+      // 覆盖层：相机错误对话框
+      if (this.showCameraError) {
         this.buildCameraErrorDialog()
+      }
 
-      } else if (this.showPermissionDialog) {
-        // 权限对话框状态
+      // 覆盖层：权限对话框
+      if (this.showPermissionDialog) {
         this.buildPermissionDialog()
-
-      } else if (this.showPreview) {
-        // 预览状态
-        this.buildPreviewView()
-
-      } else if (this.isCameraReady) {
-        // 相机预览状态
-        this.buildCameraView()
-
-      } else {
-        // 默认状态 - 等待相机管理器设置完成
-        this.buildCameraView()
       }
     }
     .width('100%')
@@ -430,21 +539,39 @@ struct CameraPage_Simple {
             console.log('=== XComponent onLoad triggered ===')
             console.log('Camera preview XComponent loaded')
             console.log('XComponent controller:', !!xComponent)
+
             try {
-              xComponent.setXComponentSurfaceSize({
-                surfaceWidth: 1280,
-                surfaceHeight: 960
-              })
-              console.log('Surface size set: 1280 x 960')
+              if (!xComponent) {
+                console.error('XComponent controller is null or undefined')
+                this.cameraErrorMessage = '相机预览组件加载失败'
+                this.showCameraError = true
+                this.isLoading = false
+                return
+              }
+
+              // 设置Surface尺寸
+              try {
+                xComponent.setXComponentSurfaceSize({
+                  surfaceWidth: 1920,
+                  surfaceHeight: 1080
+                })
+                console.log('Surface size set: 1920 x 1080')
+              } catch (sizeError) {
+                console.warn('Failed to set surface size, using default:', sizeError)
+              }
 
               // 获取Surface ID
               const surfaceId: string = xComponent.getXComponentSurfaceId()
-              console.log('Surface ID:', surfaceId)
+              console.log('Surface ID obtained:', surfaceId)
+              console.log('Surface ID length:', surfaceId?.length || 0)
 
               if (surfaceId && surfaceId.length > 0) {
                 // 使用Surface ID初始化相机
                 console.log('Surface ID is valid, initializing camera...')
-                this.initializeCameraWithSurface(surfaceId)
+                // 延迟一小段时间确保Surface完全准备好
+                setTimeout(() => {
+                  this.initializeCameraWithSurface(surfaceId)
+                }, 100)
               } else {
                 console.error('Surface ID is empty or invalid')
                 this.cameraErrorMessage = '相机预览区域初始化失败：Surface ID无效'
@@ -452,8 +579,9 @@ struct CameraPage_Simple {
                 this.isLoading = false
               }
             } catch (error) {
-              console.error('Get surface size failed:', error)
-              this.cameraErrorMessage = '获取相机预览区域失败'
+              console.error('XComponent initialization failed:', error)
+              console.error('Error details:', JSON.stringify(error))
+              this.cameraErrorMessage = `相机预览组件初始化失败: ${error instanceof Error ? error.message : String(error)}`
               this.showCameraError = true
               this.isLoading = false
             }
@@ -490,6 +618,40 @@ struct CameraPage_Simple {
           .position({ x: 16, y: 16 })
           .alignItems(HorizontalAlign.Start)
         }
+
+        // 相机状态指示器（右上角）
+        if (!this.isCameraReady) {
+          Row({ space: 6 }) {
+            LoadingProgress()
+              .width(16)
+              .height(16)
+              .color('#1890FF')
+            
+            Text('初始化中')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+          .backgroundColor('#1890FF80')
+          .borderRadius(16)
+          .position({ x: '50%', y: 16 })
+          .translate({ x: '-50%' })
+        } else {
+          Row({ space: 6 }) {
+            Text('✓')
+              .fontSize(14)
+              .fontColor('#52C41A')
+            
+            Text('就绪')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+          }
+          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+          .backgroundColor('#52C41A80')
+          .borderRadius(16)
+          .position({ x: '50%', y: 16 })
+          .translate({ x: '-50%' })
+        }
       }
       .layoutWeight(1)
       .width('100%')
@@ -516,9 +678,12 @@ struct CameraPage_Simple {
             .width(80)
             .height(80)
             .borderRadius(40)
-            .backgroundColor('#FFFFFF')
-            .border({ width: 4, color: '#E0E0E0' })
+            .backgroundColor(this.isCameraReady ? '#FFFFFF' : '#666666')
+            .border({ width: 4, color: this.isCameraReady ? '#E0E0E0' : '#444444' })
+            .enabled(this.isCameraReady)
+            .opacity(this.isCameraReady ? 1.0 : 0.5)
             .onClick(() => {
+              console.log('Capture button clicked, isCameraReady:', this.isCameraReady)
               this.takePhoto()
             })
 
@@ -537,11 +702,25 @@ struct CameraPage_Simple {
         .justifyContent(FlexAlign.Center)
         .margin({ bottom: 20 })
 
-        // 提示信息
-        Text('轻触拍照，长按连拍')
-          .fontSize(14)
-          .fontColor('#CCCCCC')
+        // 提示信息和状态
+        if (this.isCameraReady) {
+          Text('轻触拍照，长按连拍')
+            .fontSize(14)
+            .fontColor('#CCCCCC')
+            .margin({ bottom: 20 })
+        } else {
+          Row({ space: 8 }) {
+            LoadingProgress()
+              .width(16)
+              .height(16)
+              .color('#1890FF')
+            
+            Text('相机准备中...')
+              .fontSize(14)
+              .fontColor('#1890FF')
+          }
           .margin({ bottom: 20 })
+        }
       }
       .width('100%')
       .padding({ left: 20, right: 20, top: 16, bottom: 20 })
@@ -784,39 +963,48 @@ struct CameraPage_Simple {
   }
 
   /**
-   * 构建相机错误对话框
+   * 构建相机错误对话框（优化版本）
    */
   @Builder
   buildCameraErrorDialog() {
     Column() {
       // 错误对话框内容
       Column({ space: 20 }) {
-        // 图标
-        Text('⚠️')
-          .fontSize(64)
-          .fontColor('#FF6B6B')
-          .margin({ bottom: 16 })
+        // 图标和标题
+        Column({ space: 8 }) {
+          Text(this.cameraRetryCount > 0 ? '⏳' : '⚠️')
+            .fontSize(64)
+            .fontColor(this.cameraRetryCount > 0 ? '#FFD700' : '#FF6B6B')
+            .margin({ bottom: 16 })
 
-        // 标题
-        Text('相机错误')
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .margin({ bottom: 8 })
+          Text(this.cameraRetryCount > 0 ? '相机初始化中...' : '相机错误')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#FFFFFF')
+        }
 
         // 错误信息
         if (this.cameraErrorMessage) {
           Text(this.cameraErrorMessage)
             .fontSize(14)
-            .fontColor('#FF6B6B')
+            .fontColor(this.cameraRetryCount > 0 ? '#FFD700' : '#FF6B6B')
             .textAlign(TextAlign.Center)
             .margin({ bottom: 16 })
             .maxLines(5)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
         }
 
+        // 重试进度信息
+        if (this.cameraRetryCount > 0) {
+          Text(`正在重试第 ${this.cameraRetryCount} 次，最多 ${this.maxRetryCount} 次`)
+            .fontSize(12)
+            .fontColor('#B0B0B0')
+            .textAlign(TextAlign.Center)
+            .margin({ bottom: 8 })
+        }
+
         // 说明文字
-        Text('请检查相机是否被其他应用占用，或重启应用后重试')
+        Text(this.getCameraErrorHelpText())
           .fontSize(14)
           .fontColor('#B0B0B0')
           .textAlign(TextAlign.Center)
@@ -824,38 +1012,71 @@ struct CameraPage_Simple {
 
         // 按钮组
         Column({ space: 12 }) {
-          Button('重试')
-            .width('100%')
-            .height(48)
-            .fontSize(16)
-            .fontColor('#FFFFFF')
-            .backgroundColor('#1890FF')
-            .borderRadius(8)
-            .onClick(() => {
-              console.log('User clicked retry camera')
-              if (this.showCameraError !== undefined) {
-                this.showCameraError = false
-              }
-              if (this.cameraErrorMessage !== undefined) {
-                this.cameraErrorMessage = ''
-              }
-              if (this.isLoading !== undefined) {
-                this.isLoading = true
-              }
-              this.initCameraManager()
-            })
+          // 主要操作按钮
+          if (this.cameraRetryCount > 0 && this.cameraRetryCount < this.maxRetryCount) {
+            // 重试中状态
+            Button()
+              .width('100%')
+              .height(48)
+              .backgroundColor('#333333')
+              .borderRadius(8)
+              .enabled(false)
+          } else if (this.cameraRetryCount >= this.maxRetryCount) {
+            // 重试次数用完，显示手动重试
+            Button('手动重试')
+              .width('100%')
+              .height(48)
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#1890FF')
+              .borderRadius(8)
+              .onClick(() => {
+                this.manualRetryCamera()
+              })
+          } else {
+            // 首次错误，显示重试
+            Button('重试')
+              .width('100%')
+              .height(48)
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+              .backgroundColor('#1890FF')
+              .borderRadius(8)
+              .onClick(() => {
+                this.manualRetryCamera()
+              })
+          }
 
-          Button('返回')
-            .width('100%')
-            .height(48)
-            .fontSize(16)
-            .fontColor('#8C8C8C')
-            .backgroundColor('transparent')
-            .borderRadius(8)
-            .onClick(() => {
-              console.log('User clicked back from camera error')
-              this.navigateBack()
-            })
+          // 辅助按钮
+          Row({ space: 12 }) {
+            if (this.cameraRetryCount < this.maxRetryCount) {
+              Button('跳过重试')
+                .layoutWeight(1)
+                .height(48)
+                .fontSize(14)
+                .fontColor('#8C8C8C')
+                .backgroundColor('transparent')
+                .borderRadius(8)
+                .border({ width: 1, color: '#555555' })
+                .onClick(() => {
+                  this.skipRetry()
+                })
+            }
+
+            Button('返回')
+              .layoutWeight(1)
+              .height(48)
+              .fontSize(14)
+              .fontColor('#8C8C8C')
+              .backgroundColor('transparent')
+              .borderRadius(8)
+              .border({ width: 1, color: '#555555' })
+              .onClick(() => {
+                console.log('User clicked back from camera error')
+                this.navigateBack()
+              })
+          }
+          .width('100%')
         }
         .width('100%')
       }
@@ -879,5 +1100,52 @@ struct CameraPage_Simple {
       // 点击背景不会关闭对话框
       console.log('Camera error dialog background clicked - ignoring')
     })
+  }
+
+  /**
+   * 获取相机错误帮助文本
+   */
+  private getCameraErrorHelpText(): string {
+    if (this.cameraRetryCount > 0) {
+      return '正在自动重试相机初始化，请稍候...'
+    }
+
+    if (this.cameraErrorMessage?.includes('权限')) {
+      return '请检查相机权限设置'
+    } else if (this.cameraErrorMessage?.includes('占用') || this.cameraErrorMessage?.includes('busy')) {
+      return '请关闭其他使用相机的应用后重试'
+    } else if (this.cameraErrorMessage?.includes('设备') || this.cameraErrorMessage?.includes('device')) {
+      return '请检查相机设备是否正常工作，或重启应用后重试'
+    } else {
+      return '请检查相机是否正常工作，或重启应用后重试'
+    }
+  }
+
+  /**
+   * 手动重试相机
+   */
+  private manualRetryCamera(): void {
+    console.log('User initiated manual camera retry')
+
+    // 重置状态
+    this.showCameraError = false
+    this.cameraErrorMessage = ''
+    this.cameraRetryCount = 0
+    this.isLoading = true
+
+    // 重新初始化相机管理器
+    this.initCameraManager()
+  }
+
+  /**
+   * 跳过重试
+   */
+  private skipRetry(): void {
+    console.log('User chose to skip camera retry')
+
+    this.cameraRetryCount = this.maxRetryCount // 设置为最大值，阻止自动重试
+    this.showCameraError = false
+    this.cameraErrorMessage = ''
+    this.isLoading = false
   }
 }

@@ -92,7 +92,7 @@ export class PermissionManager {
   }
 
   /**
-   * 申请相机权限
+   * 申请相机权限（包括相机和存储权限）
    */
   async requestCameraPermission(context: common.UIAbilityContext): Promise<PermissionResult> {
     try {
@@ -112,7 +112,13 @@ export class PermissionManager {
       const atManager = abilityAccessCtrl.createAtManager()
       console.log('Permission manager created:', !!atManager)
 
-      const permissions: Array<Permissions> = ['ohos.permission.CAMERA']
+      // 请求相机、存储和位置权限
+      const permissions: Array<Permissions> = [
+        'ohos.permission.CAMERA',
+        'ohos.permission.READ_MEDIA',
+        'ohos.permission.WRITE_MEDIA',
+        'ohos.permission.APPROXIMATELY_LOCATION'
+      ]
       console.log('Requesting permissions:', permissions)
 
       try {
@@ -122,18 +128,36 @@ export class PermissionManager {
         console.log('Permissions requested:', result.permissions)
         console.log('Auth results:', result.authResults)
 
-        if (result.permissions.length > 0 && result.authResults[0] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
-          console.log('Camera permission granted successfully')
+        // 检查相机权限是否被授予
+        const cameraIndex = result.permissions.indexOf('ohos.permission.CAMERA')
+        const cameraGranted = cameraIndex >= 0 && 
+                             result.authResults[cameraIndex] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED
+        
+        // 检查存储权限是否被授予
+        const readMediaIndex = result.permissions.indexOf('ohos.permission.READ_MEDIA')
+        const writeMediaIndex = result.permissions.indexOf('ohos.permission.WRITE_MEDIA')
+        const storageGranted = (readMediaIndex >= 0 && 
+                               result.authResults[readMediaIndex] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) ||
+                              (writeMediaIndex >= 0 && 
+                               result.authResults[writeMediaIndex] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED)
+
+        if (cameraGranted && storageGranted) {
+          console.log('Camera and storage permissions granted successfully')
           return {
             status: PermissionStatus.GRANTED,
             message: '相机权限授权成功'
           }
-        } else {
+        } else if (!cameraGranted) {
           console.log('Camera permission denied')
-          console.log('Grant status:', result.authResults[0])
           return {
             status: PermissionStatus.DENIED,
             message: '相机权限被拒绝'
+          }
+        } else {
+          console.log('Storage permission denied')
+          return {
+            status: PermissionStatus.DENIED,
+            message: '存储权限被拒绝，无法保存照片'
           }
         }
       } catch (requestError) {
@@ -184,12 +208,35 @@ export class PermissionManager {
   async openAppSettings(context: common.UIAbilityContext): Promise<void> {
     try {
       console.log('=== PermissionManager.openAppSettings() ===')
-      // TODO: 实现打开应用设置页面的逻辑
-      // 在实际应用中，可能需要使用特定的API来打开设置页面
-      console.log('Opening app settings...')
+      
+      // 打开应用详情设置页面
+      const bundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT)
+      const bundleName = bundleInfo.name
+      
+      await context.startAbility({
+        bundleName: 'com.huawei.hmos.settings',
+        abilityName: 'com.huawei.hmos.settings.MainAbility',
+        uri: `application_info_entry://application_info_entry?bundleName=${bundleName}`,
+        parameters: {
+          pushParams: bundleName
+        }
+      })
+      
+      console.log('App settings opened successfully')
     } catch (error) {
       const err = error as BusinessError
       console.error('Open app settings failed:', err.code, err.message)
+      
+      // 如果上面的方法失败，尝试使用通用设置页面
+      try {
+        await context.startAbility({
+          bundleName: 'com.huawei.hmos.settings',
+          abilityName: 'com.huawei.hmos.settings.MainAbility'
+        })
+        console.log('General settings opened successfully')
+      } catch (fallbackError) {
+        console.error('Fallback open settings failed:', fallbackError)
+      }
     }
   }
 }
