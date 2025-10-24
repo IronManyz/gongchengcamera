@@ -169,10 +169,15 @@ export class ThemeManager {
    * 获取当前背景色
    */
   static getCurrentBgColor(): string {
+    console.log('ThemeManager: getCurrentBgColor called, currentTheme.isDark:', ThemeManager.currentTheme.isDark)
+    console.log('ThemeManager: currentTheme:', ThemeManager.currentTheme)
     if (ThemeManager.currentTheme.isDark) {
-      return ColorPalettes.professional.background // 深色主题使用专业背景
+      console.log('ThemeManager: Returning dark background:', ColorPalettes.dark.background)
+      return ColorPalettes.dark.background // 使用真正的深色主题
     } else {
-      return ThemeManager.getCurrentPalette().background
+      const bgColor = ThemeManager.getCurrentPalette().background
+      console.log('ThemeManager: Returning light background:', bgColor)
+      return bgColor
     }
   }
 
@@ -181,7 +186,7 @@ export class ThemeManager {
    */
   static getCurrentTextColor(): string {
     if (ThemeManager.currentTheme.isDark) {
-      return ColorPalettes.professional.text // 深色主题使用专业文本色
+      return ColorPalettes.dark.text // 使用深色主题文本色
     } else {
       return ThemeManager.getCurrentPalette().text
     }
@@ -192,7 +197,7 @@ export class ThemeManager {
    */
   static getCurrentSurfaceColor(): string {
     if (ThemeManager.currentTheme.isDark) {
-      return ColorPalettes.professional.surface // 深色主题使用专业表面色
+      return ColorPalettes.dark.surface // 使用深色主题表面色
     } else {
       return ThemeManager.getCurrentPalette().surface
     }
@@ -203,7 +208,7 @@ export class ThemeManager {
    */
   static getCurrentBorderColor(): string {
     if (ThemeManager.currentTheme.isDark) {
-      return AppColors.borderTertiary // 深色主题使用浅边框
+      return ColorPalettes.dark.border // 使用深色主题边框色
     } else {
       return ThemeManager.getCurrentPalette().border
     }

@@ -248,6 +248,7 @@ interface ColorPalettesType {
   engineering: ColorPalette
   safety: ColorPalette
   professional: ColorPalette
+  dark: ColorPalette
 }
 
 /**
@@ -281,5 +282,16 @@ export const ColorPalettes: ColorPalettesType = {
     text: '#2C3E50',
     border: '#E1E8ED',
     shadow: 'rgba(0, 0, 0, 0.1)'
+  },
+  // 深色主题
+  dark: {
+    primary: '#409EFF',
+    secondary: '#61AFFA',
+    accent: '#409EFF',
+    background: '#121212',
+    surface: '#1E1E1E',
+    text: '#FFFFFF',
+    border: '#333333',
+    shadow: 'rgba(0, 0, 0, 0.3)'
   }
 }
