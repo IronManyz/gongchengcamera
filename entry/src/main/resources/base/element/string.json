@@ -2,15 +2,19 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "工程项目管理应用，用于工程现场拍照记录和管理"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "工程拍记应用"
     },
     {
       "name": "EntryAbility_label",
       "value": "工程拍记"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "工程拍记需要访问相机来拍摄工程现场照片，用于项目记录和管理"
     }
   ]
 }
