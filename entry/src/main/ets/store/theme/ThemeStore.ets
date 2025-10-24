@@ -21,6 +21,7 @@ import { systemThemeMonitor, SystemThemeListener } from './SystemThemeMonitor'
 import { preferences } from '@kit.ArkData'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { BusinessError } from '@kit.BasicServicesKit'
+import { ConfigurationConstant } from '@kit.AbilityKit'
 
 const TAG = 'ThemeStore'
 
@@ -577,6 +578,61 @@ export class ThemeStore extends BaseStore implements SystemThemeListener {
     // 暂时返回一个默认值，实际使用时需要从Ability或其他地方获取
     // 这个方法需要根据项目的实际情况来实现
     return getContext() as Context
+  }
+
+  /**
+   * 强制应用主题到全局应用上下文
+   * 基于HarmonyOS Next官方文档的实现
+   */
+  private async applyThemeGlobally(themeType: ThemeType): Promise<void> {
+    try {
+      const context = this.getContext()
+
+      // 使用官方API设置应用级主题
+      let colorMode: ConfigurationConstant.ColorMode
+      switch (themeType) {
+        case ThemeType.LIGHT:
+          colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+          break
+        case ThemeType.DARK:
+          colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
+          break
+        case ThemeType.SYSTEM:
+          colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+          break
+        default:
+          colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+          break
+      }
+
+      // 应用主题到应用上下文
+      context.getApplicationContext().setColorMode(colorMode)
+
+      this.log(`Global theme applied: ${themeType}, colorMode: ${colorMode}`)
+
+      // 触发全局主题变更事件
+      this.triggerGlobalThemeChange(themeType)
+
+    } catch (error) {
+      this.logError('Failed to apply theme globally', error)
+    }
+  }
+
+  /**
+   * 触发全局主题变更事件
+   * 通知所有监听器主题已变更
+   */
+  private triggerGlobalThemeChange(themeType: ThemeType): void {
+    try {
+      // 可以使用EventHub或其他事件系统来通知所有页面
+      this.log(`Triggering global theme change: ${themeType}`)
+
+      // 这里应该调用全局的事件通知系统
+      // 实际实现中可能需要与应用的主Ability集成
+
+    } catch (error) {
+      this.logError('Failed to trigger global theme change', error)
+    }
   }
 }
 
