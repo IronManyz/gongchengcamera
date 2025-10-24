@@ -58,10 +58,19 @@ struct ThemePage {
   }
 
   /**
-   * 返回上一页
+   * 返回设置页面
    */
   private goBack(): void {
-    router.back()
+    try {
+      router.replaceUrl({
+        url: 'pages/settings/SettingsPlaceholderPage',
+        params: {}
+      }).catch((error: Error) => {
+        console.error('Navigation back to settings failed:', error)
+      })
+    } catch (error) {
+      console.error('Navigation back to settings failed with exception:', error)
+    }
   }
 
   /**
