@@ -1,7 +1,7 @@
 {
   "app": {
-    "bundleName": "com.example.engineeringcamera",
-    "vendor": "EngineeringCamera Team",
+    "bundleName": "com.example.engineeringphoto",
+    "vendor": "工程拍记团队",
     "versionCode": 1000100,
     "versionName": "1.0.1",
     "buildNumber": 101,
