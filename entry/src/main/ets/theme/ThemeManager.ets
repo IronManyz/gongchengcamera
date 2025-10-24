@@ -178,7 +178,7 @@ export class ThemeManager {
    * 获取适配当前主题的主色调
    */
   static getCurrentPrimaryColor(): string {
-    return AppColors.primary
+    return ThemeManager.getCurrentPalette().primary
   }
 
   /**

@@ -10,12 +10,16 @@ import { AppColors } from '../../theme/AppColors'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
 
 @Entry
-@Component
+@ComponentV2
 struct ThemePage {
-  @State private currentThemeType: ThemeType = ThemeType.LIGHT
-  @State private currentThemeName: ThemeName = ThemeName.ENGINEERING
+  @Local private currentThemeType: ThemeType = ThemeType.LIGHT
+  @Local private currentThemeName: ThemeName = ThemeName.ENGINEERING
 
   aboutToAppear() {
+    this.updateThemeState()
+  }
+
+  private updateThemeState(): void {
     const theme = ThemeManager.getCurrentTheme()
     this.currentThemeType = theme.type
     this.currentThemeName = theme.name
@@ -75,7 +79,7 @@ struct ThemePage {
         ThemeManager.setAutoTheme()
         break
     }
-    this.currentThemeType = type
+    this.updateThemeState()
   }
 
   /**
@@ -83,7 +87,7 @@ struct ThemePage {
    */
   private setThemeName(name: ThemeName): void {
     ThemeManager.setThemeName(name)
-    this.currentThemeName = name
+    this.updateThemeState()
   }
 
   build() {
@@ -93,7 +97,7 @@ struct ThemePage {
         Button() {
           Text('‹')
             .fontSize(24)
-            .fontColor('#333333')
+            .fontColor(ThemeManager.getCurrentTextColor())
         }
         .width(48)
         .height(48)
@@ -103,7 +107,7 @@ struct ThemePage {
         Text('主题设置')
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#333333')
+          .fontColor(ThemeManager.getCurrentTextColor())
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
 
@@ -113,7 +117,7 @@ struct ThemePage {
       .width('100%')
       .height(56)
       .padding({ left: 16, right: 16 })
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(ThemeManager.getCurrentSurfaceColor())
       .border({ width: { bottom: 1 }, color: '#F0F0F0' })
 
       // 内容区域
@@ -124,7 +128,7 @@ struct ThemePage {
             Text('主题模式')
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
+              .fontColor(ThemeManager.getCurrentTextColor())
               .alignSelf(ItemAlign.Start)
 
             // 主题类型选择器
@@ -139,12 +143,12 @@ struct ThemePage {
             Row() {
               Text('当前主题')
                 .fontSize(14)
-                .fontColor('#666666')
+                .fontColor(ThemeManager.getCurrentTextSecondaryColor())
 
               Text(this.getThemeTypeText(this.currentThemeType))
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
-                .fontColor('#333333')
+                .fontColor(ThemeManager.getCurrentTextColor())
                 .margin({ left: 8 })
 
               Text(`(${this.getThemeNameText(this.currentThemeName)})`)
@@ -171,7 +175,7 @@ struct ThemePage {
             Text('主题配色')
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
+              .fontColor(ThemeManager.getCurrentTextColor())
               .alignSelf(ItemAlign.Start)
 
             // 主题名称选择
@@ -221,7 +225,7 @@ struct ThemePage {
         .padding({ top: 16, bottom: 16 })
       }
       .layoutWeight(1)
-      .backgroundColor('#F5F5F5')
+      .backgroundColor(ThemeManager.getCurrentBgColor())
 
       // 底部导航栏
       BottomNavigation({
@@ -254,7 +258,7 @@ struct ThemePage {
 
             Text('主色调')
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor(ThemeManager.getCurrentTextSecondaryColor())
           }
 
           // 选中指示器
@@ -298,7 +302,7 @@ struct ThemePage {
       Text('主题预览')
         .fontSize(16)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#333333')
+        .fontColor(ThemeManager.getCurrentTextColor())
         .alignSelf(ItemAlign.Start)
 
       // 预览卡片
@@ -307,13 +311,13 @@ struct ThemePage {
         Row() {
           Text('主色调')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor(ThemeManager.getCurrentTextSecondaryColor())
             .width(80)
 
           Text(ThemeManager.getCurrentPrimaryColor())
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#333333')
+            .fontColor(ThemeManager.getCurrentTextColor())
             .padding({ left: 8, right: 8, top: 4, bottom: 4 })
             .backgroundColor(ThemeManager.getCurrentPrimaryColor() + '20')
             .borderRadius(4)
@@ -327,13 +331,13 @@ struct ThemePage {
           Column({ space: 4 }) {
             Text('成功')
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor(ThemeManager.getCurrentTextSecondaryColor())
               .width(40)
 
             Text(ThemeManager.getCurrentSuccessColor())
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
+              .fontColor(ThemeManager.getCurrentTextColor())
               .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentSuccessColor() + '20')
               .borderRadius(4)
@@ -344,13 +348,13 @@ struct ThemePage {
           Column({ space: 4 }) {
             Text('警告')
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor(ThemeManager.getCurrentTextSecondaryColor())
               .width(40)
 
             Text(ThemeManager.getCurrentWarningColor())
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
+              .fontColor(ThemeManager.getCurrentTextColor())
               .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentWarningColor() + '20')
               .borderRadius(4)
@@ -361,13 +365,13 @@ struct ThemePage {
           Column({ space: 4 }) {
             Text('错误')
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor(ThemeManager.getCurrentTextSecondaryColor())
               .width(40)
 
             Text(ThemeManager.getCurrentErrorColor())
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#333333')
+              .fontColor(ThemeManager.getCurrentTextColor())
               .padding({ left: 8, right: 8, top: 4, bottom: 4 })
               .backgroundColor(ThemeManager.getCurrentErrorColor() + '20')
               .borderRadius(4)
@@ -381,13 +385,13 @@ struct ThemePage {
         Row() {
           Text('主要文本')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor(ThemeManager.getCurrentTextSecondaryColor())
             .width(80)
 
           Text(ThemeManager.getCurrentTextColor())
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#333333')
+            .fontColor(ThemeManager.getCurrentTextColor())
             .padding({ left: 8, right: 8, top: 4, bottom: 4 })
             .backgroundColor(ThemeManager.getCurrentBgColor())
             .borderRadius(4)
@@ -398,7 +402,7 @@ struct ThemePage {
       }
       .width('100%')
       .padding(20)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(ThemeManager.getCurrentSurfaceColor())
       .borderRadius(12)
       .shadow({
         radius: 4,

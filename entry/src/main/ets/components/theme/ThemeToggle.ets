@@ -24,6 +24,10 @@ export struct ThemeToggle {
   @Local private currentThemeType: ThemeType = ThemeType.LIGHT
 
   aboutToAppear() {
+    this.updateThemeType()
+  }
+
+  private updateThemeType(): void {
     this.currentThemeType = ThemeManager.getCurrentTheme().type
   }
 
@@ -32,7 +36,7 @@ export struct ThemeToggle {
    */
   private setLightTheme(): void {
     ThemeManager.setLightTheme()
-    this.currentThemeType = ThemeType.LIGHT
+    this.updateThemeType()
   }
 
   /**
@@ -40,7 +44,7 @@ export struct ThemeToggle {
    */
   private setDarkTheme(): void {
     ThemeManager.setDarkTheme()
-    this.currentThemeType = ThemeType.DARK
+    this.updateThemeType()
   }
 
   /**
@@ -48,7 +52,7 @@ export struct ThemeToggle {
    */
   private setAutoTheme(): void {
     ThemeManager.setAutoTheme()
-    this.currentThemeType = ThemeType.AUTO
+    this.updateThemeType()
   }
 
   /**
@@ -78,10 +82,10 @@ export struct ThemeToggle {
         top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
         bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
       })
-      .backgroundColor(this.currentThemeType === ThemeType.LIGHT ? AppColors.primary : Color.Transparent)
+      .backgroundColor(this.currentThemeType === ThemeType.LIGHT ? ThemeManager.getCurrentPrimaryColor() : Color.Transparent)
       .border({
         width: this.currentThemeType === ThemeType.LIGHT ? 0 : 1,
-        color: '#E0E0E0'
+        color: ThemeManager.getCurrentBorderColor()
       })
       .borderRadius(20)
       .onClick(() => this.setLightTheme())
@@ -107,10 +111,10 @@ export struct ThemeToggle {
         top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
         bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
       })
-      .backgroundColor(this.currentThemeType === ThemeType.DARK ? AppColors.primary : Color.Transparent)
+      .backgroundColor(this.currentThemeType === ThemeType.DARK ? ThemeManager.getCurrentPrimaryColor() : Color.Transparent)
       .border({
         width: this.currentThemeType === ThemeType.DARK ? 0 : 1,
-        color: '#E0E0E0'
+        color: ThemeManager.getCurrentBorderColor()
       })
       .borderRadius(20)
       .onClick(() => this.setDarkTheme())
@@ -137,10 +141,10 @@ export struct ThemeToggle {
           top: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8,
           bottom: this.toggleSize === 'small' ? 4 : this.toggleSize === 'large' ? 12 : 8
         })
-        .backgroundColor(this.currentThemeType === ThemeType.AUTO ? AppColors.primary : Color.Transparent)
+        .backgroundColor(this.currentThemeType === ThemeType.AUTO ? ThemeManager.getCurrentPrimaryColor() : Color.Transparent)
         .border({
           width: this.currentThemeType === ThemeType.AUTO ? 0 : 1,
-          color: '#E0E0E0'
+          color: ThemeManager.getCurrentBorderColor()
         })
         .borderRadius(20)
         .onClick(() => this.setAutoTheme())
