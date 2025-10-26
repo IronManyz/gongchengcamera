@@ -397,6 +397,9 @@ struct CameraPage_Simple {
         console.error('Take photo failed:', result.message)
         this.cameraErrorMessage = result.message || '拍照失败'
         this.showCameraError = true
+
+        // 确保在拍照失败时也清空照片路径，这样预览组件就不会显示错误内容
+        this.capturedImagePath = ''
       }
 
     } catch (error) {
@@ -804,6 +807,24 @@ struct CameraPage_Simple {
           .fontSize(64)
           .fontColor('#666666')
           .margin({ bottom: 16 })
+
+        // 添加调试信息
+        Column() {
+          Text('调试信息')
+            .fontSize(12)
+            .fontColor('#1890FF')
+            .padding({ right: 8 })
+
+          Text('路径状态: ' + (this.capturedImagePath ? '有值' : '无值'))
+            .fontSize(10)
+            .fontColor('#FF6B6B')
+            .margin({ top: 4, bottom: 4 })
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .borderRadius(4)
+            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
 
         Text('照片预览')
           .fontSize(16)
