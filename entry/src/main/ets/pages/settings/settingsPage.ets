@@ -6,6 +6,7 @@
 import router from '@ohos.router'
 import { bundleManager } from '@kit.AbilityKit'
 import { Logger } from '../../utils/Logger'
+import { SVGIcon } from '../../components/icons/SVGIcon'
 import { themeStore as themeStoreInstance } from '../../store/theme/ThemeStore'
 import { userStore as userStoreInstance } from '../../store/user/UserStore'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
@@ -591,8 +592,7 @@ struct SettingsPage {
       Row({ space: 16 }) {
         // 用户头像
         Column() {
-          Text('👷‍♂️')
-            .fontSize(32)
+          SVGIcon({ iconName: 'user', iconSize: 32, iconColor: '#1890FF', iconStrokeWidth: 2 })
             .width(64)
             .height(64)
             .justifyContent(FlexAlign.Center)
@@ -724,8 +724,7 @@ struct SettingsPage {
       Row({ space: 12 }) {
         Button() {
           Column({ space: 4 }) {
-            Text('📊')
-              .fontSize(20)
+            SVGIcon({ iconName: 'database', iconSize: 20, iconColor: '#FFFFFF', iconStrokeWidth: 2 })
             Text('数据分析')
               .fontSize(12)
               .fontColor('#FFFFFF')
@@ -812,8 +811,7 @@ struct SettingsPage {
 
         Row({ space: 12 }) {
           Column() {
-            Text('🎨')
-              .fontSize(16)
+            SVGIcon({ iconName: 'palette', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('主题')
               .fontSize(12)
               .fontColor('#666666')
@@ -825,8 +823,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            Text('📱')
-              .fontSize(16)
+            SVGIcon({ iconName: 'photo', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('布局')
               .fontSize(12)
               .fontColor('#666666')
@@ -851,8 +848,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            Text('☁️')
-              .fontSize(16)
+            SVGIcon({ iconName: 'cloud-storage', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('云端')
               .fontSize(12)
               .fontColor('#666666')
@@ -864,8 +860,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            Text('🛡️')
-              .fontSize(16)
+            SVGIcon({ iconName: 'shield', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('隐私')
               .fontSize(12)
               .fontColor('#666666')

@@ -4,6 +4,7 @@
  */
 
 import { BottomNavigation } from '../../components/common/BottomNavigation'
+import { SVGIcon } from '../../components/icons/SVGIcon'
 import router from '@ohos.router'
 import { ThemeManager } from '../../theme/ThemeManager'
 
@@ -11,6 +12,7 @@ interface SettingItem {
   title: string
   subtitle?: string
   icon: string
+  iconName?: string // 新增：SVG图标名称
   onPress: () => void
 }
 
@@ -34,6 +36,7 @@ struct SettingsPage {
       title: '主题设置',
       subtitle: '切换浅色/深色主题',
       icon: '🎨',
+      iconName: 'palette',
       onPress: () => {
         this.navigateToTheme()
       }
@@ -42,6 +45,7 @@ struct SettingsPage {
       title: '存储管理',
       subtitle: `已使用 ${this.storageUsed}`,
       icon: '📱',
+      iconName: 'photo',
       onPress: () => {
         console.log('Storage management clicked')
       }
@@ -50,6 +54,7 @@ struct SettingsPage {
       title: '相机设置',
       subtitle: '照片质量、水印配置',
       icon: '📸',
+      iconName: 'camera',
       onPress: () => {
         console.log('Camera settings clicked')
       }
@@ -58,6 +63,7 @@ struct SettingsPage {
       title: '关于应用',
       subtitle: `版本 ${this.version}`,
       icon: 'ℹ️',
+      iconName: 'info-circle',
       onPress: () => {
         this.navigateToAbout()
       }
@@ -154,8 +160,11 @@ struct SettingsPage {
           // 用户信息区域
           Column() {
             Row() {
+              SVGIcon({ iconName: 'user', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                .margin({ right: 12 })
+
               Column() {
-                Text('👤 工���师')
+                Text('工程师')
                   .fontSize(18)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#262626')
@@ -182,10 +191,14 @@ struct SettingsPage {
 
           // 统计信息区域
           Column() {
-            Text('📊 使用统计')
-              .fontSize(16)
-              .fontWeight(FontWeight.Medium)
-              .fontColor('#262626')
+            Row() {
+                SVGIcon({ iconName: 'database', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                  .margin({ right: 8 })
+                Text('使用统计')
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor('#262626')
+              }
               .alignSelf(ItemAlign.Start)
               .margin({ bottom: 12 })
 
@@ -240,9 +253,15 @@ struct SettingsPage {
           ForEach(this.settingsList, (item: SettingItem) => {
             Column() {
               Row() {
-                Text(item.icon)
-                  .fontSize(20)
-                  .margin({ right: 12 })
+                // 使用SVG图标或fallback到emoji
+                if (item.iconName) {
+                  SVGIcon({ iconName: item.iconName, iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                    .margin({ right: 12 })
+                } else {
+                  Text(item.icon)
+                    .fontSize(20)
+                    .margin({ right: 12 })
+                }
 
                 Column() {
                   Text(item.title)

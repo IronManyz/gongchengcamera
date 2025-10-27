@@ -9,6 +9,7 @@ import { ThemeState, ThemeConfig } from '../../theme/ThemeObservable'
 import { ThemeToggle } from '../../components/theme/ThemeToggle'
 import { AppColors, ColorPalettes } from '../../theme/AppColors'
 import { BottomNavigation } from '../../components/common/BottomNavigation'
+import { SVGIcon } from '../../components/icons/SVGIcon'
 
 @Entry
 @ComponentV2
@@ -263,10 +264,14 @@ struct ThemePage {
         Column({ space: 24 }) {
           // 调试信息显示区域
           Column({ space: 8 }) {
-            Text('🔍 调试信息')
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.currentTextColor)
+            Row() {
+                SVGIcon({ iconName: 'search', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                  .margin({ right: 8 })
+                Text('调试信息')
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(this.currentTextColor)
+              }
               .alignSelf(ItemAlign.Start)
 
             Row() {
@@ -322,9 +327,13 @@ struct ThemePage {
 
           // 调试按钮（临时）
           Button() {
-            Text('🔍 手动测试主题系统')
-              .fontSize(14)
-              .fontColor('#FFFFFF')
+            Row() {
+              SVGIcon({ iconName: 'search', iconSize: 14, iconColor: '#FFFFFF', iconStrokeWidth: 2 })
+                .margin({ right: 8 })
+              Text('手动测试主题系统')
+                .fontSize(14)
+                .fontColor('#FFFFFF')
+            }
           }
           .width('100%')
           .height(40)

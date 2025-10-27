@@ -29,7 +29,13 @@ export struct SVGIcon {
       'cloud-rain': 'icon_cloud_rain',
       'snowflake': 'icon_snowflake',
       'mist': 'icon_mist',
-      'info-circle': 'icon_info_circle'
+      'info-circle': 'icon_info_circle',
+      'shield': 'icon_shield',
+      'database': 'icon_database',
+      'user': 'icon_user',
+      'cloud-storage': 'icon_cloud_storage',
+      'palette': 'icon_palette',
+      'camera': 'icon_camera'
     }
 
     return resourceMap[this.iconName] || 'icon_info_circle'
@@ -137,6 +143,18 @@ export struct SVGIcon {
         this.renderSnowflakeIcon()
       } else if (this.iconName === 'mist') {
         this.renderMistIcon()
+      } else if (this.iconName === 'shield') {
+        this.renderShieldIcon()
+      } else if (this.iconName === 'database') {
+        this.renderDatabaseIcon()
+      } else if (this.iconName === 'user') {
+        this.renderUserIcon()
+      } else if (this.iconName === 'cloud-storage') {
+        this.renderCloudStorageIcon()
+      } else if (this.iconName === 'palette') {
+        this.renderPaletteIcon()
+      } else if (this.iconName === 'camera') {
+        this.renderCameraIcon()
       } else {
         this.renderInfoCircleIcon()
       }
@@ -283,6 +301,72 @@ export struct SVGIcon {
   private renderInfoCircleIcon() {
     Path()
       .commands('M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm1-11h-2v6h2v-6zm0-4h-2v2h2V7z')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderShieldIcon() {
+    Path()
+      .commands('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderDatabaseIcon() {
+    Path()
+      .commands('M12 2c4.97 0 9 1.34 9 3s-4.03 3-9 3-9-1.34-9-3 4.03-3 9-3zM3 12c0 1.66 4.03 3 9 3s9-1.34 9-3M3 7c0 1.66 4.03 3 9 3s9-1.34 9-3M3 17c0 1.66 4.03 3 9 3s9-1.34 9-3')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderUserIcon() {
+    Path()
+      .commands('M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderCloudStorageIcon() {
+    Path()
+      .commands('M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z M12 15v-6M8 12l4-4 4 4')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderPaletteIcon() {
+    Path()
+      .commands('M12 2a10 10 0 0 0 0 20c1.3 0 2.5-.25 3.6-.7A4 4 0 0 0 20 12.4V12a10 10 0 0 0-8-9.8zm1 3.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5z')
+      .fill(Color.Transparent)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+          .width(this.iconSize)
+      .height(this.iconSize)
+  }
+
+  @Builder
+  private renderCameraIcon() {
+    Path()
+      .commands('M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z')
       .fill(Color.Transparent)
       .stroke(this.iconColor)
       .strokeWidth(this.iconStrokeWidth)
