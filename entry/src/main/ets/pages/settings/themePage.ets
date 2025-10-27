@@ -265,7 +265,12 @@ struct ThemePage {
           // 调试信息显示区域
           Column({ space: 8 }) {
             Row() {
-                SVGIcon({ iconName: 'search', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                SVGIcon({
+                  iconName: 'search',
+                  iconSize: 30,
+                  iconColor: '#1890FF',
+                  iconStrokeWidth: 2.5
+                })
                   .margin({ right: 8 })
                 Text('调试信息')
                   .fontSize(16)
@@ -328,7 +333,12 @@ struct ThemePage {
           // 调试按钮（临时）
           Button() {
             Row() {
-              SVGIcon({ iconName: 'search', iconSize: 16, iconColor: '#FFFFFF', iconStrokeWidth: 2 })
+              SVGIcon({
+                iconName: 'search',
+                iconSize: 24,
+                iconColor: '#FFFFFF',
+                iconStrokeWidth: 2.5
+              })
                 .margin({ right: 8 })
               Text('手动测试主题系统')
                 .fontSize(14)

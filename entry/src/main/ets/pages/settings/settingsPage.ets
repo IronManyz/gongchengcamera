@@ -6,7 +6,7 @@
 import router from '@ohos.router'
 import { bundleManager } from '@kit.AbilityKit'
 import { Logger } from '../../utils/Logger'
-import { SVGIcon } from '../../components/icons/SVGIcon'
+import { EnhancedSVGIcon } from '../../components/icons/EnhancedSVGIcon'
 import { themeStore as themeStoreInstance } from '../../store/theme/ThemeStore'
 import { userStore as userStoreInstance } from '../../store/user/UserStore'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
@@ -592,7 +592,7 @@ struct SettingsPage {
       Row({ space: 16 }) {
         // 用户头像
         Column() {
-          SVGIcon({ iconName: 'user', iconSize: 40, iconColor: '#1890FF', iconStrokeWidth: 2 })
+          EnhancedSVGIcon({ iconName: 'user', iconSize: 48, iconColor: '#1890FF', iconStrokeWidth: 2 })
             .width(64)
             .height(64)
             .justifyContent(FlexAlign.Center)
@@ -724,7 +724,7 @@ struct SettingsPage {
       Row({ space: 12 }) {
         Button() {
           Column({ space: 4 }) {
-            SVGIcon({ iconName: 'database', iconSize: 24, iconColor: '#FFFFFF', iconStrokeWidth: 2 })
+            EnhancedSVGIcon({ iconName: 'database', iconSize: 28, iconColor: '#FFFFFF', iconStrokeWidth: 2 })
             Text('数据分析')
               .fontSize(12)
               .fontColor('#FFFFFF')
@@ -811,7 +811,7 @@ struct SettingsPage {
 
         Row({ space: 12 }) {
           Column() {
-            SVGIcon({ iconName: 'palette', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+            EnhancedSVGIcon({ iconName: 'palette', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('主题')
               .fontSize(12)
               .fontColor('#666666')
@@ -823,7 +823,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            SVGIcon({ iconName: 'photo', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+            EnhancedSVGIcon({ iconName: 'photo', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('布局')
               .fontSize(12)
               .fontColor('#666666')
@@ -848,7 +848,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            SVGIcon({ iconName: 'cloud-storage', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+            EnhancedSVGIcon({ iconName: 'cloud-storage', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('云端')
               .fontSize(12)
               .fontColor('#666666')
@@ -860,7 +860,7 @@ struct SettingsPage {
           .borderRadius(8)
 
           Column() {
-            SVGIcon({ iconName: 'shield', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+            EnhancedSVGIcon({ iconName: 'shield', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
             Text('隐私')
               .fontSize(12)
               .fontColor('#666666')

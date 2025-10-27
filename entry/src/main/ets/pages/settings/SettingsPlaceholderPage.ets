@@ -160,7 +160,12 @@ struct SettingsPage {
           // 用户信息区域
           Column() {
             Row() {
-              SVGIcon({ iconName: 'user', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
+              SVGIcon({
+                iconName: 'user',
+                iconSize: 36,
+                iconColor: '#1890FF',
+                iconStrokeWidth: 2.5
+              })
                 .margin({ right: 12 })
 
               Column() {
@@ -192,8 +197,13 @@ struct SettingsPage {
           // 统计信息区域
           Column() {
             Row() {
-                SVGIcon({ iconName: 'database', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
-                  .margin({ right: 8 })
+                SVGIcon({
+                    iconName: 'database',
+                    iconSize: 32,
+                    iconColor: '#1890FF',
+                    iconStrokeWidth: 2.5
+                  })
+                    .margin({ right: 8 })
                 Text('使用统计')
                   .fontSize(16)
                   .fontWeight(FontWeight.Medium)
@@ -253,13 +263,18 @@ struct SettingsPage {
           ForEach(this.settingsList, (item: SettingItem) => {
             Column() {
               Row() {
-                // 使用SVG图标或fallback到emoji
+                // 使用增强版SVG图标或fallback到emoji
                 if (item.iconName) {
-                  SVGIcon({ iconName: item.iconName, iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                  SVGIcon({
+                    iconName: item.iconName,
+                    iconSize: 32,
+                    iconColor: '#1890FF',
+                    iconStrokeWidth: 2.5
+                  })
                     .margin({ right: 12 })
                 } else {
                   Text(item.icon)
-                    .fontSize(24)
+                    .fontSize(28)
                     .margin({ right: 12 })
                 }
 
