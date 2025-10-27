@@ -1082,8 +1082,8 @@ struct CameraPage_Simple {
               .fontColor('#FFFFFF')
               .backgroundColor('#1890FF')
               .borderRadius(8)
-              .onClick(() => {
-                this.manualRetryCamera()
+              .onClick(async () => {
+                await this.manualRetryCamera()
               })
           } else {
             // 首次错误，显示重试
@@ -1094,8 +1094,8 @@ struct CameraPage_Simple {
               .fontColor('#FFFFFF')
               .backgroundColor('#1890FF')
               .borderRadius(8)
-              .onClick(() => {
-                this.manualRetryCamera()
+              .onClick(async () => {
+                await this.manualRetryCamera()
               })
           }
 
@@ -1176,7 +1176,7 @@ struct CameraPage_Simple {
   /**
    * 手动重试相机
    */
-  private manualRetryCamera(): void {
+  private async manualRetryCamera(): Promise<void> {
     console.log('User initiated manual camera retry')
 
     // 重置状态
@@ -1184,9 +1184,48 @@ struct CameraPage_Simple {
     this.cameraErrorMessage = ''
     this.cameraRetryCount = 0
     this.isLoading = true
+    this.initializationSteps = []
+    this.isCameraReady = false
 
-    // 重新初始化相机管理器
-    this.initCameraManager()
+    // 先释放已有的相机资源
+    if (this.cameraManager) {
+      console.log('Releasing existing camera resources...')
+      try {
+        await this.cameraManager.releaseCamera()
+        console.log('Camera resources released')
+      } catch (error) {
+        console.error('Failed to release camera:', error)
+      }
+    }
+
+    // 如果已经有 Surface ID，直接使用它重新初始化
+    if (this.surfaceId && this.surfaceId.length > 0) {
+      console.log('Using existing Surface ID:', this.surfaceId)
+      
+      // 重新创建相机管理器实例
+      this.cameraManager = CameraManager.getInstance()
+      
+      // 重新设置回调
+      this.cameraManager.onInitialized(() => {
+        console.log('=== Camera initialization callback triggered (manual retry) ===')
+        this.isCameraReady = true
+        console.log('Camera is ready for use!')
+      })
+
+      this.cameraManager.onError((error: string) => {
+        console.error('=== Camera manager error callback (manual retry) ===')
+        console.error('Error:', error)
+        this.cameraErrorMessage = error
+        this.showCameraError = true
+      })
+
+      // 直接使用已有的 Surface ID 初始化
+      await this.initializeCameraWithSurface(this.surfaceId)
+    } else {
+      // 没有 Surface ID，需要重新渲染 XComponent
+      console.log('No existing Surface ID, reinitializing camera manager...')
+      this.initCameraManager()
+    }
   }
 
   /**
