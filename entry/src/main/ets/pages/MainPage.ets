@@ -12,6 +12,7 @@ import { DeleteConfirmDialog } from '../components/common/ConfirmDialog'
 import { SimpleProjectCard } from '../components/project/SimpleProjectCard'
 import { SimpleProject, ProjectStatus } from '../models/SimpleProject'
 import { ThemeManager } from '../theme/ThemeManager'
+import { SVGIcon } from '../components/icons/SVGIcon'
 
 interface StatusFilterOption {
   key: 'all' | ProjectStatus
@@ -898,9 +899,11 @@ struct MainPage {
     Row() {
       // 工程导航
       Column() {
-        Text('🏗️')
-          .fontSize(24)
-          .fontColor(this.currentTab === 'projects' ? '#1890FF' : '#8C8C8C')
+        SVGIcon({
+          iconName: 'building',
+          iconSize: 36,
+          iconColor: this.currentTab === 'projects' ? '#1890FF' : '#8C8C8C'
+        })
         Text('工程')
           .fontSize(12)
           .fontColor(this.currentTab === 'projects' ? '#1890FF' : '#8C8C8C')
@@ -910,7 +913,7 @@ struct MainPage {
       .justifyContent(FlexAlign.Center)
       .backgroundColor(this.currentTab === 'projects' ? '#E6F7FF' : Color.Transparent)
       .borderRadius(8)
-      .padding({ top: 4, bottom: 4 })
+      .padding({ top: 6, bottom: 6 })
       .animation({ duration: 200, curve: Curve.EaseInOut })
       .onClick(() => {
         console.log('Projects tab clicked')
@@ -920,9 +923,11 @@ struct MainPage {
 
       // 相册导航
       Column() {
-        Text('📱')
-          .fontSize(24)
-          .fontColor(this.currentTab === 'gallery' ? '#1890FF' : '#8C8C8C')
+        SVGIcon({
+          iconName: 'photo',
+          iconSize: 36,
+          iconColor: this.currentTab === 'gallery' ? '#1890FF' : '#8C8C8C'
+        })
         Text('相册')
           .fontSize(12)
           .fontColor(this.currentTab === 'gallery' ? '#1890FF' : '#8C8C8C')
@@ -932,7 +937,7 @@ struct MainPage {
       .justifyContent(FlexAlign.Center)
       .backgroundColor(this.currentTab === 'gallery' ? '#E6F7FF' : Color.Transparent)
       .borderRadius(8)
-      .padding({ top: 4, bottom: 4 })
+      .padding({ top: 6, bottom: 6 })
       .animation({ duration: 200, curve: Curve.EaseInOut })
       .onClick(() => {
         console.log('Gallery tab clicked')
@@ -942,9 +947,11 @@ struct MainPage {
 
       // 设置导航
       Column() {
-        Text('⚙️')
-          .fontSize(24)
-          .fontColor(this.currentTab === 'settings' ? '#1890FF' : '#8C8C8C')
+        SVGIcon({
+          iconName: 'settings',
+          iconSize: 36,
+          iconColor: this.currentTab === 'settings' ? '#1890FF' : '#8C8C8C'
+        })
         Text('设置')
           .fontSize(12)
           .fontColor(this.currentTab === 'settings' ? '#1890FF' : '#8C8C8C')
@@ -954,7 +961,7 @@ struct MainPage {
       .justifyContent(FlexAlign.Center)
       .backgroundColor(this.currentTab === 'settings' ? '#E6F7FF' : Color.Transparent)
       .borderRadius(8)
-      .padding({ top: 4, bottom: 4 })
+      .padding({ top: 6, bottom: 6 })
       .animation({ duration: 200, curve: Curve.EaseInOut })
       .onClick(() => {
         console.log('Settings tab clicked')

@@ -22,19 +22,19 @@ export struct BottomNavigation {
 
   private navigationItems: NavigationItem[] = [
     {
-      icon: '🏗️',
+      icon: '',
       iconName: 'building',
       label: '工程',
       route: 'pages/MainPage'
     },
     {
-      icon: '📱',
+      icon: '',
       iconName: 'photo',
       label: '相册',
       route: 'pages/gallery/GalleryPlaceholderPage'
     },
     {
-      icon: '⚙️',
+      icon: '',
       iconName: 'settings',
       label: '设置',
       route: 'pages/settings/SettingsPlaceholderPage'
@@ -69,15 +69,9 @@ export struct BottomNavigation {
     Row() {
       ForEach(this.navigationItems, (item: NavigationItem) => {
         Column() {
-          // 使用专业图标组件替换 emoji
-          if (item.iconName) {
-            this.renderIcon(item.iconName, item.route)
-          } else {
-            // 兼容旧的 emoji 图标
-            Text(item.icon)
-              .fontSize(24)
-              .fontColor(this.getPageIconColor(item.route))
-          }
+          // 使用 SVG 图标
+          this.renderIcon(item.iconName || 'info-circle', item.route)
+          
           Text(item.label)
             .fontSize(12)
             .fontColor(this.getPageIconColor(item.route))
@@ -88,7 +82,7 @@ export struct BottomNavigation {
         .alignItems(HorizontalAlign.Center)
         .backgroundColor(this.getPageBackgroundColor(item.route))
         .borderRadius(8)
-        .padding({ top: 4, bottom: 4 })
+        .padding({ top: 6, bottom: 6 })
         .animation({ duration: 200, curve: Curve.EaseInOut })
         .onClick(() => {
           this.handleNavigation(item)
@@ -118,14 +112,14 @@ export struct BottomNavigation {
   @Builder
   private renderIcon(iconName: string, route: string) {
     if (iconName === 'building') {
-      SVGIcon({ iconName: 'building', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'building', iconSize: 36, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else if (iconName === 'photo') {
-      SVGIcon({ iconName: 'photo', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'photo', iconSize: 36, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else if (iconName === 'settings') {
-      SVGIcon({ iconName: 'settings', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'settings', iconSize: 36, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else {
       // 默认使用 info-circle 图标
-      SVGIcon({ iconName: 'info-circle', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'info-circle', iconSize: 36, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     }
   }
 }

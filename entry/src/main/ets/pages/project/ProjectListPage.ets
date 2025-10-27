@@ -11,6 +11,7 @@ import { SearchBar } from '../../components/common/SearchBar'
 import { LoadingDialog } from '../../components/common/LoadingDialog'
 import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { ProjectCard } from '../../components/project/ProjectCard'
+import { SVGIcon } from '../../components/icons/SVGIcon'
 
 
 /**
@@ -508,10 +509,11 @@ struct ProjectListPage {
         // 高级筛选按钮
         Button() {
           Row({ space: 6 }) {
-            Text('⚙️')
-              .width(16)
-              .height(16)
-              .fontColor(this.hasAdvancedFilters() ? '#007AFF' : '#666666')
+            SVGIcon({
+              iconName: 'settings',
+              iconSize: 18,
+              iconColor: this.hasAdvancedFilters() ? '#007AFF' : '#666666'
+            })
 
             Text('高级')
               .fontSize(14)
