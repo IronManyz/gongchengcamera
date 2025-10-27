@@ -117,22 +117,15 @@ export struct BottomNavigation {
    */
   @Builder
   private renderIcon(iconName: string, route: string) {
-    let iconColor = this.getPageIconColor(route)
-
-    switch (iconName) {
-      case 'building':
-        EngineeringIcon({ name: 'building', size: 24, color: iconColor, strokeWidth: 2 })
-        break
-      case 'photo':
-        EngineeringIcon({ name: 'photo', size: 24, color: iconColor, strokeWidth: 2 })
-        break
-      case 'settings':
-        EngineeringIcon({ name: 'settings', size: 24, color: iconColor, strokeWidth: 2 })
-        break
-      default:
-        // 默认使用 info-circle 图标
-        EngineeringIcon({ name: 'info-circle', size: 24, color: iconColor, strokeWidth: 2 })
-        break
+    if (iconName === 'building') {
+      EngineeringIcon({ name: 'building', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+    } else if (iconName === 'photo') {
+      EngineeringIcon({ name: 'photo', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+    } else if (iconName === 'settings') {
+      EngineeringIcon({ name: 'settings', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+    } else {
+      // 默认使用 info-circle 图标
+      EngineeringIcon({ name: 'info-circle', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     }
   }
 }

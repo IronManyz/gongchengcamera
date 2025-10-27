@@ -7,9 +7,9 @@
 @ComponentV2
 export struct EngineeringIcon {
   @Param name: string = ''
-  @Param size: number = 24
-  @Param color: string = '#1890FF'
-  @Param strokeWidth: number = 2
+  @Param iconSize: number = 24
+  @Param iconColor: string = '#1890FF'
+  @Param iconStrokeWidth: number = 2
 
   // SVG 图标数据映射
   private getIconData(): string {
@@ -70,16 +70,16 @@ export struct EngineeringIcon {
     Path()
       .commands(this.getIconData())
       .fill(Color.Transparent)
-      .stroke(this.color)
-      .strokeWidth(this.strokeWidth)
-      .width(this.size)
-      .height(this.size)
+      .stroke(this.iconColor)
+      .strokeWidth(this.iconStrokeWidth)
+      .width(this.iconSize)
+      .height(this.iconSize)
   }
 }
 
 /**
  * 创建图标的便捷函数
  */
-export function createIcon(name: string, size: number = 24, color: string = '#1890FF', strokeWidth: number = 2): EngineeringIcon {
-  EngineeringIcon({ name: name, size: size, color: color, strokeWidth: strokeWidth })
+export function createIcon(name: string, size: number = 24, color: string = '#1890FF', strokeWidth: number = 2): void {
+  EngineeringIcon({ name: name, iconSize: size, iconColor: color, iconStrokeWidth: strokeWidth })
 }
