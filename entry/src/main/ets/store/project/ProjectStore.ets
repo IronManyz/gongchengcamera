@@ -82,6 +82,7 @@ export class ProjectStore extends BaseStore {
   @Trace currentFilter: ProjectFilter = ProjectFilter.ALL
   @Trace currentSortOrder: ProjectSortOrder = ProjectSortOrder.UPDATED_DESC
   @Trace selectedTags: string[] = []
+  @Trace advancedFilters: Map<string, Object> = new Map<string, Object>()
 
   // 分页状态
   @Trace currentPage: number = 1
@@ -507,6 +508,18 @@ export class ProjectStore extends BaseStore {
   }
 
   /**
+   * 设置高级筛选参数
+   */
+  setAdvancedFilters(filters: Map<string, Object>): void {
+    // 更新筛选参数
+    this.advancedFilters = filters
+
+    // 应用筛选
+    this.applyFiltersAndSort()
+    this.log('设置高级筛选', filters)
+  }
+
+  /**
    * 设置选中的标签
    */
   setSelectedTags(tags: string[]): void {
@@ -590,6 +603,9 @@ export class ProjectStore extends BaseStore {
       )
     }
 
+    // 应用高级筛选
+    filtered = this.applyAdvancedFilters(filtered)
+
     // 应用排序
     filtered.sort(this.getSortComparator())
 
@@ -597,6 +613,89 @@ export class ProjectStore extends BaseStore {
     this.filteredProjects.splice(0, this.filteredProjects.length, ...filtered)
 
     this.log('应用过滤和排序')
+  }
+
+  /**
+   * 应用高级筛选条件
+   */
+  private applyAdvancedFilters(projects: Project[]): Project[] {
+    let filtered = [...projects]
+
+    // 应用时间范围筛选
+    if (this.advancedFilters.has('dateRange')) {
+      const dateRange = this.advancedFilters.get('dateRange') as Record<string, Object>
+      if (dateRange.start) {
+        const start = dateRange.start as Date
+        filtered = filtered.filter(project =>
+          project.startDate.getTime() >= start.getTime()
+        )
+      }
+      if (dateRange.end) {
+        const end = dateRange.end as Date
+        filtered = filtered.filter(project =>
+          project.endDate && project.endDate.getTime() <= end.getTime()
+        )
+      }
+    }
+
+    // 应用优先级筛选
+    if (this.advancedFilters.has('priorities')) {
+      const priorities = this.advancedFilters.get('priorities') as string[]
+      if (priorities.length > 0) {
+        filtered = filtered.filter(project =>
+          priorities.includes(project.priority)
+        )
+      }
+    }
+
+    // 应用负责人筛选
+    if (this.advancedFilters.has('managers')) {
+      const managers = this.advancedFilters.get('managers') as string[]
+      if (managers.length > 0) {
+        filtered = filtered.filter(project =>
+          managers.includes(project.manager)
+        )
+      }
+    }
+
+    // 应用客户筛选
+    if (this.advancedFilters.has('clients')) {
+      const clients = this.advancedFilters.get('clients') as string[]
+      if (clients.length > 0) {
+        filtered = filtered.filter(project =>
+          clients.includes(project.client)
+        )
+      }
+    }
+
+    // 应用状态范围筛选
+    if (this.advancedFilters.has('statuses')) {
+      const statuses = this.advancedFilters.get('statuses') as ProjectStatus[]
+      if (statuses.length > 0) {
+        filtered = filtered.filter(project =>
+          statuses.includes(project.status)
+        )
+      }
+    }
+
+    // 应用进度范围筛选
+    if (this.advancedFilters.has('progressRange')) {
+      const progressRange = this.advancedFilters.get('progressRange') as Record<string, Object>
+      if (progressRange.min !== undefined) {
+        const min = progressRange.min as number
+        filtered = filtered.filter(project =>
+          project.progress >= min
+        )
+      }
+      if (progressRange.max !== undefined) {
+        const max = progressRange.max as number
+        filtered = filtered.filter(project =>
+          project.progress <= max
+        )
+      }
+    }
+
+    return filtered
   }
 
   /**

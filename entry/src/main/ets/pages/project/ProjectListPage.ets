@@ -39,6 +39,14 @@ type TimeRangeKey = 'all' | 'today' | 'week' | 'month' | 'quarter' | 'year'
  */
 type PriorityKey = 'all' | 'high' | 'medium' | 'low'
 
+/**
+ * 日期范围接口
+ */
+interface DateRange {
+  start: Date
+  end: Date
+}
+
 @Entry
 @Component
 struct ProjectListPage {
@@ -868,14 +876,84 @@ struct ProjectListPage {
    * 应用高级筛选
    */
   private applyAdvancedFilters(): void {
-    // TODO: 这里应该调用ProjectStore的高级筛选方法
-    // 目前先关闭弹窗
+    // 构建筛选参数
+    const filterParams: Map<string, Object> = new Map<string, Object>()
+
+    // 添加时间范围筛选
+    const timeRange = this.getTimeRangeFilter()
+    if (timeRange) {
+      filterParams.set('dateRange', timeRange)
+    }
+
+    // 添加优先级筛选
+    const priority = this.getPriorityFilter()
+    if (priority) {
+      filterParams.set('priorities', [priority])
+    }
+
+    // 添加负责人筛选
+    if (this.selectedManager !== 'all') {
+      filterParams.set('managers', [this.selectedManager])
+    }
+
+    // 应用到ProjectStore
+    this.projectStore.setAdvancedFilters(filterParams)
     this.showAdvancedFilter = false
-    console.log('应用高级筛选:', {
-      timeRange: this.selectedTimeRange,
-      priority: this.selectedPriority,
-      manager: this.selectedManager
-    })
+
+    console.log('应用高级筛选:', filterParams)
+  }
+
+  /**
+   * 获取时间范围筛选参数
+   */
+  private getTimeRangeFilter(): DateRange | undefined {
+    const now = new Date()
+    let startDate: Date | undefined
+
+    switch (this.selectedTimeRange) {
+      case 'today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        break
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        break
+      case 'quarter':
+        startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+        break
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1)
+        break
+      default:
+        return undefined
+    }
+
+    if (startDate) {
+      return {
+        start: startDate,
+        end: now
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * 获取优先级筛选参数
+   */
+  private getPriorityFilter(): string | undefined {
+    switch (this.selectedPriority) {
+      case 'high':
+        return 'high'
+      case 'medium':
+        return 'medium'
+      case 'low':
+        return 'low'
+      default:
+        return undefined
+    }
   }
 
   /**
