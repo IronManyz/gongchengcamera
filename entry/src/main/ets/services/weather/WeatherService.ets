@@ -537,23 +537,24 @@ export class WeatherService {
    * 获取天气图标
    */
   getWeatherIcon(condition: WeatherCondition): string {
-    const icons: Record<WeatherCondition, string> = {
-      [WeatherCondition.CLEAR]: '☀️',
-      [WeatherCondition.CLOUDY]: '⛅',
-      [WeatherCondition.OVERCAST]: '☁️',
-      [WeatherCondition.LIGHT_RAIN]: '🌦️',
-      [WeatherCondition.MODERATE_RAIN]: '🌧️',
-      [WeatherCondition.HEAVY_RAIN]: '⛈️',
-      [WeatherCondition.THUNDERSTORM]: '⛈️',
-      [WeatherCondition.LIGHT_SNOW]: '🌨️',
-      [WeatherCondition.MODERATE_SNOW]: '❄️',
-      [WeatherCondition.HEAVY_SNOW]: '🌨️',
-      [WeatherCondition.FOG]: '🌫️',
-      [WeatherCondition.MIST]: '🌫️',
-      [WeatherCondition.UNKNOWN]: '❓'
+    // 天气图标映射 - 使用图标名称而非 emoji
+    const iconNames: Record<WeatherCondition, string> = {
+      [WeatherCondition.CLEAR]: 'sun',
+      [WeatherCondition.CLOUDY]: 'cloud',
+      [WeatherCondition.OVERCAST]: 'cloud',
+      [WeatherCondition.LIGHT_RAIN]: 'cloudRain',
+      [WeatherCondition.MODERATE_RAIN]: 'cloudRain',
+      [WeatherCondition.HEAVY_RAIN]: 'cloudRain',
+      [WeatherCondition.THUNDERSTORM]: 'cloudRain',
+      [WeatherCondition.LIGHT_SNOW]: 'snowflake',
+      [WeatherCondition.MODERATE_SNOW]: 'snowflake',
+      [WeatherCondition.HEAVY_SNOW]: 'snowflake',
+      [WeatherCondition.FOG]: 'mist',
+      [WeatherCondition.MIST]: 'mist',
+      [WeatherCondition.UNKNOWN]: 'alertTriangle'
     }
 
-    return icons[condition] || '❓'
+    return iconNames[condition] || 'alertTriangle'
   }
 
   /**

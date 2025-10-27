@@ -1,12 +1,15 @@
 /**
  * 底部导航栏组件
  * 提供统一的底部导航功能
+ * 使用专业 SVG 图标替换 emoji
  */
 
 import router from '@ohos.router'
+import { EngineeringIcon } from '../icons/EngineeringIcon'
 
 export interface NavigationItem {
   icon: string
+  iconName?: string  // 新增：图标名称字段
   label: string
   route: string
   params?: ESObject
@@ -20,16 +23,19 @@ export struct BottomNavigation {
   private navigationItems: NavigationItem[] = [
     {
       icon: '🏗️',
+      iconName: 'building',
       label: '工程',
       route: 'pages/MainPage'
     },
     {
       icon: '📱',
+      iconName: 'photo',
       label: '相册',
       route: 'pages/gallery/GalleryPlaceholderPage'
     },
     {
       icon: '⚙️',
+      iconName: 'settings',
       label: '设置',
       route: 'pages/settings/SettingsPlaceholderPage'
     }
@@ -63,9 +69,15 @@ export struct BottomNavigation {
     Row() {
       ForEach(this.navigationItems, (item: NavigationItem) => {
         Column() {
-          Text(item.icon)
-            .fontSize(24)
-            .fontColor(this.getPageIconColor(item.route))
+          // 使用专业图标组件替换 emoji
+          if (item.iconName) {
+            this.renderIcon(item.iconName, item.route)
+          } else {
+            // 兼容旧的 emoji 图标
+            Text(item.icon)
+              .fontSize(24)
+              .fontColor(this.getPageIconColor(item.route))
+          }
           Text(item.label)
             .fontSize(12)
             .fontColor(this.getPageIconColor(item.route))
@@ -97,5 +109,30 @@ export struct BottomNavigation {
 
   private getPageBackgroundColor(route: string): string {
     return this.currentPage === route ? '#E6F7FF' : ''
+  }
+
+  /**
+   * 渲染图标组件
+   * 根据路由状态决定图标颜色
+   */
+  @Builder
+  private renderIcon(iconName: string, route: string) {
+    let iconColor = this.getPageIconColor(route)
+
+    switch (iconName) {
+      case 'building':
+        EngineeringIcon({ name: 'building', size: 24, color: iconColor, strokeWidth: 2 })
+        break
+      case 'photo':
+        EngineeringIcon({ name: 'photo', size: 24, color: iconColor, strokeWidth: 2 })
+        break
+      case 'settings':
+        EngineeringIcon({ name: 'settings', size: 24, color: iconColor, strokeWidth: 2 })
+        break
+      default:
+        // 默认使用 info-circle 图标
+        EngineeringIcon({ name: 'info-circle', size: 24, color: iconColor, strokeWidth: 2 })
+        break
+    }
   }
 }

@@ -1,9 +1,11 @@
 /**
  * 空状态组件
  * 提供统一的空数据展示和操作引导
+ * 使用专业 SVG 图标替换 emoji
  */
 
 import { ThemeManager } from '../../theme/ThemeManager'
+import { EngineeringIcon } from '../icons/EngineeringIcon'
 
 export interface EmptyStateConfig {
   icon?: string
@@ -35,11 +37,11 @@ export struct EmptyState {
 
   private getDefaultIcon(): string {
     switch (this.currentConfig.type) {
-      case 'search': return '🔍'
-      case 'error': return '⚠️'
-      case 'network': return '🌐'
-      case 'permission': return '🔒'
-      default: return '📭'
+      case 'search': return 'search'
+      case 'error': return 'alertTriangle'
+      case 'network': return 'world'
+      case 'permission': return 'lock'
+      default: return 'infoCircle'
     }
   }
 
@@ -74,20 +76,48 @@ export struct EmptyState {
 
   @Builder
   private DefaultIcon() {
-    Text(this.currentConfig.icon || this.getDefaultIcon())
-      .fontSize(64)
-      .fontColor('#C0C0C0')
-      .textAlign(TextAlign.Center)
-      .margin({ bottom: 16 })
+    // 使用专业图标组件替换 emoji
+    const iconName = this.currentConfig.icon || this.getDefaultIcon()
+    this.renderIconByName(iconName)
+  }
+
+  /**
+   * 根据图标名称渲染对应的图标组件
+   */
+  @Builder
+  private renderIconByName(iconName: string) {
+    switch (iconName) {
+      case 'search':
+        EngineeringIcon({ name: 'search', size: 64, color: '#C0C0C0', strokeWidth: 1.5 })
+        break
+      case 'alertTriangle':
+        EngineeringIcon({ name: 'alert-triangle', size: 64, color: '#C0C0C0', strokeWidth: 1.5 })
+        break
+      case 'world':
+        EngineeringIcon({ name: 'world', size: 64, color: '#C0C0C0', strokeWidth: 1.5 })
+        break
+      case 'lock':
+        EngineeringIcon({ name: 'lock', size: 64, color: '#C0C0C0', strokeWidth: 1.5 })
+        break
+      case 'infoCircle':
+        EngineeringIcon({ name: 'info-circle', size: 64, color: '#C0C0C0', strokeWidth: 1.5 })
+        break
+      default:
+        // 如果是 emoji，使用原来的显示方式
+        Text(iconName)
+          .fontSize(64)
+          .fontColor('#C0C0C0')
+          .textAlign(TextAlign.Center)
+          .margin({ bottom: 16 })
+        break
+    }
   }
 
   @Builder
   private SearchEmptyState() {
     Column({ space: 16 }) {
-      Text('🔍')
-        .fontSize(64)
-        .fontColor('#E0E0E0')
-        .textAlign(TextAlign.Center)
+      // 使用搜索图标替换 emoji
+      EngineeringIcon({ name: 'search', size: 64, color: '#E0E0E0', strokeWidth: 1.5 })
 
       Text('未找到匹配结果')
         .fontSize(18)
@@ -108,10 +138,8 @@ export struct EmptyState {
   @Builder
   private ErrorEmptyState() {
     Column({ space: 16 }) {
-      Text('⚠️')
-        .fontSize(64)
-        .fontColor('#FFB800')
-        .textAlign(TextAlign.Center)
+      // 使用警告图标替换 emoji
+      EngineeringIcon({ name: 'alert-triangle', size: 64, color: '#FFB800', strokeWidth: 1.5 })
 
       Text('出现了一些问题')
         .fontSize(18)
@@ -147,10 +175,8 @@ export struct EmptyState {
   @Builder
   private NetworkEmptyState() {
     Column({ space: 16 }) {
-      Text('🌐')
-        .fontSize(64)
-        .fontColor('#1890FF')
-        .textAlign(TextAlign.Center)
+      // 使用网络图标替换 emoji
+      EngineeringIcon({ name: 'world', size: 64, color: '#1890FF', strokeWidth: 1.5 })
 
       Text('网络连接异常')
         .fontSize(18)
