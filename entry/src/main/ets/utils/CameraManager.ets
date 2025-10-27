@@ -95,10 +95,11 @@ export class CameraManager {
         console.log(`camera : ${cameraStatusInfo.camera.cameraId}`)
         console.log(`status: ${cameraStatusInfo.status}`)
 
+        // 只处理真正的错误状态，忽略中间状态
         if (cameraStatusInfo.status === camera.CameraStatus.CAMERA_STATUS_UNAVAILABLE) {
-          if (this.onErrorCallback) {
-            this.onErrorCallback(`相机设备不可用: ${cameraStatusInfo.camera.cameraId}`)
-          }
+          console.warn(`相机设备暂时不可用: ${cameraStatusInfo.camera.cameraId}，这可能是正常的状态转换`)
+          // 不立即触发错误回调，等待状态稳定
+          // 设备可能正在打开过程中
         }
       })
 
@@ -126,20 +127,43 @@ export class CameraManager {
       // 注册相机输入错误监听
       this.cameraInput.on('error', selectedCamera, (error: BusinessError) => {
         console.error('Camera input error:', error.code, error.message)
-        if (this.onErrorCallback) {
-          this.onErrorCallback(`相机输入错误 [${error.code}]: ${error.message}`)
+        // 只处理严重错误，忽略可恢复的错误
+        if (error.code !== 7400201) { // 7400201 是设备不可用的常见错误码，通常可恢复
+          if (this.onErrorCallback) {
+            this.onErrorCallback(`相机输入错误 [${error.code}]: ${error.message}`)
+          }
+        } else {
+          console.warn(`相机输入暂时不可用，等待恢复: [${error.code}] ${error.message}`)
         }
       })
       
       // 打开相机输入（关键步骤！）
       console.log('Opening camera input...')
-      try {
-        await this.cameraInput.open()
-        console.log('Camera input opened successfully')
-      } catch (openError) {
-        const err = openError as BusinessError
-        console.error('Failed to open camera input:', err.code, err.message)
-        throw new Error(`打开相机输入失败 [${err.code}]: ${err.message}`)
+      let maxRetries = 3
+      let retryDelay = 500 // 500ms
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Camera open attempt ${attempt}/${maxRetries}...`)
+          await this.cameraInput.open()
+          console.log('Camera input opened successfully')
+          break // 成功，跳出重试循环
+        } catch (openError) {
+          const err = openError as BusinessError
+          console.error(`Camera open attempt ${attempt} failed:`, err.code, err.message)
+
+          if (attempt === maxRetries) {
+            // 最后一次尝试失败
+            throw new Error(`打开相机输入失败，已重试${maxRetries}次 [${err.code}]: ${err.message}`)
+          }
+
+          // 等待后重试
+          console.log(`Waiting ${retryDelay}ms before retry...`)
+          await new Promise<void>((resolve: () => void): void => {
+            setTimeout(resolve, retryDelay)
+          })
+          retryDelay *= 2 // 指数退避
+        }
       }
 
       // 创建预览输出 - 需要获取支持的预览配置

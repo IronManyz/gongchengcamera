@@ -50,7 +50,7 @@ struct CameraPage_Simple {
   @Local private currentInitStep: string = ''
 
   // XComponent相关成员变量
-  private xComponentController: XComponentController | null = null
+  private xComponentController: XComponentController = new XComponentController()
 
   aboutToAppear(): void {
     this.loadRouteParams()
@@ -572,44 +572,56 @@ struct CameraPage_Simple {
           id: 'camera_preview',
           type: 'surface',
           libraryname: '',
+          controller: this.xComponentController
         })
-          .onLoad((xComponentContext) => {
+          .onLoad(() => {
             console.log('=== XComponent onLoad triggered ===')
             console.log('Camera preview XComponent loaded')
-            console.log('XComponent context:', xComponentContext)
-            console.log('XComponent context type:', typeof xComponentContext)
 
             try {
-              // 获取Surface ID  
-              console.log('Attempting to get Surface ID...')
-              const xComponent = xComponentContext as XComponentController
-              const surfaceId: string = xComponent.getXComponentSurfaceId()
-              
-              console.log('Surface ID obtained:', surfaceId)
-              console.log('Surface ID type:', typeof surfaceId)
-              console.log('Surface ID length:', surfaceId?.length || 0)
+              // 根据HarmonyOS Next文档，延迟获取Surface ID以确保XComponent完全初始化
+              setTimeout(() => {
+                try {
+                  console.log('Attempting to get Surface ID from XComponentController...')
+                  const surfaceId: string = this.xComponentController.getXComponentSurfaceId()
 
-              if (surfaceId && surfaceId.length > 0) {
-                // Surface ID有效，初始化相机
-                console.log('Surface ID is valid, will initialize camera')
-                
-                // 延迟一小段时间确保Surface完全准备好
-                setTimeout(() => {
-                  console.log('Starting camera initialization with surfaceId:', surfaceId)
-                  this.initializeCameraWithSurface(surfaceId)
-                }, 200)
-              } else {
-                console.error('Surface ID is empty or invalid')
-                console.error('Received surfaceId value:', surfaceId)
-                this.cameraErrorMessage = '无法获取相机预览区域ID，请返回后重试'
-                this.showCameraError = true
-                this.isLoading = false
-              }
+                  console.log('=== 成功获取Surface ID:', surfaceId, ' ===')
+                  console.log('Surface ID type:', typeof surfaceId)
+                  console.log('Surface ID length:', surfaceId?.length || 0)
+
+                  if (surfaceId && surfaceId.length > 0) {
+                    // Surface ID有效，初���化相机
+                    console.log('Surface ID is valid, will initialize camera')
+                    this.surfaceId = surfaceId
+                    console.log('Surface ID 已设置:', surfaceId, '，准备初始化相机')
+
+                    // 额外延迟确保Surface完全准备好用于相机初始化
+                    setTimeout(() => {
+                      console.log('Starting camera initialization with surfaceId:', surfaceId)
+                      this.initializeCameraWithSurface(surfaceId)
+                    }, 300)
+                  } else {
+                    console.error('Surface ID is empty or invalid')
+                    console.error('Received surfaceId value:', surfaceId)
+                    this.cameraErrorMessage = '无法获取相机预览区域ID (控制器返回空值)'
+                    this.showCameraError = true
+                    this.isLoading = false
+                  }
+                } catch (controllerError) {
+                  console.error('通过控制器获取Surface ID失败:', controllerError)
+                  console.error('Controller error type:', typeof controllerError)
+                  console.error('Controller error message:', controllerError instanceof Error ? controllerError.message : String(controllerError))
+                  this.cameraErrorMessage = 'XComponent控制器未初始化，请返回后重试'
+                  this.showCameraError = true
+                  this.isLoading = false
+                }
+              }, 500) // 500ms延迟确保XComponent完全初始化
+
             } catch (error) {
-              console.error('XComponent onLoad failed:', error)
-              console.error('Error type:', typeof error)
-              console.error('Error message:', error instanceof Error ? error.message : String(error))
-              this.cameraErrorMessage = `相机预览组件初始化失败，请返回后重试`
+              console.error('XComponent onLoad setup failed:', error)
+              console.error('Setup error type:', typeof error)
+              console.error('Setup error message:', error instanceof Error ? error.message : String(error))
+              this.cameraErrorMessage = '相机预览组件初始化失败，请返回后重试'
               this.showCameraError = true
               this.isLoading = false
             }
