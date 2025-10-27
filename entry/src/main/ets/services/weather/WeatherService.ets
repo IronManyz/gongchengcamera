@@ -534,27 +534,27 @@ export class WeatherService {
   }
 
   /**
-   * 获取天气图标
+   * 获取天气SVG图标
    */
   getWeatherIcon(condition: WeatherCondition): string {
-    // 天气图标映射 - 使用图标名称而非 emoji
-    const iconNames: Record<WeatherCondition, string> = {
+    // 天气SVG图标映射 - 使用SVG图标名称
+    const svgIconNames: Record<WeatherCondition, string> = {
       [WeatherCondition.CLEAR]: 'sun',
       [WeatherCondition.CLOUDY]: 'cloud',
       [WeatherCondition.OVERCAST]: 'cloud',
-      [WeatherCondition.LIGHT_RAIN]: 'cloudRain',
-      [WeatherCondition.MODERATE_RAIN]: 'cloudRain',
-      [WeatherCondition.HEAVY_RAIN]: 'cloudRain',
-      [WeatherCondition.THUNDERSTORM]: 'cloudRain',
+      [WeatherCondition.LIGHT_RAIN]: 'cloud-rain',
+      [WeatherCondition.MODERATE_RAIN]: 'cloud-rain',
+      [WeatherCondition.HEAVY_RAIN]: 'cloud-rain',
+      [WeatherCondition.THUNDERSTORM]: 'cloud-rain',
       [WeatherCondition.LIGHT_SNOW]: 'snowflake',
       [WeatherCondition.MODERATE_SNOW]: 'snowflake',
       [WeatherCondition.HEAVY_SNOW]: 'snowflake',
       [WeatherCondition.FOG]: 'mist',
       [WeatherCondition.MIST]: 'mist',
-      [WeatherCondition.UNKNOWN]: 'alertTriangle'
+      [WeatherCondition.UNKNOWN]: 'alert-triangle'
     }
 
-    return iconNames[condition] || 'alertTriangle'
+    return svgIconNames[condition] || 'alert-triangle'
   }
 
   /**

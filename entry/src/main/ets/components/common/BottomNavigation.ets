@@ -5,7 +5,7 @@
  */
 
 import router from '@ohos.router'
-import { EngineeringIcon } from '../icons/EngineeringIcon'
+import { SVGIcon } from '../icons/SVGIcon'
 
 export interface NavigationItem {
   icon: string
@@ -112,20 +112,20 @@ export struct BottomNavigation {
   }
 
   /**
-   * 渲染图标组件
+   * 渲染SVG图标组件
    * 根据路由状态决定图标颜色
    */
   @Builder
   private renderIcon(iconName: string, route: string) {
     if (iconName === 'building') {
-      EngineeringIcon({ name: 'building', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'building', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else if (iconName === 'photo') {
-      EngineeringIcon({ name: 'photo', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'photo', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else if (iconName === 'settings') {
-      EngineeringIcon({ name: 'settings', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'settings', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     } else {
       // 默认使用 info-circle 图标
-      EngineeringIcon({ name: 'info-circle', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
+      SVGIcon({ iconName: 'info-circle', iconSize: 24, iconColor: this.getPageIconColor(route), iconStrokeWidth: 2 })
     }
   }
 }
