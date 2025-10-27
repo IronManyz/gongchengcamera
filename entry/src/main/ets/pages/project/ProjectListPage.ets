@@ -617,47 +617,106 @@ struct ProjectListPage {
   private buildProjectList() {
     Refresh({ refreshing: $$isRefreshing, friction: 100 }) {
       if (this.projectStore.hasFilteredProjects) {
-        List({ space: 12 }) {
+        List({ space: 0 }) {
           ForEach(
             this.projectStore.filteredProjects,
-            (project: Project) => {
+            (project: Project, index?: number) => {
               ListItem() {
-                this.buildProjectItem(project)
+                Column() {
+                  this.buildProjectItem(project)
+
+                  // 分割线（最后一项不显示）
+                  if (index && index < this.projectStore.filteredProjects.length - 1) {
+                    Divider()
+                      .color('#F0F0F0')
+                      .margin({ left: 16, right: 16, top: 0 })
+                      .opacity(0.6)
+                  }
+                }
+                .margin({ bottom: index === this.projectStore.filteredProjects.length - 1 ? 12 : 0 })
               }
+              .transition({
+                type: TransitionType.All,
+                opacity: 1,
+                translate: { x: 0, y: 0 },
+                scale: { x: 1, y: 1 }
+              })
             },
-            (project: Project) => project.id
+            (project: Project, index?: number) => `${project.id}_${index}`
           )
         }
         .width('100%')
         .layoutWeight(1)
-        .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+        .padding({ left: 0, right: 0, top: 8, bottom: 8 })
+        .backgroundColor('#FAFAFA')
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
       } else {
         Column() {
-          Text('📁')
-            .width(120)
-            .height(120)
-            .fontColor('#C0C0C0')
-            .margin({ bottom: 16 })
+          // 空状态动画图标
+          Column({ space: 16 }) {
+            // 主图标
+            Stack() {
+              Circle({ width: 80, height: 80 })
+                .fill('#F0F0F0')
 
-          Text(this.searchQuery ? '未找到匹配的项目' : '暂无项目')
-            .fontSize(18)
-            .fontWeight(FontWeight.Medium)
-            .fontColor('#666666')
-            .margin({ bottom: 8 })
+              if (this.searchQuery) {
+                Text('🔍')
+                  .fontSize(40)
+              } else {
+                Text('📁')
+                  .fontSize(40)
+              }
+            }
 
-          Text(this.searchQuery ? '尝试修改搜索条件' : '点击下方按钮创建第一个项目')
-            .fontSize(14)
-            .fontColor('#999999')
-            .textAlign(TextAlign.Center)
-            .lineHeight(20)
-            .padding({ left: 32, right: 32 })
+            // 装饰性圆圈
+            Circle({ width: 100, height: 100 })
+              .fill('transparent')
+              .stroke('#E0E0E0')
+              .strokeWidth(1)
+              .strokeDashArray([5, 5])
+          }
+
+          // 空状态文本
+          Column({ space: 12 }) {
+            Text(this.searchQuery ? '未找到匹配的项目' : '暂无项目')
+              .fontSize(20)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#333333')
+
+            Text(this.searchQuery ? '尝试修改搜索条件或筛选器' : '开始创建您的第一个工程项目')
+              .fontSize(14)
+              .fontColor('#666666')
+              .textAlign(TextAlign.Center)
+              .lineHeight(22)
+              .padding({ left: 40, right: 40 })
+
+            // 快速操作按钮（仅在没有搜索时显示）
+            if (!this.searchQuery) {
+              Button() {
+                Row({ space: 8 }) {
+                  Text('➕')
+                    .fontSize(16)
+                  Text('创建项目')
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                }
+              }
+              .height(44)
+              .padding({ left: 24, right: 24 })
+              .backgroundColor('#007AFF')
+              .borderRadius(22)
+              .margin({ top: 8 })
+              .onClick(() => this.navigateToCreateProject())
+            }
+          }
         }
         .width('100%')
         .height('100%')
         .justifyContent(FlexAlign.Center)
         .alignItems(HorizontalAlign.Center)
         .layoutWeight(1)
-        .margin({ left: 16, right: 16 })
+        .margin({ left: 32, right: 32, top: 32, bottom: 32 })
       }
     }
   }
@@ -670,11 +729,18 @@ struct ProjectListPage {
     ProjectCard({
       project: project,
       showStats: true,
+      elevation: true,
       onTap: (project) => this.navigateToProjectDetail(project),
       onLongPress: (project) => {
         this.selectedProjectId = project.id
         this.showDeleteDialog = true
       }
+    })
+    .margin({ left: 16, right: 16, top: 0, bottom: 0 })
+    .borderRadius(12)
+    .onClick(() => {
+      // 添加点击反馈动画
+      this.animateItem(project.id)
     })
   }
 
@@ -954,6 +1020,14 @@ struct ProjectListPage {
       default:
         return undefined
     }
+  }
+
+  /**
+   * 项目项点击动画
+   */
+  private animateItem(projectId: string): void {
+    // 可以在这里添加点击反馈动画逻辑
+    console.log(`Project item clicked: ${projectId}`)
   }
 
   /**

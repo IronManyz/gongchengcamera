@@ -15,7 +15,8 @@ export struct ProjectCard {
   @Require @Param onLongPress: (project: Project) => void = () => {}
   @Param showTeamMember?: boolean = true // 新增团队成员显示
   @Param compact?: boolean = false // 新增紧凑布局模式
-  @Param elevation?: boolean = false // 新增高程效果
+  @Param elevation?: boolean = true // 改为默认开启高程效果
+  @Local private isPressed: boolean = false // 改为Local状态
 
   // 状态颜色映射
   private getStatusColor(status: ProjectStatus): string {
@@ -98,171 +99,272 @@ export struct ProjectCard {
     }
   }
 
+  // 获取状态图标
+  private getStatusIcon(status: ProjectStatus): string {
+    switch (status) {
+      case ProjectStatus.ACTIVE:
+        return '🟢' // 绿色圆圈
+      case ProjectStatus.COMPLETED:
+        return '✅' // 完成标记
+      case ProjectStatus.PAUSED:
+        return '⏸️' // 暂停符号
+      case ProjectStatus.CANCELLED:
+        return '❌' // 取消标记
+      default:
+        return '⚪' // 空白圆圈
+    }
+  }
+
+  // 获取健康状态颜色
+  private getHealthStatusColor(progress: number): string {
+    if (progress >= 75) {
+      return '#52C41A' // 绿色 - 良好
+    } else if (progress >= 50) {
+      return '#FAAD14' // 橙色 - 中等
+    } else if (progress >= 25) {
+      return '#FA8C16' // 深橙色 - 需要关注
+    } else {
+      return '#FF4D4F' // 红色 - 紧急
+    }
+  }
+
+  // 获取卡片背景颜色
+  private getCardBackgroundColor(status: ProjectStatus): string {
+    const color = this.getStatusColor(status)
+    return `${color}05` // 简单的背景色
+  }
+
   build() {
     Column() {
+      // 顶部状态指示条
+      Row()
+        .width('100%')
+        .height(3)
+        .backgroundColor(this.getStatusColor(this.project.status))
+        .borderRadius({ topLeft: 8, topRight: 8 })
+
       // 主要内容区域
       Row() {
-        // 左侧信息
+        // 左侧状态指示器
         Column() {
-          // 项目编号和名称
-          Row() {
-            Text(`📁 ${this.project.code}`)
-              .fontSize(14)
-              .fontColor('#1890FF')
-              .fontWeight(FontWeight.Medium)
+          Text(this.getStatusIcon(this.project.status))
+            .fontSize(20)
+            .margin({ bottom: 8 })
 
-            Blank()
+          // 进度环
+          Stack() {
+            Circle({ width: 40, height: 40 })
+              .fill(this.getHealthStatusColor(this.project.progress) + '20')
+              .stroke(this.getHealthStatusColor(this.project.progress))
+              .strokeWidth(2)
 
-            // 状态标签
-            Text(this.getStatusText(this.project.status))
-              .fontSize(12)
-              .fontColor('#FFFFFF')
-              .backgroundColor(this.getStatusColor(this.project.status))
-              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-              .borderRadius(4)
+            Text(`${this.project.progress}%`)
+              .fontSize(10)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.getHealthStatusColor(this.project.progress))
           }
-          .width('100%')
+        }
+        .width(50)
+        .alignItems(HorizontalAlign.Center)
+
+        // 中间信息区域
+        Column() {
+          // 项目编号
+          Text(this.project.code)
+            .fontSize(12)
+            .fontColor('#1890FF')
+            .fontWeight(FontWeight.Medium)
+            .fontStyle(FontStyle.Italic)
+            .margin({ top: 4 })
 
           // 项目名称
           Text(this.project.getDisplayName())
             .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor('#262626')
-            .margin({ top: 8 })
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1A1A1A')
+            .margin({ top: 4 })
             .maxLines(2)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
 
-          // 负责人信息
-          Row() {
-            Text(`👤 ${this.project.manager || '未指定'}`)
-              .fontSize(14)
-              .fontColor('#595959')
-              .margin({ top: 6 })
+          // 负责人和客户信息
+          Row({ space: 12 }) {
+            // 负责人
+            Row({ space: 4 }) {
+              Text('👤')
+                .fontSize(12)
+                .fontColor('#595959')
+              Text(this.project.manager || '未指定')
+                .fontSize(12)
+                .fontColor('#595959')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+            }
+            .layoutWeight(1)
 
-            Blank()
+            // 客户
+            Row({ space: 4 }) {
+              Text('🏢')
+                .fontSize(12)
+                .fontColor('#595959')
+              Text(this.project.client)
+                .fontSize(12)
+                .fontColor('#595959')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+            }
+            .layoutWeight(1)
+          }
+          .width('100%')
+          .margin({ top: 6 })
 
-            // 项目优先级或类型标签
+          // 标签行
+          Row({ space: 8 }) {
+            // 优先级标签
             if (this.project.priority) {
               Text(this.getPriorityText(this.project.priority))
-                .fontSize(12)
+                .fontSize(10)
                 .fontColor('#FFFFFF')
                 .backgroundColor(this.getPriorityColor(this.project.priority))
                 .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                .borderRadius(3)
-                .margin({ top: 6 })
+                .borderRadius(10)
+                .maxLines(1)
             }
+
+            // 状态标签
+            Text(this.getStatusText(this.project.status))
+              .fontSize(10)
+              .fontColor('#FFFFFF')
+              .backgroundColor(this.getStatusColor(this.project.status))
+              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+              .borderRadius(10)
+              .maxLines(1)
+
+            // 时间标签
+            Text(this.getRelativeTime(this.project.updatedAt))
+              .fontSize(10)
+              .fontColor('#8C8C8C')
+              .backgroundColor('#F5F5F5')
+              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+              .borderRadius(10)
+              .maxLines(1)
           }
           .width('100%')
+          .margin({ top: 8 })
 
           // 统计信息
           if (this.showStats) {
             Column() {
               // 统计数据行
-              Row() {
+              Row({ space: 16 }) {
                 // 工点统计
-                Row() {
-                  Text('📍')
-                    .fontSize(14)
-                    .fontColor('#1890FF')
+                Column({ space: 4 }) {
                   Text(`${this.project.siteCount || 0}`)
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor('#262626')
-                    .margin({ left: 4 })
-                  Text('个工点')
-                    .fontSize(12)
+                    .fontSize(18)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor('#1890FF')
+                  Text('工点')
+                    .fontSize(10)
                     .fontColor('#8C8C8C')
-                    .margin({ left: 2 })
                 }
                 .layoutWeight(1)
+                .backgroundColor('#F0F8FF')
+                .padding({ top: 8, bottom: 8 })
+                .borderRadius(8)
 
                 // 照片统计
-                Row() {
-                  Text('📷')
-                    .fontSize(14)
-                    .fontColor('#722ED1')
+                Column({ space: 4 }) {
                   Text(`${this.project.photoCount || 0}`)
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor('#262626')
-                    .margin({ left: 4 })
-                  Text('张照片')
-                    .fontSize(12)
+                    .fontSize(18)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor('#722ED1')
+                  Text('照片')
+                    .fontSize(10)
                     .fontColor('#8C8C8C')
-                    .margin({ left: 2 })
                 }
                 .layoutWeight(1)
+                .backgroundColor('#F9F0FF')
+                .padding({ top: 8, bottom: 8 })
+                .borderRadius(8)
+
+                // 进度指示
+                Column({ space: 4 }) {
+                  Text(`${this.project.progress}%`)
+                    .fontSize(18)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(this.getHealthStatusColor(this.project.progress))
+                  Text('进度')
+                    .fontSize(10)
+                    .fontColor('#8C8C8C')
+                }
+                .layoutWeight(1)
+                .backgroundColor(`${this.getHealthStatusColor(this.project.progress)}15`)
+                .padding({ top: 8, bottom: 8 })
+                .borderRadius(8)
               }
               .width('100%')
-
-              // 进度条（如果有的话）
-              if (this.project.progress !== undefined) {
-                Row() {
-                  Text('完成进度')
-                    .fontSize(12)
-                    .fontColor('#8C8C8C')
-                    .margin({ right: 8 })
-
-                  Progress({
-                    value: this.project.progress,
-                    total: 100,
-                    type: ProgressType.Linear
-                  })
-                    .layoutWeight(1)
-                    .color('#1890FF')
-                    .backgroundColor('#F0F0F0')
-                    .height(6)
-
-                  Text(`${this.project.progress}%`)
-                    .fontSize(12)
-                    .fontColor('#1890FF')
-                    .fontWeight(FontWeight.Medium)
-                    .margin({ left: 8 })
-                }
-                .width('100%')
-                .margin({ top: 8 })
-              }
-
-              // 时间信息
-              Text(this.getRelativeTime(this.project.updatedAt))
-                .fontSize(12)
-                .fontColor('#BFBFBF')
-                .alignSelf(ItemAlign.Start)
-                .margin({ top: 6 })
+              .margin({ top: 8 })
             }
             .width('100%')
-            .margin({ top: 8 })
           }
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
         .padding({ right: 12 })
 
-        // 右侧操作按钮
-        Column() {
-          Text('⋮')
-            .fontSize(20)
-            .fontColor('#8C8C8C')
-            .onClick(() => {
-              if (this.onLongPress) {
-                this.onLongPress(this.project)
-              }
-            })
+        // 右侧操作区域
+        Column({ space: 8 }) {
+          // 更多操作按钮
+          Button() {
+            Text('⋮')
+              .fontSize(16)
+              .fontColor('#8C8C8C')
+          }
+          .width(32)
+          .height(32)
+          .backgroundColor('#F5F5F5')
+          .borderRadius(16)
+          .onClick(() => {
+            if (this.onLongPress) {
+              this.onLongPress(this.project)
+            }
+          })
+
+          Blank()
+
+          // 状态指示器
+          if (this.project.status === ProjectStatus.ACTIVE) {
+            Column({ space: 2 }) {
+              Circle({ width: 8, height: 8 })
+                .fill(this.getStatusColor(this.project.status))
+              Text('活跃')
+                .fontSize(8)
+                .fontColor(this.getStatusColor(this.project.status))
+            }
+          }
         }
+        .width(40)
+        .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
       .alignItems(VerticalAlign.Top)
+      .padding({ left: 16, right: 16, top: 8, bottom: 16 })
     }
     .width('100%')
-    .padding(16)
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
-    .shadow({
-      radius: 4,
-      color: '#00000010',
+    .borderRadius(12)
+    .shadow(this.elevation ? {
+      radius: this.isPressed ? 2 : 8,
+      color: this.isPressed ? '#00000015' : '#00000020',
       offsetX: 0,
-      offsetY: 2
+      offsetY: this.isPressed ? 1 : 4
+    } : undefined)
+    .scale({ x: this.isPressed ? 0.98 : 1.0, y: this.isPressed ? 0.98 : 1.0 })
+    .animation({
+      duration: 150,
+      curve: Curve.EaseInOut
     })
     .onClick(() => {
       if (this.onTap) {
@@ -270,11 +372,26 @@ export struct ProjectCard {
       }
     })
     .gesture(
+      // 按压手势
+      TapGesture({ count: 1 })
+        .onAction(() => {
+          // 点击时的按压效果
+          this.isPressed = true
+          setTimeout(() => {
+            this.isPressed = false
+          }, 150)
+        })
+    )
+    .gesture(
       LongPressGesture({ repeat: false, duration: 500 })
         .onAction(() => {
           if (this.onLongPress) {
             this.onLongPress(this.project)
           }
+        })
+        .onAction(() => {
+          // 长按时的视觉反馈
+          this.isPressed = false
         })
     )
   }
