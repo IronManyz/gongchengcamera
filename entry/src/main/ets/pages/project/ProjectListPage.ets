@@ -53,6 +53,7 @@ struct ProjectListPage {
   // 状态管理
   @State private isLoading: boolean = false
   @State private isRefreshing: boolean = false
+  @State private isLoadingMore: boolean = false
   @State private searchQuery: string = ''
   @State private currentFilter: ProjectFilter = ProjectFilter.ALL
   @State private selectedProjectId: string = ''
@@ -119,13 +120,42 @@ struct ProjectListPage {
    * 下拉刷新
    */
   private async onRefresh(): Promise<void> {
+    if (this.isRefreshing || this.isLoadingMore) {
+      return // 防止重复触发
+    }
+
     this.isRefreshing = true
     try {
+      console.log('开始下拉刷新...')
       await this.projectStore.refresh()
+      console.log('下拉刷新完成')
     } catch (error) {
       console.error('刷新项目数据失败:', error)
     } finally {
       this.isRefreshing = false
+    }
+  }
+
+  /**
+   * 加载更多处理
+   */
+  private async onLoadMore(): Promise<void> {
+    if (this.isLoadingMore || this.isRefreshing || !this.projectStore.hasNextPage) {
+      return // 防止重复触发或无更多数据
+    }
+
+    this.isLoadingMore = true
+    try {
+      console.log('开始加载更多数据...', `当前页: ${this.projectStore.currentPage}`)
+
+      // 加载更多数据
+      await this.projectStore.loadProjectsWithPagination()
+
+      console.log('加载更多完成', `新页码: ${this.projectStore.currentPage}`)
+    } catch (error) {
+      console.error('加载更多数据失败:', error)
+    } finally {
+      this.isLoadingMore = false
     }
   }
 
@@ -644,6 +674,27 @@ struct ProjectListPage {
             },
             (project: Project, index?: number) => `${project.id}_${index}`
           )
+
+          // 底部加载更多指示器
+          if (this.projectStore.hasNextPage) {
+            ListItem() {
+              Row({ space: 8 }) {
+                if (this.isLoadingMore) {
+                  LoadingProgress()
+                    .width(16)
+                    .height(16)
+                    .color('#007AFF')
+                }
+
+                Text(this.isLoadingMore ? '加载中...' : '上拉加载更多')
+                  .fontSize(12)
+                  .fontColor('#666666')
+              }
+              .width('100%')
+              .justifyContent(FlexAlign.Center)
+              .padding({ top: 16, bottom: 16 })
+            }
+          }
         }
         .width('100%')
         .layoutWeight(1)
@@ -651,6 +702,10 @@ struct ProjectListPage {
         .backgroundColor('#FAFAFA')
         .scrollBar(BarState.Off)
         .edgeEffect(EdgeEffect.Spring)
+        .onReachEnd(() => {
+          // 滚动到底部时触发加载更多
+          this.onLoadMore()
+        })
       } else {
         Column() {
           // 空状态动画图标
