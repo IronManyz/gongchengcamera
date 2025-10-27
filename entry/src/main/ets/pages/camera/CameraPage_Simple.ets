@@ -49,10 +49,14 @@ struct CameraPage_Simple {
   @Local private initializationSteps: string[] = []
   @Local private currentInitStep: string = ''
 
+  // XComponent相关成员变量
+  private xComponentController: XComponentController | null = null
+
   aboutToAppear(): void {
     this.loadRouteParams()
     this.checkAndRequestPermission()
   }
+
 
   aboutToDisappear(): void {
     console.log('=== CameraPage.aboutToDisappear() ===')
@@ -567,55 +571,45 @@ struct CameraPage_Simple {
         XComponent({
           id: 'camera_preview',
           type: 'surface',
-          libraryname: 'entry',
+          libraryname: '',
         })
-          .onLoad((xComponent: XComponentController) => {
+          .onLoad((xComponentContext) => {
             console.log('=== XComponent onLoad triggered ===')
             console.log('Camera preview XComponent loaded')
-            console.log('XComponent controller:', !!xComponent)
+            console.log('XComponent context:', xComponentContext)
+            console.log('XComponent context type:', typeof xComponentContext)
 
             try {
-              if (!xComponent) {
-                console.error('XComponent controller is null or undefined')
-                this.cameraErrorMessage = '相机预览组件加载失败'
-                this.showCameraError = true
-                this.isLoading = false
-                return
-              }
-
-              // 设置Surface尺寸
-              try {
-                xComponent.setXComponentSurfaceRect({
-                  surfaceWidth: 1920,
-                  surfaceHeight: 1080
-                })
-                console.log('Surface rect set: 1920 x 1080')
-              } catch (sizeError) {
-                console.warn('Failed to set surface rect, using default:', sizeError)
-              }
-
-              // 获取Surface ID
+              // 获取Surface ID  
+              console.log('Attempting to get Surface ID...')
+              const xComponent = xComponentContext as XComponentController
               const surfaceId: string = xComponent.getXComponentSurfaceId()
+              
               console.log('Surface ID obtained:', surfaceId)
+              console.log('Surface ID type:', typeof surfaceId)
               console.log('Surface ID length:', surfaceId?.length || 0)
 
               if (surfaceId && surfaceId.length > 0) {
-                // 使用Surface ID初始化相机
-                console.log('Surface ID is valid, initializing camera...')
+                // Surface ID有效，初始化相机
+                console.log('Surface ID is valid, will initialize camera')
+                
                 // 延迟一小段时间确保Surface完全准备好
                 setTimeout(() => {
+                  console.log('Starting camera initialization with surfaceId:', surfaceId)
                   this.initializeCameraWithSurface(surfaceId)
-                }, 100)
+                }, 200)
               } else {
                 console.error('Surface ID is empty or invalid')
-                this.cameraErrorMessage = '相机预览区域初始化失败：Surface ID无效'
+                console.error('Received surfaceId value:', surfaceId)
+                this.cameraErrorMessage = '无法获取相机预览区域ID，请返回后重试'
                 this.showCameraError = true
                 this.isLoading = false
               }
             } catch (error) {
-              console.error('XComponent initialization failed:', error)
-              console.error('Error details:', JSON.stringify(error))
-              this.cameraErrorMessage = `相机预览组件初始化失败: ${error instanceof Error ? error.message : String(error)}`
+              console.error('XComponent onLoad failed:', error)
+              console.error('Error type:', typeof error)
+              console.error('Error message:', error instanceof Error ? error.message : String(error))
+              this.cameraErrorMessage = `相机预览组件初始化失败，请返回后重试`
               this.showCameraError = true
               this.isLoading = false
             }
