@@ -12,13 +12,13 @@ export interface TransitionConfig {
 
 @ComponentV2
 export struct PageTransition {
-  @Require @Param content: () => void = () => {}
+  @Require @Param content: () => void
   @Param isLoading: boolean = false
   @Param animationConfig?: TransitionConfig = {}
   @Param onAnimationEnd?: () => void = () => {}
 
-  @State private isVisible: boolean = false
-  @State private currentOpacity: number = 0
+  private isVisible: boolean = false
+  private currentOpacity: number = 0
 
   aboutToAppear() {
     if (this.animationConfig.delay) {

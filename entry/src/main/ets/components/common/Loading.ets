@@ -95,24 +95,23 @@ export struct Loading {
   private SkeletonLoading() {
     Column({ space: 12 }) {
       // 模拟标题骨架
-      Rectangle()
+      Row()
         .width('60%')
         .height(16)
-        .fill('#E0E0E0')
+        .backgroundColor('#E0E0E0')
         .borderRadius(4)
 
       // 模拟内容骨架
       ForEach([1, 2, 3], (index: number) => {
-        Rectangle()
+        Row()
           .width(this.isLoading ? `${85 + index * 5}%` : '80%')
           .height(12)
-          .fill('#F0F0F0')
+          .backgroundColor('#F0F0F0')
           .borderRadius(4)
           .animation({
             duration: 1500,
             curve: Curve.EaseInOut,
             iterations: -1,
-            play: this.isLoading,
             delay: index * 200
           })
           .opacity(this.isLoading ? 1 : 0.6)

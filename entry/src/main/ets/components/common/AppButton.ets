@@ -20,7 +20,7 @@ export interface ButtonConfig {
 export struct AppButton {
   @Param text: string = ''
   @Param config?: ButtonConfig = {}
-  @Param onClick?: () => void = () => {}
+  @Param onTap?: () => void = () => {}
 
   private get buttonConfig(): ButtonConfig {
     return {
@@ -161,13 +161,15 @@ export struct AppButton {
   }
 
   private handleButtonClick(): void {
-    if (!this.buttonConfig.disabled && !this.buttonConfig.loading && this.onClick) {
-      this.onClick()
+    if (!this.buttonConfig.disabled && !this.buttonConfig.loading && this.onTap) {
+      this.onTap()
     }
   }
 
   build() {
-    Button(this.ButtonContent)
+    Button() {
+      this.ButtonContent()
+    }
       .height(this.getHeight())
       .padding({
         left: this.getPadding().left,
@@ -192,8 +194,7 @@ export struct AppButton {
       .animation({
         duration: 200,
         curve: Curve.EaseInOut,
-        delay: 0,
-        play: true
+        delay: 0
       })
       .scale({
         x: this.buttonConfig.disabled ? 1 : 1,

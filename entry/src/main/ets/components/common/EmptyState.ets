@@ -7,7 +7,7 @@ import { ThemeManager } from '../../theme/ThemeManager'
 
 export interface EmptyStateConfig {
   icon?: string
-  title: string
+  title?: string
   description?: string
   actionText?: string
   onAction?: () => void
@@ -17,8 +17,8 @@ export interface EmptyStateConfig {
 
 @ComponentV2
 export struct EmptyState {
-  @Param config?: EmptyStateConfig
-  @Param height?: number = 300
+  @Param config?: EmptyStateConfig = {}
+  @Param containerHeight: number = 300
   @Param showBackground: boolean = true
 
   private get defaultConfig(): EmptyStateConfig {
@@ -278,7 +278,7 @@ export struct EmptyState {
       }
     }
     .width('100%')
-    .height(this.height || 300)
+    .height(this.containerHeight)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .padding(32)
