@@ -160,7 +160,7 @@ struct SettingsPage {
           // 用户信息区域
           Column() {
             Row() {
-              SVGIcon({ iconName: 'user', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+              SVGIcon({ iconName: 'user', iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
                 .margin({ right: 12 })
 
               Column() {
@@ -192,7 +192,7 @@ struct SettingsPage {
           // 统计信息区域
           Column() {
             Row() {
-                SVGIcon({ iconName: 'database', iconSize: 16, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                SVGIcon({ iconName: 'database', iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
                   .margin({ right: 8 })
                 Text('使用统计')
                   .fontSize(16)
@@ -255,11 +255,11 @@ struct SettingsPage {
               Row() {
                 // 使用SVG图标或fallback到emoji
                 if (item.iconName) {
-                  SVGIcon({ iconName: item.iconName, iconSize: 20, iconColor: '#1890FF', iconStrokeWidth: 2 })
+                  SVGIcon({ iconName: item.iconName, iconSize: 24, iconColor: '#1890FF', iconStrokeWidth: 2 })
                     .margin({ right: 12 })
                 } else {
                   Text(item.icon)
-                    .fontSize(20)
+                    .fontSize(24)
                     .margin({ right: 12 })
                 }
 
