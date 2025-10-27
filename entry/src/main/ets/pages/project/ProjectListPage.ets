@@ -226,6 +226,9 @@ struct ProjectListPage {
       // 顶部导航栏
       this.buildTopBar()
 
+      // 统计概览卡片
+      this.buildStatsOverview()
+
       // 搜索和筛选栏
       this.buildSearchAndFilterBar()
 
@@ -270,6 +273,119 @@ struct ProjectListPage {
   }
 
   
+  /**
+   * 构建统计概览卡片
+   */
+  @Builder
+  private buildStatsOverview() {
+    if (this.projectStore.projectStats) {
+      Column({ space: 16 }) {
+        // 主要统计卡片
+        Row() {
+          // 工程数量统计
+          Column() {
+            Text(String(this.projectStore.projectStats.totalProjects))
+              .fontSize(28)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#007AFF')
+
+            Text('总工程')
+              .fontSize(14)
+              .fontColor('#666666')
+              .margin({ top: 4 })
+          }
+          .width('33.33%')
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#F0F8FF')
+          .borderRadius(12)
+          .padding({ top: 16, bottom: 16 })
+
+          // 工点数量统计
+          Column() {
+            Text(String(this.projectStore.projectStats.totalSites))
+              .fontSize(28)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#34C759')
+
+            Text('总工点')
+              .fontSize(14)
+              .fontColor('#666666')
+              .margin({ top: 4 })
+          }
+          .width('33.33%')
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#F0FFF4')
+          .borderRadius(12)
+          .padding({ top: 16, bottom: 16 })
+
+          // 照片数量统计
+          Column() {
+            Text(String(this.projectStore.projectStats.totalPhotos))
+              .fontSize(28)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#FF9500')
+
+            Text('总照片')
+              .fontSize(14)
+              .fontColor('#666666')
+              .margin({ top: 4 })
+          }
+          .width('33.33%')
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#FFF8F0')
+          .borderRadius(12)
+          .padding({ top: 16, bottom: 16 })
+        }
+        .width('100%')
+        .height(100)
+        .padding({ left: 16, right: 16 })
+        .justifyContent(FlexAlign.SpaceEvenly)
+
+        // 状态分布统计
+        if (this.projectStore.projectStats.projectsByStatus) {
+          Row({ space: 8 }) {
+            this.buildStatusIndicator('进行中', this.projectStore.projectStats.projectsByStatus[ProjectStatus.ACTIVE] || 0, '#4CAF50')
+            this.buildStatusIndicator('已完成', this.projectStore.projectStats.projectsByStatus[ProjectStatus.COMPLETED] || 0, '#2196F3')
+            this.buildStatusIndicator('已暂停', this.projectStore.projectStats.projectsByStatus[ProjectStatus.PAUSED] || 0, '#FF9800')
+            this.buildStatusIndicator('已取消', this.projectStore.projectStats.projectsByStatus[ProjectStatus.CANCELLED] || 0, '#F44336')
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16 })
+          .justifyContent(FlexAlign.SpaceEvenly)
+        }
+      }
+      .width('100%')
+      .padding({ top: 12, bottom: 16 })
+      .backgroundColor('#FFFFFF')
+      .shadow({
+        radius: 4,
+        color: 'rgba(0, 0, 0, 0.08)',
+        offsetX: 0,
+        offsetY: 2
+      })
+    }
+  }
+
+  /**
+   * 构建状态指示器
+   */
+  @Builder
+  private buildStatusIndicator(label: string, count: number, color: string) {
+    Column() {
+      Text(String(count))
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(color)
+
+      Text(label)
+        .fontSize(12)
+        .fontColor('#666666')
+        .margin({ top: 2 })
+    }
+    .alignItems(HorizontalAlign.Center)
+    .flexShrink(1)
+  }
+
   /**
    * 构建顶部导航栏
    */
